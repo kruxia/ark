@@ -12,8 +12,8 @@ services:
     volumes:
       - svndata:/var/svn
 
-  app:
-    build: ./app
+  api:
+    build: ./api
     ports:
       - "8000:80"
     volumes:
