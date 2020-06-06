@@ -1,7 +1,9 @@
 version: "3.7"
 services:
   svn:
-    build: ./svn
+    build: 
+      context: ./svn
+      dockerfile: Dockerfile.alpine
     environment:
       SERVER_ADMIN: $SERVER_ADMIN
       SERVER_NAME: svn

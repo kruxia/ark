@@ -5,7 +5,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
         subversion \
         nano \
-    && apt-get upgrade \
+    && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/svn
