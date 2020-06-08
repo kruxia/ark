@@ -16,6 +16,7 @@ services:
       - "8000:80"
     volumes:
       - svndata:/var/svn
+      - ./api:/var/api
 
 volumes:
   svndata:

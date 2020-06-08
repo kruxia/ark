@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM rust:1.44-slim-buster
 LABEL maintainer="Sean Harrison <sah@kruxia.com>"
 
 RUN apt-get update \
@@ -8,7 +8,11 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /var/svn
+RUN cargo install systemfd cargo-watch
+
+WORKDIR /var/api
 USER www-data
 
-CMD ["python"]
+EXPOSE 8000
+
+CMD ["systemfd", "--no-pid", "-s", "http::8000", "--", "cargo", "watch", "-x", "run"]
