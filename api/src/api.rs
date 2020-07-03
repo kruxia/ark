@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, Result};
-use serde::{Serialize};
+use serde::Serialize;
 
 pub mod health;
 

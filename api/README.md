@@ -7,7 +7,7 @@ API = /api/v1
     * [x] filestorage — ARCHIVE_FILES
     * [ ] SVN server – ARCHIVE_SERVER
     * [ ] PostgreSQL database – POSTGRES_DSN
-    * [ ] all async, at the same time
+    * [x] all at the same time (`futures::join!`)
 * [ ] /ark = archive parent 
     * [ ] GET = list of archives and their metadata
     * [ ] POST = create new archive
