@@ -1,5 +1,5 @@
 [package]
-name = "api"
+name = "ark"
 version = "0.1.0"
 authors = ["Sean Harrison <sah@kruxia.com>"]
 edition = "2018"
