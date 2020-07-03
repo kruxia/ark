@@ -1,16 +1,14 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 use listenfd::ListenFd;
 
-async fn index() -> impl Responder {
-    HttpResponse::Ok().body("{\"status\": 200, \"message\": \"Welcome\"}")
-}
+mod api;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     let mut listenfd = ListenFd::from_env();
     let mut server = HttpServer::new(|| {
         App::new()
-            .route("/", web::get().to(index))
+            .route("/", web::get().to(api::index))
     });
 
     server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
