@@ -8,15 +8,16 @@ services:
     ports:
       - "7000:80"
     volumes:
-      - svndata:/var/svn
+      # - svndata:/var/svn
+      - ./svndata:/var/svn
 
-  api:
-    build: ./api
-    ports:
-      - "8000:80"
-    volumes:
-      - svndata:/var/svn
-      - ./api:/var/api
+  # api:
+  #   build: ./api
+  #   ports:
+  #     - "8000:80"
+  #   volumes:
+  #     - svndata:/var/svn
+  #     - ./api:/var/api
 
-volumes:
-  svndata:
+# volumes:
+#   svndata:
