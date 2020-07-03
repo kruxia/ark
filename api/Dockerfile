@@ -1,4 +1,4 @@
-FROM rust:1.44-slim-buster
+FROM rust:1.44-slim-buster as build
 LABEL maintainer="Sean Harrison <sah@kruxia.com>"
 
 RUN apt-get update \
@@ -8,11 +8,17 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cargo install systemfd cargo-watch
-
 WORKDIR /var/api
+COPY ./ ./
+RUN cargo build --release
+
+FROM debian:buster-slim as prod
+COPY --from=build /var/api/target/release/ark-api /usr/local/bin/ark-api
+
+WORKDIR /var/svn
 USER www-data
 
 EXPOSE 8000
 
-CMD ["systemfd", "--no-pid", "-s", "http::8000", "--", "cargo", "watch", "-x", "run"]
+CMD ["ark-api"]
+
