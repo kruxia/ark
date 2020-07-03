@@ -4,13 +4,13 @@ use serde::Serialize;
 pub mod health;
 
 #[derive(Serialize)]
-struct Message {
+struct StatusMessage {
     status: u16,
     message: String,
 }
 
 pub async fn index() -> Result<HttpResponse> {
-    Ok(HttpResponse::Ok().json(Message {
+    Ok(HttpResponse::Ok().json(StatusMessage {
         status: 200,
         message: "Welcome to the Ark API".to_string(),
     }))

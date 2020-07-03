@@ -3,11 +3,14 @@
 API = /api/v1
 
 * [x] / = 200 OK + welcome message
+    * [x] GET => StatusMessage
+    * [ ] tests
 * [ ] /health = healthcheck on all system components 
     * [x] filestorage — ARCHIVE_FILES
-    * [ ] SVN server – ARCHIVE_SERVER
-    * [ ] PostgreSQL database – POSTGRES_DSN
+    * [x] SVN server – ARCHIVE_SERVER
+    * [x] PostgreSQL database – DATABASE_URL
     * [x] all at the same time (`futures::join!`)
+    * [ ] tests
 * [ ] /ark = archive parent 
     * [ ] GET = list of archives and their metadata
     * [ ] POST = create new archive
