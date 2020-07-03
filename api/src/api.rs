@@ -1,6 +1,8 @@
 use actix_web::{HttpResponse, Result};
 use serde::{Serialize};
 
+pub mod health;
+
 #[derive(Serialize)]
 struct Message {
     status: u16,

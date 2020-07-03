@@ -9,6 +9,7 @@ async fn main() -> std::io::Result<()> {
     let mut server = HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(api::index))
+            .route("/health", web::get().to(api::health::index))
     });
 
     server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {

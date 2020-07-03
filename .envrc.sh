@@ -1,2 +1,2 @@
-# set yourself as the server administrator
-export SERVER_ADMIN=you@yourhost.ext
+export SERVER_ADMIN="Your Name <you@yourhost.ext>"
+export ARCHIVE_SERVER="http://localhost:7000"

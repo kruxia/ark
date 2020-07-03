@@ -2,8 +2,12 @@
 
 API = /api/v1
 
-* [ ] / = 200 OK + welcome message
-* [ ] /health = healthcheck on all system components {filestorage, SVN server, PostgreSQL}
+* [x] / = 200 OK + welcome message
+* [ ] /health = healthcheck on all system components 
+    * [x] filestorage — ARCHIVE_FILES
+    * [ ] SVN server – ARCHIVE_SERVER
+    * [ ] PostgreSQL database – POSTGRES_DSN
+    * [ ] all async, at the same time
 * [ ] /ark = archive parent 
     * [ ] GET = list of archives and their metadata
     * [ ] POST = create new archive
