@@ -15,3 +15,4 @@ pub async fn index() -> Result<HttpResponse> {
         message: "Welcome to the Ark API".to_string(),
     }))
 }
+

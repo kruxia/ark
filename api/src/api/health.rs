@@ -1,7 +1,7 @@
 use crate::api;
 use crate::AppState;
 use actix_web::{web, HttpResponse, Result};
-use futures::join;
+use futures;
 use reqwest;
 use serde::Serialize;
 use sqlx;
@@ -16,7 +16,7 @@ struct HealthStatus {
 
 pub async fn index(app_state: web::Data<AppState>) -> Result<HttpResponse> {
     // query the health of services in parallel (by using join!)
-    let (archive_files_status, archive_server_status, postgresql_status) = join!(
+    let (archive_files_status, archive_server_status, postgresql_status) = futures::join!(
         archive_files_health(),
         archive_server_health(),
         postgresql_health(app_state),
