@@ -6,7 +6,7 @@ use reqwest;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use sqlx;
-use std::{env, fs};
+use std::{env, format, fs};
 
 #[derive(Deserialize, Serialize)]
 struct HealthStatus {
@@ -203,11 +203,55 @@ mod tests {
     
     // when DATABASE_URL is set and reachable, returns
     // {"database": {"status": 200, "message": "Ok"}, ...}
+    #[actix_rt::test]
+    async fn test_database_url_ok() {
+        let req = test::TestRequest::default().to_http_request();
+        let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
+        let mut resp = index(req, app_data).await.unwrap();
+        
+        let bytes = test::load_stream(resp.take_body()).await.unwrap();
+        let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
+        assert_eq!(health_data.database.status, 200);
+        assert_eq!(health_data.database.message, "Ok");
+    }
 
     // when DATABASE_URL is not set, returns
-    // {"archive": {"status": 404, "message": "...DATABASE_URL is not set"}, ...}
+    // {"archive": {"status": 502, "message": "relative URL without a base"}, ...}
+    #[actix_rt::test]
+    async fn test_database_url_unset() {
+        let database_url = env::var("DATABASE_URL").unwrap();
+        env::remove_var("DATABASE_URL");
+
+        let req = test::TestRequest::default().to_http_request();
+        let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
+        let mut resp = index(req, app_data).await.unwrap();
+
+        env::set_var("DATABASE_URL", database_url);
+
+        let bytes = test::load_stream(resp.take_body()).await.unwrap();
+        let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
+        assert_eq!(health_data.database.status, 502);
+        assert_eq!(health_data.database.message, "relative URL without a base");
+    }
 
     // when DATABASE_URL is set but not reachable, returns
     // {"archive": {"status": 502, "message": "..."}, ...}
+    #[actix_rt::test]
+    async fn test_database_url_non_existent() {
+        let database_url = env::var("DATABASE_URL").unwrap();
+        env::set_var("DATABASE_URL", format!("{}_NONE", database_url)); // non-existent database
 
+        let req = test::TestRequest::default().to_http_request();
+        let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
+        let mut resp = index(req, app_data).await.unwrap();
+
+        env::set_var("DATABASE_URL", database_url);
+
+        let bytes = test::load_stream(resp.take_body()).await.unwrap();
+        let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
+        assert_eq!(health_data.database.status, 502);
+        println!("health_data.database.message = {:?}", health_data.database.message);
+        assert!(health_data.database.message.contains("database \""));
+        assert!(health_data.database.message.contains("\" does not exist"));
+    }
 }
