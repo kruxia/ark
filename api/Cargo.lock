@@ -299,6 +299,7 @@ dependencies = [
  "listenfd",
  "reqwest",
  "serde",
+ "serde_json",
  "sqlx",
 ]
 

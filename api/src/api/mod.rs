@@ -1,9 +1,9 @@
 use actix_web::{HttpRequest, HttpResponse, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub mod health;
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 struct StatusMessage {
     status: u16,
     message: String,

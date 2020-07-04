@@ -5,7 +5,7 @@ use std::env;
 
 mod api;
 
-pub struct AppState {
+pub struct AppData {
     database: PgPool,
 }
 
@@ -27,7 +27,7 @@ async fn main() -> std::io::Result<()> {
     let database: PgPool = get_database_pool(max_size).await;
     let mut server = HttpServer::new(move || {
         App::new()
-            .data(AppState { database: database.clone() })
+            .data(AppData { database: database.clone() })
             .route("/", web::get().to(api::index))
             .route("/health", web::get().to(api::health::index))
     });
