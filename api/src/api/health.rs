@@ -4,9 +4,8 @@ use actix_web::{web, HttpRequest, HttpResponse, Result};
 use futures;
 use reqwest;
 use serde::{Deserialize, Serialize};
-use serde_json;
 use sqlx;
-use std::{env, format, fs};
+use std::{env, fs};
 
 #[derive(Deserialize, Serialize)]
 struct HealthStatus {
@@ -87,9 +86,11 @@ async fn database_health(app_state: web::Data<AppData>) -> api::StatusMessage {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::get_database_pool;
     use actix_web::test;
+    use serde_json;
+    use std::format;
+    use crate::get_database_pool;
+    use super::*;
 
     // index returns 200 Ok (whether the underlying services are available or not)
     #[actix_rt::test]
@@ -184,7 +185,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_archive_server_non_existent() {
         let archive_server = env::var("ARCHIVE_SERVER").unwrap();
-        env::set_var("ARCHIVE_SERVER", "http://localhost.NONE:0000"); // non-existent location
+        env::set_var("ARCHIVE_SERVER", "http://localhost.NONE:0000"); // non-existent
 
         let req = test::TestRequest::default().to_http_request();
         let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
@@ -239,7 +240,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_database_url_non_existent() {
         let database_url = env::var("DATABASE_URL").unwrap();
-        env::set_var("DATABASE_URL", format!("{}_NONE", database_url)); // non-existent database
+        env::set_var("DATABASE_URL", format!("{}_NONE", database_url)); // non-existent
 
         let req = test::TestRequest::default().to_http_request();
         let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
