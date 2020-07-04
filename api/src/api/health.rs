@@ -148,12 +148,56 @@ mod tests {
     
     // when ARCHIVE_SERVER is set and reachable, returns 
     // {"archive": {"status": 200, "message": "Ok"}, ...}
+    #[actix_rt::test]
+    async fn test_archive_server_ok() {
+        let req = test::TestRequest::default().to_http_request();
+        let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
+        let mut resp = index(req, app_data).await.unwrap();
+        
+        let bytes = test::load_stream(resp.take_body()).await.unwrap();
+        let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
+        assert_eq!(health_data.archive.status, 200);
+        assert_eq!(health_data.archive.message, "Ok");
+    }
 
     // when ARCHIVE_SERVER is not set, returns
     // {"archive": {"status": 404, "message": "...ARCHIVE_SERVER is not set"}, ...}
+    #[actix_rt::test]
+    async fn test_archive_server_unset() {
+        let archive_server = env::var("ARCHIVE_SERVER").unwrap();
+        env::remove_var("ARCHIVE_SERVER");
+
+        let req = test::TestRequest::default().to_http_request();
+        let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
+        let mut resp = index(req, app_data).await.unwrap();
+
+        env::set_var("ARCHIVE_SERVER", archive_server);
+
+        let bytes = test::load_stream(resp.take_body()).await.unwrap();
+        let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
+        assert_eq!(health_data.archive.status, 404);
+        assert_eq!(health_data.archive.message, "environment variable not found");
+    }
 
     // when ARCHIVE_SERVER is set but not reachable, returns
     // {"archive": {"status": 502, "message": "..."}, ...}
+    #[actix_rt::test]
+    async fn test_archive_server_non_existent() {
+        let archive_server = env::var("ARCHIVE_SERVER").unwrap();
+        env::set_var("ARCHIVE_SERVER", "http://localhost.NONE:0000"); // non-existent location
+
+        let req = test::TestRequest::default().to_http_request();
+        let app_data = web::Data::new(AppData { database: get_database_pool(1).await });
+        let mut resp = index(req, app_data).await.unwrap();
+
+        env::set_var("ARCHIVE_SERVER", archive_server);
+
+        let bytes = test::load_stream(resp.take_body()).await.unwrap();
+        let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
+        assert_eq!(health_data.archive.status, 502);
+        println!("health_data.archive.message = {:?}", health_data.archive.message);
+        assert!(health_data.archive.message.contains("error trying to connect"));
+    }
 
     // ---------------------------------------------------------------------------------
     
