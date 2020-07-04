@@ -4,7 +4,7 @@ API = /api/v1
 
 * [x] / = 200 OK + welcome message
     * [x] GET => StatusMessage
-    * [ ] tests
+    * [x] test
 * [ ] /health = healthcheck on all system components 
     * [x] filestorage — ARCHIVE_FILES
     * [x] SVN server – ARCHIVE_SERVER
