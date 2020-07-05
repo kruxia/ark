@@ -8,34 +8,34 @@ services:
     ports:
       - "7000:80"
     volumes:
-      # - svndata:/var/svn
-      - ./svndata:/var/svn
+      - svndata:/var/svn
 
-  # postgres:
-  #   image: postgres:12
-  #   environment:
-  #     POSTGRES_DATABASE: ark
-  #     POSTGRES_USERNAME: ark
-  #     POSTGRES_PASSWORD: ark
-  #   ports:
-  #     - "5433:5432"
-  #   volumes: 
-  #     - pgdata:/var/lib/postgres/data
+  postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: ark
+      POSTGRES_USER: ark
+      POSTGRES_PASSWORD: ark
+    volumes: 
+      - pgdata:/var/lib/postgres/data
 
-  # api:
-  #   build: ./api
-  #   depends_on:
-  #     - postgres
-  #     - svn
-  #   environment:
-  #     POSTGRES_URL: postgres://ark:ark@localhost:5433/ark
-  #   ports:
-  #     - "8000:8000"
-  #   volumes:
-  #     - /var/api/target
-  #     - svndata:/var/svn
-  #     - ./api:/var/api
+  api:
+    build: ./api
+    depends_on:
+      - postgres
+      - svn
+    environment:
+      ARCHIVE_FILES: /var/svn
+      ARCHIVE_SERVER: http://svn
+      DATABASE_NAME: ark
+      DATABASE_URL: postgres://ark:ark@postgres:5432/${DATABASE_NAME}
+    ports:
+      - "8000:8000"
+    volumes:
+      - svndata:/var/svn
+      - /var/api/target
+      - ./api:/var/api
 
-# volumes:
-#   svndata:
-#   pgdata:
+volumes:
+  pgdata:
+  svndata:

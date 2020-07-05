@@ -5,20 +5,19 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
         subversion \
         nano \
+        pkg-config \
+        libssl-dev \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/api
+
 COPY ./ ./
-RUN cargo build --release
+RUN cargo build
+RUN cargo install systemfd cargo-watch 
 
-FROM debian:buster-slim as prod
-COPY --from=build /var/api/target/release/ark-api /usr/local/bin/ark-api
-
-WORKDIR /var/svn
-USER www-data
+RUN useradd -m -d /var/svn apache
 
 EXPOSE 8000
 
-CMD ["ark-api"]
-
+CMD ["systemfd", "--no-pid", "-s", "http::0.0.0.0:8000", "--", "cargo", "watch", "-x", "run"]
