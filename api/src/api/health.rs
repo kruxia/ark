@@ -43,7 +43,7 @@ async fn archive_files_health() -> api::StatusMessage {
             },
             Ok(_) => api::StatusMessage {
                 status: 200,
-                message: "Ok".to_string(),
+                message: "OK".to_string(),
             },
         },
     }
@@ -60,9 +60,9 @@ async fn archive_server_health() -> api::StatusMessage {
                 status: 502,
                 message: err.to_string(),
             },
-            Ok(_) => api::StatusMessage {
-                status: 200,
-                message: "Ok".to_string(),
+            Ok(resp) => api::StatusMessage {
+                status: resp.status().as_u16(),
+                message: resp.status().canonical_reason().unwrap().to_string(),
             },
         },
     }
@@ -79,7 +79,7 @@ async fn database_health(app_state: web::Data<AppData>) -> api::StatusMessage {
         },
         Ok(_) => api::StatusMessage {
             status: 200,
-            message: "Ok".to_string(),
+            message: "OK".to_string(),
         },
     }
 }
@@ -104,7 +104,7 @@ mod tests {
     // ---------------------------------------------------------------------------------
 
     // when ARCHIVE_FILES is set and the folder exists, returns
-    // {"files": {"status": 200, "message": "Ok"}, ...}
+    // {"files": {"status": 200, "message": "OK"}, ...}
     #[actix_rt::test]
     async fn test_archive_files_ok() {
         env::set_var("ARCHIVE_FILES", "/"); // root folder always exists
@@ -114,7 +114,7 @@ mod tests {
         let bytes = test::load_stream(resp.take_body()).await.unwrap();
         let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
         assert_eq!(health_data.files.status, 200);
-        assert_eq!(health_data.files.message, "Ok");
+        assert_eq!(health_data.files.message, "OK");
     }
 
     // when ARCHIVE_FILES is not set, returns
@@ -148,7 +148,7 @@ mod tests {
     // ---------------------------------------------------------------------------------
     
     // when ARCHIVE_SERVER is set and reachable, returns 
-    // {"archive": {"status": 200, "message": "Ok"}, ...}
+    // {"archive": {"status": 200, "message": "OK"}, ...}
     #[actix_rt::test]
     async fn test_archive_server_ok() {
         let req = test::TestRequest::default().to_http_request();
@@ -158,7 +158,7 @@ mod tests {
         let bytes = test::load_stream(resp.take_body()).await.unwrap();
         let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
         assert_eq!(health_data.archive.status, 200);
-        assert_eq!(health_data.archive.message, "Ok");
+        assert_eq!(health_data.archive.message, "OK");
     }
 
     // when ARCHIVE_SERVER is not set, returns
@@ -203,7 +203,7 @@ mod tests {
     // ---------------------------------------------------------------------------------
     
     // when DATABASE_URL is set and reachable, returns
-    // {"database": {"status": 200, "message": "Ok"}, ...}
+    // {"database": {"status": 200, "message": "OK"}, ...}
     #[actix_rt::test]
     async fn test_database_url_ok() {
         let req = test::TestRequest::default().to_http_request();
@@ -213,7 +213,7 @@ mod tests {
         let bytes = test::load_stream(resp.take_body()).await.unwrap();
         let health_data = serde_json::from_slice::<HealthStatus>(&bytes).unwrap();
         assert_eq!(health_data.database.status, 200);
-        assert_eq!(health_data.database.message, "Ok");
+        assert_eq!(health_data.database.message, "OK");
     }
 
     // when DATABASE_URL is not set, returns
