@@ -7,6 +7,7 @@ RUN apt-get update \
         nano \
         pkg-config \
         libssl-dev \
+        postgresql-client \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
