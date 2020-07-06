@@ -17,8 +17,12 @@ RUN cargo install systemfd cargo-watch
 COPY ./ ./
 RUN cargo build
 
-RUN useradd -m -d /var/svn apache
+# create user apache -u 100 -g 101 to match what is in kruxia/svn(:alpine) -- we will
+# use this user for all svnadmin and svnlook
+RUN groupadd -g 101 apache \
+    & useradd -m -d /var/svn -u 100 -g 101 apache
 
 EXPOSE 8000
 
+# for this development image, use cargo watch to auto-reload changes in the code.
 CMD ["systemfd", "--no-pid", "-s", "http::0.0.0.0:8000", "--", "cargo", "watch", "-x", "run"]

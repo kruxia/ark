@@ -21,6 +21,7 @@ services:
 
   api:
     build: ./api
+    # image: kruxia/ark-api
     depends_on:
       - postgres
       - svn
