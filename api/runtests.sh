@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# make sure the supporting services are running
-docker-compose up -d
-
 # make sure the postgres test server exists
 psql -e -q -c "DROP DATABASE IF EXISTS ${DATABASE_NAME}_test;" ${DATABASE_URL}
 psql -e -q -c "CREATE DATABASE ${DATABASE_NAME}_test;" ${DATABASE_URL}
