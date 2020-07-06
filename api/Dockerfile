@@ -13,9 +13,9 @@ RUN apt-get update \
 
 WORKDIR /var/api
 
+RUN cargo install systemfd cargo-watch 
 COPY ./ ./
 RUN cargo build
-RUN cargo install systemfd cargo-watch 
 
 RUN useradd -m -d /var/svn apache
 

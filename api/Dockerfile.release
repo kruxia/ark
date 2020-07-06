@@ -29,6 +29,8 @@ RUN apt-get update \
 
 COPY --from=build /build/target/release/ark-api /usr/local/bin/ark-api
 
+RUN useradd -m -d /var/svn apache
+
 EXPOSE 8000
 
 CMD ["ark-api"]
