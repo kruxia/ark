@@ -26,9 +26,9 @@ API = /api/v1
         * [x] pytests
 * [ ] /ark/NAME = single archive
     * [ ] python
-        * [ ] GET = archive (complete?) metadata
-        * [ ] POST = edit archive metadata
-        * [ ] DELETE = delete this archive and all its content
+        * [x] GET = archive (complete?) metadata (nothing different from /ark entry)
+        <!-- * [ ] POST = edit archive metadata -->
+        * [x] DELETE = delete this archive and all its content
         * [ ] pytests
 * [ ] /ark/NAME/files[/PATH]
     * [ ] python

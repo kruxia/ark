@@ -1,6 +1,7 @@
 import os
 import http.client
 import httpx
+import subprocess
 from lxml import etree
 from starlette.endpoints import HTTPEndpoint
 from api.models import RepositoryInfo
@@ -9,13 +10,17 @@ from api.responses import ORJSONResponse
 
 
 class ArkParent(HTTPEndpoint):
+    """
+    /ark = the parent location for all repositories
+    """
+
     async def get(self, request):
         """
         list archives and their basic metadata.
         """
         archive_server = os.getenv('ARCHIVE_SERVER')
 
-        # get a list of repositories via SVNListParentPath 
+        # get a list of repositories via SVNListParentPath
         async with httpx.AsyncClient() as client:
             response = await client.get(archive_server)
         if response.status_code != 200:
@@ -70,3 +75,41 @@ class ArkParent(HTTPEndpoint):
             return ORJSONResponse(
                 {'code': 201, 'message': f"Created: '{data['name']}'"}, status_code=201
             )
+
+
+class ArkRepo(HTTPEndpoint):
+    """
+    /ark/NAME = the root for repository NAME
+    """
+
+    async def get(self, request):
+        """
+        Return the metadata for the given repository NAME if it exists, or 404.
+        Return 404 NOT FOUND if it doesn't exist.
+        """
+        archive_server = os.getenv('ARCHIVE_SERVER')
+        name = request.path_params['name']
+        cmd = ['svn', 'info', '--xml'] + [f"{archive_server}/{name}"]
+        result = await run_command(*cmd)
+        if bool(result['error']) is True:
+            return ORJSONResponse({'code': 404, 'message': 'NOT FOUND'}, status_code=404)
+        else:
+            xml = etree.fromstring(result['output'])
+            entry = xml.xpath('/info/entry')[0]
+            info = RepositoryInfo.from_entry(entry).dict()
+            return ORJSONResponse(info, status_code=200)
+
+    async def delete(self, request):
+        """
+        Delete the given repository if it exists, or 404.
+        """
+        name = request.path_params['name']
+        path = f"{os.getenv('ARCHIVE_FILES')}/{name}"
+        if not os.path.exists(path):
+            response = ORJSONResponse({'code': 404, 'message': 'NOT FOUND'}, status_code=404)
+        else:
+            cmd = ['rm', '-rf', path]
+            subprocess.check_output(cmd)
+            response = ORJSONResponse({'code': 200, 'message': f"Deleted '{name}'"}, status_code=200)
+
+        return response
