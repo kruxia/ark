@@ -1,9 +1,18 @@
 # Performance comparisons
 
-tldr; **Rust/Actix** --release **is 2x—10x faster than Python/Starlette** w/o --reload.
-That seems like a very reasonable tradeoff for significantly faster development time
-(10x—50x faster). Python becomes an excellent prototyping environment, and we can move
-to Rust if and when performance demands.
+## Runtime Performance: Summary
+
+tldr; **Rust/Actix** --release **is 2x—10x faster than Python/Starlette** w/o --reload. That seems like a very reasonable tradeoff for significantly faster development time (10x—50x faster). Python becomes an excellent prototyping environment, and we can move to Rust if and when performance demands.
+
+| req/sec                        | /       | /health |
+| ------------------------------ | ------- | ------- |
+| Rust actix develop/cargo watch | 1017.16 | 71.74   |
+| Rust actix release             | 4026.84 | 221.31  |
+| Python starlette reload        | 2391.58 | 23.08   |
+| Python starlette no reload     | 2784.34 | 29.90   |
+
+* / = create and return a JSON object with status and welcome message
+* /health = ping the database, filesystem, and archive server and return a JSON object with the status of each.
 
 ## Rust API (development w/cargo watch)
 
