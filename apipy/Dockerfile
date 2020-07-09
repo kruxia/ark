@@ -34,4 +34,5 @@ RUN userdel _apt \
 EXPOSE 8000
 
 # for this development image, use uvicorn --reload
+ENTRYPOINT ["/var/api/docker-entrypoint.sh"]
 CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
