@@ -16,27 +16,34 @@ API = /api/v1
     * [x] python
     * [ ] pytest
 * [ ] /ark = archive parent 
-    * [ ] GET = list of archives and their (basic?) metadata
-    * [ ] POST = create new archive — takes a name parameter in a JSON body
+    * [x] GET = list of archives and their (basic?) metadata
+    * [x] POST = create new archive — takes a name parameter in a JSON body
+    * [ ] pytests
 * [ ] /ark/NAME = single archive
     * [ ] GET = archive (complete?) metadata
     * [ ] POST = edit archive metadata
     * [ ] DELETE = delete this archive and all its content
+    * [ ] pytests
 * [ ] /ark/NAME/files[/PATH]
     * [ ] folder 
         * [ ] GET = folder metadata and file/folder list
         * [ ] POST = edit folder metadata
         * [ ] DELETE = delete this folder and all its content
+        * [ ] pytests
     * [ ] file 
         * [ ] GET = file metadata
         * [ ] POST = edit file metadata
         * [ ] PUT = create/update file content
         * [ ] DELETE = delete the file
+        * [ ] pytests
 * [ ] /ark/NAME/rev = revisions in this archive
     * [ ] GET = list of revisions and basic metadata
+    * [ ] pytests
 * [ ] /ark/NAME/rev/N = metadata about this particular revision
     * [ ] GET = get the revision metadata
     * [ ] POST = edit the revision metadata
+    * [ ] pytests
 * [ ] /svn[/*] = proxy requests for the subversion server itself
 * [ ] /auth = OAuth2 authorization endpoints
 * [ ] /docs = API documentation (e.g., Swagger)
+* [ ] pytests

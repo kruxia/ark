@@ -4,6 +4,7 @@ from starlette.applications import Starlette
 from starlette.routing import Route
 from api.endpoints.index import Index
 from api.endpoints.health import Health
+from api.endpoints.ark import ArkParent
 
 
 async def app_startup():
@@ -18,6 +19,7 @@ async def app_shutdown():
 routes = [
     Route('/', endpoint=Index),
     Route('/health', endpoint=Health),
+    Route('/ark', endpoint=ArkParent),
 ]
 
 
