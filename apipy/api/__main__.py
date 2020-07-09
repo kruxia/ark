@@ -6,7 +6,7 @@ import os
 from dataclasses import asdict
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
-from .models import StatusMessage, HealthStatus
+from .models import Status, HealthStatus
 
 
 app = FastAPI()
@@ -25,7 +25,7 @@ async def shutdown():
 
 @app.get('/', response_class=ORJSONResponse)
 async def index():
-    return asdict(StatusMessage(status=200, message='Welcome to the Ark API'))
+    return asdict(Status(code=200, message='Welcome to the Ark API'))
 
 
 @app.get('/health', response_class=ORJSONResponse)
@@ -43,10 +43,10 @@ async def health():
 async def archive_files_health():
     archive_files = os.getenv('ARCHIVE_FILES')
     if os.path.isdir(archive_files):
-        return StatusMessage(status=200, message="OK")
+        return Status(code=200, message="OK")
     else:
-        return StatusMessage(
-            status=502, message=f"ARCHIVE_FILES not found: {archive_files}"
+        return Status(
+            code=502, message=f"ARCHIVE_FILES not found: {archive_files}"
         )
 
 
@@ -55,7 +55,7 @@ async def archive_server_health():
         response = await client.get(os.getenv('ARCHIVE_SERVER'))
         code = response.status_code
         message = http.client.responses.get(code, '')
-    return StatusMessage(status=code, message=message)
+    return Status(code=code, message=message)
 
 
 async def database_health():
@@ -66,4 +66,4 @@ async def database_health():
     except Exception as err:
         code = 502
         message = f"{http.client.responses[code]}: {err}"
-    return StatusMessage(status=code, message=message)
+    return Status(code=code, message=message)

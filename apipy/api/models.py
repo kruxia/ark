@@ -2,13 +2,13 @@ from pydantic.dataclasses import dataclass
 
 
 @dataclass
-class StatusMessage:
-    status: int
+class Status:
+    code: int
     message: str
 
 
 @dataclass
 class HealthStatus:
-    files: StatusMessage
-    archive: StatusMessage
-    database: StatusMessage
+    files: Status
+    archive: Status
+    database: Status
