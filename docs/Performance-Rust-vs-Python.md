@@ -81,6 +81,16 @@ Transfer/sec:    324.87KB
 ### /health
 
 ```bash
+wrk -c 100 -d 5 -t 5 http://127.0.0.1:8000/health
+Running 5s test @ http://127.0.0.1:8000/health
+  5 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.02s   555.05ms   1.95s    64.71%
+    Req/Sec    11.45      8.97    40.00     74.67%
+  122 requests in 5.08s, 29.31KB read
+  Socket errors: connect 0, read 0, write 0, timeout 71
+Requests/sec:     24.03
+Transfer/sec:      5.77KB
 ```
 
 ## Python Release (gunicorn w/o reload)

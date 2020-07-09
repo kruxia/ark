@@ -2,7 +2,7 @@ import json
 import os
 from codecs import open
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
