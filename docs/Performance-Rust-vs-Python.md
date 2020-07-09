@@ -1,9 +1,9 @@
 # Performance comparisons
 
-tldr; Rust/Actix --release is 2x—10x faster than Python/Starlette w/o --reload. That
-seems like a very reasonable tradeoff for significantly faster development time. Python
-becomes an excellet prototyping environment, and we can move to Rust if and when
-performance demands.
+tldr; **Rust/Actix** --release **is 2x—10x faster than Python/Starlette** w/o --reload.
+That seems like a very reasonable tradeoff for significantly faster development time
+(10x—50x faster). Python becomes an excellent prototyping environment, and we can move
+to Rust if and when performance demands.
 
 ## Rust API (development w/cargo watch)
 

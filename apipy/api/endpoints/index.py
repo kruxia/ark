@@ -6,4 +6,6 @@ from starlette.endpoints import HTTPEndpoint
 
 class Index(HTTPEndpoint):
     async def get(self, request):
-        return ORJSONResponse(asdict(Status(code=200, message='Welcome to the Ark API')))
+        return ORJSONResponse(
+            asdict(Status(code=200, message='Welcome to the Ark API'))
+        )

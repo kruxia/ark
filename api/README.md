@@ -5,15 +5,19 @@ API = /api/v1
 * [x] / = 200 OK + welcome message [2020-07-03]
     * [x] GET => StatusMessage
     * [x] test
+    * [x] python
+    * [ ] pytest
 * [x] /health = healthcheck on all system components [2020-07-04]
     * [x] filestorage — ARCHIVE_FILES
     * [x] SVN server – ARCHIVE_SERVER
     * [x] PostgreSQL database – DATABASE_URL
     * [x] all at the same time (`futures::join!`)
     * [x] tests
+    * [x] python
+    * [ ] pytest
 * [ ] /ark = archive parent 
     * [ ] GET = list of archives and their (basic?) metadata
-    * [ ] POST = create new archive
+    * [ ] POST = create new archive — takes a name parameter in a JSON body
 * [ ] /ark/NAME = single archive
     * [ ] GET = archive (complete?) metadata
     * [ ] POST = edit archive metadata
