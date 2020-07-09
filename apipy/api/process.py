@@ -8,5 +8,5 @@ async def run_command(*args):
     )
     # Wait for the subprocess to finish
     stdout, stderr = await process.communicate()
-    # Return stdout
+    # Return stdout, stderr (both bytes)
     return {'output': stdout, 'error': stderr}

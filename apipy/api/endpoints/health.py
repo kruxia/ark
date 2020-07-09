@@ -2,7 +2,6 @@ import os
 import asyncio
 import http.client
 import httpx
-from dataclasses import asdict
 from api.models import Status, HealthStatus
 from api.responses import ORJSONResponse
 from starlette.endpoints import HTTPEndpoint
@@ -16,11 +15,9 @@ class Health(HTTPEndpoint):
             database_health(request.app.database),
         )
         return ORJSONResponse(
-            asdict(
-                HealthStatus(
-                    files=files_status, archive=archive_status, database=database_status
-                )
-            )
+            HealthStatus(
+                files=files_status, archive=archive_status, database=database_status
+            ).dict()
         )
 
 

@@ -1,14 +1,12 @@
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class Status:
+class Status(BaseModel):
     code: int
     message: str
 
 
-@dataclass
-class HealthStatus:
+class HealthStatus(BaseModel):
     files: Status
     archive: Status
     database: Status
