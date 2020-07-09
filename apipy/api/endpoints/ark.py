@@ -1,10 +1,9 @@
 import os
 import http.client
 import httpx
-import subprocess
 from lxml import etree
 from starlette.endpoints import HTTPEndpoint
-from api.models import RepositoryInfo
+from api.models import RepositoryInfo, Status
 from api.process import run_command
 from api.responses import ORJSONResponse
 
@@ -25,10 +24,10 @@ class ArkParent(HTTPEndpoint):
             response = await client.get(archive_server)
         if response.status_code != 200:
             return ORJSONResponse(
-                {
-                    'code': response.status_code,
-                    'message': http.client.responses[response.status_code],
-                },
+                Status(
+                    code=response.status_code,
+                    message=http.client.responses[response.status_code],
+                ).dict(),
                 status_code=response.status_code,
             )
 
@@ -60,7 +59,7 @@ class ArkParent(HTTPEndpoint):
             repo_name = data['name']
         except Exception:
             return ORJSONResponse(
-                {'code': 400, 'message': 'invalid input'}, status_code=400
+                Status(code=400, message='invalid input').dict(), status_code=400,
             )
 
         path = os.getenv('ARCHIVE_FILES') + '/' + repo_name
@@ -68,12 +67,15 @@ class ArkParent(HTTPEndpoint):
         result = await run_command(*cmd)
         if b'is an existing repository' in result['error']:
             return ORJSONResponse(
-                {'code': 409, 'message': f"'{repo_name}' is an existing repository"},
+                Status(
+                    code=409, message=f"'{repo_name}' is an existing repository",
+                ).dict(),
                 status_code=409,
             )
         else:
             return ORJSONResponse(
-                {'code': 201, 'message': f"Created: '{data['name']}'"}, status_code=201
+                Status(code=201, message=f"Created: '{data['name']}'").dict(),
+                status_code=201,
             )
 
 
@@ -92,7 +94,9 @@ class ArkRepo(HTTPEndpoint):
         cmd = ['svn', 'info', '--xml'] + [f"{archive_server}/{name}"]
         result = await run_command(*cmd)
         if bool(result['error']) is True:
-            return ORJSONResponse({'code': 404, 'message': 'NOT FOUND'}, status_code=404)
+            return ORJSONResponse(
+                Status(code=404, message='NOT FOUND').dict(), status_code=404
+            )
         else:
             xml = etree.fromstring(result['output'])
             entry = xml.xpath('/info/entry')[0]
@@ -106,10 +110,21 @@ class ArkRepo(HTTPEndpoint):
         name = request.path_params['name']
         path = f"{os.getenv('ARCHIVE_FILES')}/{name}"
         if not os.path.exists(path):
-            response = ORJSONResponse({'code': 404, 'message': 'NOT FOUND'}, status_code=404)
+            response = ORJSONResponse(
+                Status(code=404, message='NOT FOUND').dict(), status_code=404
+            )
         else:
             cmd = ['rm', '-rf', path]
-            subprocess.check_output(cmd)
-            response = ORJSONResponse({'code': 200, 'message': f"Deleted '{name}'"}, status_code=200)
+            result = await run_command(*cmd)
+            if bool(result['error']) is True:
+                response = ORJSONResponse(
+                    Status(code=500, message=result['error'].decode()).dict(),
+                    status_code=500,
+                )
+            else:
+                response = ORJSONResponse(
+                    Status(code=200, message=f"Deleted '{name}'").dict(),
+                    status_code=200,
+                )
 
         return response
