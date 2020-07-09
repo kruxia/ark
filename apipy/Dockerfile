@@ -1,3 +1,4 @@
+# development Dockerfile
 FROM python:3.8-slim-buster
 LABEL maintainer="Sean Harrison <sah@kruxia.com>"
 
@@ -18,8 +19,8 @@ RUN apt-get update \
 
 WORKDIR /var/api
 
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+COPY req/ req/
+RUN pip install -r req/dev.txt
 
 COPY ./ ./
 RUN pip install -e .
@@ -33,4 +34,4 @@ RUN userdel _apt \
 EXPOSE 8000
 
 # for this development image, use uvicorn --reload
-CMD ["uvicorn", "api.__main__:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
