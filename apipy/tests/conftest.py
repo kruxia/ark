@@ -20,20 +20,25 @@ class TestClient:
         return requests.delete(f"{self.HOST}:{self.PORT}{url}", *args, **kwargs)
 
 
-app = subprocess.Popen(
-    ['uvicorn', '--host', '0.0.0.0', '--port', f'{TestClient.PORT}', 'api.main:app'],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-)
-line = app.stderr.readline()
-while b'Uvicorn running' not in line:
+def launch_subprocess_app():
+    cmd = (
+        ['uvicorn']
+        + ['--host', '0.0.0.0', '--port', f'{TestClient.PORT}']
+        + ['api.main:app']
+    )
+    app = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     line = app.stderr.readline()
+    while b'Uvicorn running' not in line:
+        line = app.stderr.readline()
+    return app
 
 
 @pytest.fixture(scope="session")
 def setup():
+    app = launch_subprocess_app()
     yield
-    app.terminate()
+    app.kill()
+    app.communicate()  # wait for it to exit
 
 
 @pytest.fixture()
