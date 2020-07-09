@@ -19,6 +19,7 @@ class RepositoryInfo(BaseModel):
     uuid: UUID
     rev: int
     date: datetime
+    author: str = None
 
     @classmethod
     def from_entry(cls, entry):
@@ -30,4 +31,5 @@ class RepositoryInfo(BaseModel):
             uuid=next(iter(entry.xpath('repository/uuid/text()')), None),
             rev=int(next(iter(entry.xpath('commit/@revision')), -1)),
             date=next(iter(entry.xpath('commit/date/text()')), None),
+            author=next(iter(entry.xpath('commit/author/text()')), None),
         )

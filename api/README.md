@@ -19,11 +19,11 @@ API = /api/v1
     * [x] python
         * [x] port
         * [x] pytest
-* [ ] /ark = archive parent
-    * [ ] python
+* [x] /ark = archive parent
+    * [x] python
         * [x] GET = list of archives and their (basic?) metadata
         * [x] POST = create new archive — takes a name parameter in a JSON body
-        * [ ] pytests
+        * [x] pytests
 * [ ] /ark/NAME = single archive
     * [ ] python
         * [ ] GET = archive (complete?) metadata
