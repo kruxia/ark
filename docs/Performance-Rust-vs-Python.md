@@ -62,7 +62,7 @@ Requests/sec:    221.31
 Transfer/sec:     49.49KB
 ```
 
-## Python (FastAPI w/Uvicorn --reload)
+## Python (Starlette w/Uvicorn --reload)
 
 ### /
 
@@ -71,11 +71,11 @@ wrk -c 100 -d 5 -t 5 http://127.0.0.1:8000
 Running 5s test @ http://127.0.0.1:8000
   5 threads and 100 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    51.87ms    8.22ms  94.91ms   71.75%
-    Req/Sec   385.16     64.08   600.00     74.40%
-  9659 requests in 5.05s, 1.60MB read
-Requests/sec:   1911.87
-Transfer/sec:    324.87KB
+    Latency    42.37ms   20.31ms 183.24ms   77.71%
+    Req/Sec   484.21    149.12   800.00     67.34%
+  12004 requests in 5.02s, 1.97MB read
+Requests/sec:   2391.58
+Transfer/sec:    401.71KB
 ```
 
 ### /health
@@ -85,23 +85,42 @@ wrk -c 100 -d 5 -t 5 http://127.0.0.1:8000/health
 Running 5s test @ http://127.0.0.1:8000/health
   5 threads and 100 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.02s   555.05ms   1.95s    64.71%
-    Req/Sec    11.45      8.97    40.00     74.67%
-  122 requests in 5.08s, 29.31KB read
-  Socket errors: connect 0, read 0, write 0, timeout 71
-Requests/sec:     24.03
-Transfer/sec:      5.77KB
+    Latency     1.30s   482.05ms   1.90s    53.49%
+    Req/Sec     9.67      8.12    40.00     70.83%
+  117 requests in 5.07s, 27.42KB read
+  Socket errors: connect 0, read 0, write 0, timeout 74
+Requests/sec:     23.08
+Transfer/sec:      5.41KB
 ```
 
-## Python Release (gunicorn w/o reload)
+## Python Release (uvicorn w/o reload)
 
 ### /
 
 ```bash
+wrk -c 100 -d 5 -t 5 http://127.0.0.1:8000
+Running 5s test @ http://127.0.0.1:8000
+  5 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    36.11ms   15.05ms 149.87ms   75.89%
+    Req/Sec   561.44    151.93     0.92k    68.27%
+  13985 requests in 5.02s, 2.29MB read
+Requests/sec:   2784.34
+Transfer/sec:    467.68KB
 ```
 
 ### /health
 
 ```bash
+wrk -c 100 -d 5 -t 5 http://127.0.0.1:8000/health
+Running 5s test @ http://127.0.0.1:8000/health
+  5 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.04s   455.63ms   1.96s    48.33%
+    Req/Sec     9.86      7.32    30.00     72.92%
+  152 requests in 5.08s, 35.62KB read
+  Socket errors: connect 0, read 0, write 0, timeout 92
+Requests/sec:     29.90
+Transfer/sec:      7.01KB
 ```
 
