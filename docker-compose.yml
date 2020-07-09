@@ -20,8 +20,9 @@ services:
       - pgdata:/var/lib/postgres/data
 
   api:
-    build: ./api
     # image: kruxia/ark-api
+    # build: ./api
+    build: ./apipy
     depends_on:
       - postgres
       - svn
@@ -35,7 +36,8 @@ services:
     volumes:
       - svndata:/var/svn
       - /var/api/target
-      - ./api:/var/api
+      # - ./api:/var/api
+      - ./apipy:/var/api
 
 volumes:
   pgdata:

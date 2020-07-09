@@ -62,7 +62,28 @@ Requests/sec:    221.31
 Transfer/sec:     49.49KB
 ```
 
-## Python (FastAPI)
+## Python (FastAPI w/Uvicorn --reload)
+
+### /
+
+```bash
+wrk -c 100 -d 5 -t 5 http://127.0.0.1:8000
+Running 5s test @ http://127.0.0.1:8000
+  5 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    51.87ms    8.22ms  94.91ms   71.75%
+    Req/Sec   385.16     64.08   600.00     74.40%
+  9659 requests in 5.05s, 1.60MB read
+Requests/sec:   1911.87
+Transfer/sec:    324.87KB
+```
+
+### /health
+
+```bash
+```
+
+## Python Release (gunicorn w/o reload)
 
 ### /
 
@@ -73,3 +94,4 @@ Transfer/sec:     49.49KB
 
 ```bash
 ```
+
