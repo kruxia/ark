@@ -71,11 +71,22 @@ API = /api/v1
     - [x] delete the file/folder/repo and all its content, return 200 with result
     - [x] 404 if not found
     - [ ] pytest
-* [ ] /svn[/*] = proxy all requests for the subversion server itself 
+* [ ] /auth = OAuth2 authorization endpoints
+  - See: <https://docs.authlib.org/en/latest/client/starlette.html> and
+    <https://gitlab.com/jorgecarleitao/starlette-oauth2-api>
+  - [ ] implement
+  - [ ] pytest
+* [ ] /docs = API documentation (e.g., Swagger)
+  - See: <https://github.com/Woile/starlette-apispec> and
+    <https://gitlab.com/jorgecarleitao/starlette-oauth2-api>
+  - [ ] implement
+  - [ ] document existing endpoints
+  - [ ] pytest?
+* [ ] /svn[/*] = proxy all requests for the subversion server itself
   - accept and proxy all svn HTTP methods
   - [NOTE: This is a good candidate for Rust because it has to be fast and streaming. We
     have to do authentication and authorization before completing the request, which is
     why it has to be proxied.]
-* [ ] /auth = OAuth2 authorization endpoints
-* [ ] /docs = API documentation (e.g., Swagger)
-* [ ] pytest
+  - [NOTE: vouch-proxy with nginx ngx_http_auth_request_module could provide this
+    service, but we are instead going to use our own API server for authn/authz]
+  - [ ] pytest
