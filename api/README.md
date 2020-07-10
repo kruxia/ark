@@ -60,16 +60,22 @@ API = /api/v1
     - [x] 400 if "propdel" in body
     - [ ] pytest
   * [ ] PUT `/ark/NAME[/PATH]` = 
-    - [ ] create/update this folder/file content (update folder has no effect)
-    - [ ] make directories down to the given path
+    - [x] PATH must be non-empty — cannot PUT to repository root (instead, POST to /ark)
+    - [x] create/update this folder/file content 
+    - [x] new w/empty body => svn mkdir, non-empty body => svnmucc put
+    - [x] mkdir: make directories down to the given path
+    - [x] update existing folder w/body makes it a file (replacing it and all children)
+    - [x] update w/o body raises conflict
     - [ ] pytest
   * [ ] DELETE `/ark/NAME[/PATH]` = 
-    - [ ] delete the file/folder/repo and all its content
-    * [ ] pytest
-* [ ] /svn[/*] = proxy all requests for the subversion server itself [NOTE: This is a
-  good candidate for Rust because it has to be fast and streaming. We have to do
-  authentication and authorization before completing the request, which is why it has to
-  be proxied.]
+    - [ ] delete the file/folder/repo and all its content, return 204 NO CONTENT
+    - [ ] 404 if not found
+    - [ ] pytest
+* [ ] /svn[/*] = proxy all requests for the subversion server itself 
+  - accept and proxy all svn HTTP methods
+  - [NOTE: This is a good candidate for Rust because it has to be fast and streaming. We
+    have to do authentication and authorization before completing the request, which is
+    why it has to be proxied.]
 * [ ] /auth = OAuth2 authorization endpoints
 * [ ] /docs = API documentation (e.g., Swagger)
 * [ ] pytest

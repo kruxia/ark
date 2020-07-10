@@ -85,8 +85,23 @@ class ArkPath(HTTPEndpoint):
         """
         Create or update a file at path, if the parent is a directory and exists.
         """
+        if not request.path_params.get('path'):
+            result = Status(
+                **{
+                    'code': 409,
+                    'message': "It’s meaningless to PUT to the archive root",
+                }
+            ).dict()
+
+        else:
+            body = await request.body()
+            url = request_url(request)
+            message = request.query_params.get('message')
+            result = await svn.put(url, body=body, message=message)
+
         return ORJSONResponse(
-            Status(code=501, message="NOT IMPLEMENTED").dict(), status_code=501
+            result,
+            status_code=result.get('code') or (409 if result.get('error') else 201),
         )
 
     async def delete(self, request):

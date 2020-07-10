@@ -1,3 +1,6 @@
+import os
+import re
+import tempfile
 from lxml import etree
 from api import models
 from api import process
@@ -146,5 +149,24 @@ async def propset(url, data):
 
         else:
             result = {'error': '', 'output': 'No change'}
+
+    return result
+
+
+async def put(url, body=None, message=None):
+    message = message or 'PUT ' + re.sub(f"^{os.getenv('ARCHIVE_SERVER')}", "", url)
+
+    if not body:
+        # directory
+        cmd = ['svn', 'mkdir', '--parents', '--message', message, url]
+        result = await process.run_command(*cmd)
+
+    else:
+        # file from body
+        with tempfile.NamedTemporaryFile() as tf:
+            tf.write(body)
+            tf.seek(0)
+            cmd = ['svnmucc', '--message', message, 'put', tf.name, url]
+            result = await process.run_command(*cmd)
 
     return result
