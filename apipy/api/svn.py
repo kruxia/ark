@@ -9,7 +9,8 @@ async def info(*urls):
     if bool(result['error']) is False:
         xml = etree.fromstring(result['output'])
         result['data'] = [
-            models.Info.from_entry(entry).dict() for entry in xml.xpath("/info/entry")
+            models.Info.from_info_entry(entry).dict()
+            for entry in xml.xpath('/info/entry')
         ]
     return result
 
@@ -28,12 +29,12 @@ async def proplist(url):
 
 async def list_files(url):
     url = url.rstrip('/')
-    cmd = ["svn", "list", "--xml", url]
+    cmd = ['svn', 'list', '--xml', url]
     result = await process.run_command(*cmd)
     if bool(result['error']) is False:
         xml = etree.fromstring(result['output'])
         result['data'] = [
-            models.ListItem.from_entry(entry).dict()
+            models.Info.from_list_entry(entry).dict()
             for entry in xml.xpath(f'/lists/list[@path="{url}"]/entry')
         ]
     return result
