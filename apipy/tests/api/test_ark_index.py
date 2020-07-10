@@ -50,7 +50,7 @@ def test_ark_get_ok(client):
     test_data = [
         entry
         for entry in response.json()
-        if entry.get('name').startswith(ARK_TEST_PREFIX)
+        if entry.get('path').get('name').startswith(ARK_TEST_PREFIX)
     ]
     assert response.status_code == 200
     assert test_data == []
@@ -65,15 +65,15 @@ def test_ark_get_ok(client):
     test_data = [
         entry
         for entry in response.json()
-        if entry.get('name').startswith(ARK_TEST_PREFIX)
+        if entry.get('path').get('name').startswith(ARK_TEST_PREFIX)
     ]
     assert response.status_code == 200
     assert len(test_data) == 1
     repo_info = Info(**test_data[0])
-    assert repo_info.name == f'{ARK_TEST_PREFIX}01'
-    assert repo_info.rev == 0
-    assert isinstance(repo_info.uuid, UUID)
-    assert isinstance(repo_info.date, datetime)
+    assert repo_info.path.name == f'{ARK_TEST_PREFIX}01'
+    assert repo_info.version.rev == 0
+    assert isinstance(repo_info.version.date, datetime)
+    assert isinstance(repo_info.archive.uuid, UUID)
 
     teardown()
 
