@@ -68,8 +68,8 @@ API = /api/v1
     - [x] update w/o body raises conflict
     - [ ] pytest
   * [ ] DELETE `/ark/NAME[/PATH]` = 
-    - [ ] delete the file/folder/repo and all its content, return 204 NO CONTENT
-    - [ ] 404 if not found
+    - [x] delete the file/folder/repo and all its content, return 200 with result
+    - [x] 404 if not found
     - [ ] pytest
 * [ ] /svn[/*] = proxy all requests for the subversion server itself 
   - accept and proxy all svn HTTP methods

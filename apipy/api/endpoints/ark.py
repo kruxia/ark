@@ -67,7 +67,7 @@ class ArkParent(HTTPEndpoint):
         path = os.getenv('ARCHIVE_FILES') + '/' + repo_name
         cmd = ['svnadmin', 'create', path]
         result = await run_command(*cmd, preexec_fn=as_user(100, 101))  # as apache u/g
-        if b'is an existing repository' in result['error']:
+        if 'is an existing repository' in result['error']:
             return ORJSONResponse(
                 Status(
                     code=409, message=f"'{repo_name}' is an existing repository",
