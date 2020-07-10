@@ -1,7 +1,7 @@
 import asyncio
 import os
 from starlette.endpoints import HTTPEndpoint
-from api.responses import ORJSONResponse
+from api.responses import JSONResponse
 from api.models import Status
 from api import svn
 
@@ -53,10 +53,10 @@ class ArkPath(HTTPEndpoint):
             result['files'] = files['data'] if 'data' in files else []
 
         if result:
-            response = ORJSONResponse(result)
+            response = JSONResponse(result)
         else:
-            result = Status(code=404, message='NOT FOUND').dict()
-            response = ORJSONResponse(result, status_code=404)
+            result = Status(code=404, message='NOT FOUND')
+            response = JSONResponse(result, status_code=404)
 
         return response
 
@@ -72,14 +72,14 @@ class ArkPath(HTTPEndpoint):
             data = await request.json()
             assert isinstance(data, dict)
         except Exception:
-            result = Status(code=400, message="Invalid JSON body").dict()
+            result = Status(code=400, message="Invalid JSON body")
 
         url = request_url(request)
         result = await svn.propset(url, data)
         if result.get('error'):
-            result = Status(code=400, message=result['error']).dict()
+            result = Status(code=400, message=result['error'])
 
-        return ORJSONResponse(result, status_code=result.get('code', 200))
+        return JSONResponse(result, status_code=result.get('code', 200))
 
     async def put(self, request):
         """
@@ -104,7 +104,7 @@ class ArkPath(HTTPEndpoint):
             }
             result = await svn.put(url, body=body, message=message, revprops=revprops)
 
-        return ORJSONResponse(
+        return JSONResponse(
             result,
             status_code=result.get('code') or (409 if result.get('error') else 201),
         )
@@ -128,4 +128,4 @@ class ArkPath(HTTPEndpoint):
             # delete file or folder
             result = await svn.remove(url, message=message, revprops=revprops)
 
-        return ORJSONResponse(result, status_code=404 if result['error'] else 200)
+        return JSONResponse(result, status_code=404 if result['error'] else 200)
