@@ -2,7 +2,7 @@ import os
 import subprocess
 from uuid import UUID
 from datetime import datetime
-from api.models import RepositoryInfo
+from api.models import Info
 
 ARK_TEST_PREFIX = '__ARK_TEST.'
 
@@ -69,7 +69,7 @@ def test_ark_get_ok(client):
     ]
     assert response.status_code == 200
     assert len(test_data) == 1
-    repo_info = RepositoryInfo(**test_data[0])
+    repo_info = Info(**test_data[0])
     assert repo_info.name == f'{ARK_TEST_PREFIX}01'
     assert repo_info.rev == 0
     assert isinstance(repo_info.uuid, UUID)

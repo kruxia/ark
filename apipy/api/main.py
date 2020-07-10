@@ -5,6 +5,7 @@ from starlette.routing import Route
 from api.endpoints.index import Index
 from api.endpoints.health import Health
 from api.endpoints.ark import ArkParent, ArkRepo
+from api.endpoints.ark_files import ArkFiles
 
 
 async def app_startup():
@@ -21,6 +22,7 @@ routes = [
     Route('/health', endpoint=Health),
     Route('/ark', endpoint=ArkParent),
     Route('/ark/{name}', endpoint=ArkRepo),
+    Route('/ark/{name}/files/{path:path}', endpoint=ArkFiles),
 ]
 
 

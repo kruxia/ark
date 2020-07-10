@@ -3,9 +3,10 @@ import http.client
 import httpx
 from lxml import etree
 from starlette.endpoints import HTTPEndpoint
-from api.models import RepositoryInfo, Status
-from api.process import run_command
+from api.models import Status
+from api.process import run_command, as_user
 from api.responses import ORJSONResponse
+from api import svn
 
 
 class ArkParent(HTTPEndpoint):
@@ -39,13 +40,8 @@ class ArkParent(HTTPEndpoint):
         ]
         if len(repository_urls) > 0:
             # get the svn info for all listed repositories
-            cmd = ['svn', 'info', '--xml'] + repository_urls
-            result = await run_command(*cmd)
-            xml = etree.fromstring(result['output'])
-            data = [
-                RepositoryInfo.from_entry(entry).dict()
-                for entry in xml.xpath("/info/entry")
-            ]
+            result = await svn.info(*repository_urls)
+            data = result['data']
         else:
             data = []
         return ORJSONResponse(data)
@@ -64,7 +60,7 @@ class ArkParent(HTTPEndpoint):
 
         path = os.getenv('ARCHIVE_FILES') + '/' + repo_name
         cmd = ['svnadmin', 'create', path]
-        result = await run_command(*cmd)
+        result = await run_command(*cmd, preexec_fn=as_user(100, 101))  # as apache u/g
         if b'is an existing repository' in result['error']:
             return ORJSONResponse(
                 Status(
@@ -91,16 +87,13 @@ class ArkRepo(HTTPEndpoint):
         """
         archive_server = os.getenv('ARCHIVE_SERVER')
         name = request.path_params['name']
-        cmd = ['svn', 'info', '--xml'] + [f"{archive_server}/{name}"]
-        result = await run_command(*cmd)
+        result = await svn.info(f"{archive_server}/{name}")
         if bool(result['error']) is True:
             return ORJSONResponse(
                 Status(code=404, message='NOT FOUND').dict(), status_code=404
             )
         else:
-            xml = etree.fromstring(result['output'])
-            entry = xml.xpath('/info/entry')[0]
-            info = RepositoryInfo.from_entry(entry).dict()
+            info = result['data'][0]
             return ORJSONResponse(info, status_code=200)
 
     async def delete(self, request):
