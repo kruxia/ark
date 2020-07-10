@@ -1,17 +1,18 @@
 # development Dockerfile
-FROM python:3.8-slim-buster
+FROM debian:bullseye-slim
 LABEL maintainer="Sean Harrison <sah@kruxia.com>"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
         # run tools
+        python3.8 \ 
+        python3-pip \
         subversion \
         # build tools
         curl \
         # development tools
         nano \
         postgresql-client \
-        ipython \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
