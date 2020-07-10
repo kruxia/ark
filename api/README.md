@@ -43,15 +43,22 @@ API = /api/v1
     * [ ] GET `?rev=N:M` = range of revisions on this archive/path
       - [x] log on the path at the given revisions
       - [ ] pytest
-    * [ ] POST = edit this file/folder properties (versioned properties only allowed)
-    * [ ] POST `?rev=N` = 
-      - [ ] edit the revision properties (editing versioned properties not allowed)
+    * [ ] POST = 
+      - [ ] edit this file/folder properties (versioned properties only allowed)
+      - [ ] 400 if revprops in body
       - [ ] pytest
-    * [ ] PUT = create/update this folder/file content (update folder has no effect)
-    * [ ] DELETE = delete the file/folder/repo and all its content
-    * [ ] pytest
-  * [ ] /ark/NAME[/PATH]?rev=N = single revision on this archive/path
-  * [ ] /ark/NAME[/PATH]?rev=N:M = range of revisions at this archive/path
+    * [ ] POST `?rev=N` = single revision (multiple revisions not allowed)
+      - [ ] edit the revision properties (editing versioned properties not allowed)
+      - [ ] 400 if multiple revisions
+      - [ ] 400 if versioned properties (props) in body
+      - [ ] pytest
+    * [ ] PUT = 
+      - [ ] create/update this folder/file content (update folder has no effect)
+      - [ ] make directories down to the given path
+      - [ ] pytest
+    * [ ] DELETE = 
+      - [ ] delete the file/folder/repo and all its content
+      * [ ] pytest
 * [ ] /svn[/*] = proxy all requests for the subversion server itself [NOTE: This is a
   good candidate for Rust because it has to be fast and streaming. We have to do
   authentication and authorization before completing the request, which is why it has to
