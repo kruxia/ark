@@ -1,12 +1,10 @@
 # development Dockerfile
-FROM debian:bullseye-slim
+FROM python:3.8-slim-buster
 LABEL maintainer="Sean Harrison <sah@kruxia.com>"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
         # run tools
-        python3.8 \ 
-        python3-pip \
         subversion \
         # build tools
         curl \
