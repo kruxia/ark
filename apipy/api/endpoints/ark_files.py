@@ -25,30 +25,31 @@ class ArkFiles(HTTPEndpoint):
         ).rstrip('/')
 
         kw = {}
-        result = {}
         if 'rev' in request.query_params:
             kw['rev'] = request.query_params['rev']
 
         info = await svn.info(url, **kw)
-        if 'data' in info:
-            props = await svn.proplist(url, **kw)
-            result['info'] = next(iter(info['data']), {})
-            result['props'] = props['data'] if 'data' in props else {}
+        if not info['error']:
+            result = {}
+            if 'data' in info:
+                props = await svn.props(url, **kw)
+                result['info'] = next(iter(info['data']), {})
+                result['props'] = props['data'] if 'data' in props else {}
 
-        if 'rev' in kw:
-            revprops, log = await asyncio.gather(
-                svn.revproplist(url, **kw), svn.log(url, **kw)
-            )
-            if 'data' in revprops:
-                result['revprops'] = revprops['data']
-            result['log'] = log['data'] if 'data' in log else []
+            if 'rev' in kw:
+                revprops, log = await asyncio.gather(
+                    svn.revprops(url, **kw), svn.log(url, **kw)
+                )
+                if 'data' in revprops:
+                    result['revprops'] = revprops['data']
+                result['log'] = log['data'] if 'data' in log else []
 
-        if result.get('info', {}).get('kind') == 'dir':
-            files = await svn.list_files(url, **kw)
-            result['files'] = files['data'] if 'data' in files else []
+            if result.get('info', {}).get('kind') == 'dir':
+                files = await svn.list_files(url, **kw)
+                result['files'] = files['data'] if 'data' in files else []
 
-        if result:
             response = ORJSONResponse(result)
+
         else:
             result = Status(code=404, message='NOT FOUND').dict()
             response = ORJSONResponse(result, status_code=404)

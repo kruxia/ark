@@ -19,7 +19,7 @@ async def info(*urls, rev='HEAD'):
     return result
 
 
-async def proplist(url, rev='HEAD'):
+async def props(url, rev='HEAD'):
     # `svn proplist` cannot take a revision range
     if ':' in rev:
         result = {'error': f'Revision range not allowed: rev={rev}'}
@@ -35,7 +35,7 @@ async def proplist(url, rev='HEAD'):
     return result
 
 
-async def revproplist(url, rev='HEAD'):
+async def revprops(url, rev='HEAD'):
     cmd = ['svn', 'proplist', '--revprop', '--revision', rev, '--xml', '--verbose', url]
     result = await process.run_command(*cmd)
     if not result['error']:
