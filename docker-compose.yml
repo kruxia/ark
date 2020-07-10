@@ -30,6 +30,7 @@ services:
     environment:
       ARCHIVE_FILES: /var/svn
       ARCHIVE_SERVER: http://svn
+      ARCHIVE_URL: http://localhost:7000
       DATABASE_NAME: ark
       DATABASE_URL: postgres://ark:ark@postgres:5432/${DATABASE_NAME}
     ports:
