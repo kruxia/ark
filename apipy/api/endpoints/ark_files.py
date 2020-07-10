@@ -6,7 +6,7 @@ from api.models import Status
 from api import svn
 
 
-class ArkFiles(HTTPEndpoint):
+class ArkPath(HTTPEndpoint):
     """
     Handle requests to /ark/NAME/files/PATH, where NAME is a repository name and PATH is
     a file path within the repository. If PATH is empty, then it is "/"
@@ -44,7 +44,7 @@ class ArkFiles(HTTPEndpoint):
                     result['revprops'] = revprops['data']
                 result['log'] = log['data'] if 'data' in log else []
 
-            if result.get('info', {}).get('kind') == 'dir':
+            if result.get('info', {}).get('path', {}).get('kind') == 'dir':
                 files = await svn.list_files(url, **kw)
                 result['files'] = files['data'] if 'data' in files else []
 
@@ -74,7 +74,7 @@ class ArkFiles(HTTPEndpoint):
 
     async def delete(self, request):
         """
-        Delete the file or directory at path
+        Delete the archive, file, or directory at path
         """
         return ORJSONResponse(
             Status(code=501, message="NOT IMPLEMENTED").dict(), status_code=501

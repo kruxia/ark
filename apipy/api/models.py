@@ -3,6 +3,7 @@ import re
 import typing
 from datetime import datetime
 from pydantic import BaseModel
+from uuid import UUID
 
 # from uuid import UUID
 
@@ -24,18 +25,99 @@ class ProcessOutput(BaseModel):
     data: dict = None
 
 
+# == Info ==
+
+
+class ArchiveInfo(BaseModel):
+    """
+    Info about a given archive itself
+    """
+
+    root: str
+    uuid: UUID
+
+    @classmethod
+    def from_info(cls, entry):
+        return cls(
+            root=re.sub(
+                f"^{os.getenv('ARCHIVE_SERVER')}",
+                os.getenv('ARCHIVE_URL'),
+                entry.find('repository/root').text,
+            ),
+            uuid=entry.find('repository/uuid').text,
+        )
+
+
+class PathInfo(BaseModel):
+    name: str
+    kind: str
+    url: str = None
+    size: int = None
+
+    @classmethod
+    def from_info(cls, entry):
+        return cls(
+            name=entry.get('path'),
+            kind=entry.get('kind'),
+            url=re.sub(
+                f"^{os.getenv('ARCHIVE_SERVER')}",
+                os.getenv('ARCHIVE_URL'),
+                entry.find('url').text,
+            ),
+            size=entry.get('size'),
+        )
+
+    @classmethod
+    def from_list(cls, entry):
+        return cls(
+            name=entry.find('name').text,
+            kind=entry.get('kind'),
+            url=re.sub(
+                f"^{os.getenv('ARCHIVE_SERVER')}",
+                os.getenv('ARCHIVE_URL'),
+                '/'.join(
+                    [
+                        # if the entry is disconnected from its context, URL is relative
+                        next(iter(entry.xpath('parent::list/@path')), '.'),
+                        entry.find('name').text,
+                    ]
+                ),
+            ),
+            size=next(iter(entry.xpath('size/text()')), None),
+        )
+
+
+class VersionInfo(BaseModel):
+    rev: int
+    date: datetime
+    author: str = None
+
+    @classmethod
+    def from_info(cls, entry):
+        return cls(
+            rev=entry.find('commit').get('revision'),
+            date=entry.find('commit/date').text,
+            author=next(iter(entry.xpath('commit/author/text()')), None),
+        )
+
+    from_list = from_info  # same structure
+
+
 class Info(BaseModel):
     """
     An item created from a `svn info --xml` entry
     """
 
-    name: str
-    kind: str
-    rev: int
-    date: datetime
-    url: str = None
-    author: str = None
-    size: int = None
+    path: PathInfo
+    version: VersionInfo
+    archive: ArchiveInfo = None
+
+    def dict(self, *args, **kwargs):
+        data = super().dict(*args, **kwargs)
+        # 'archive' is only filled from_info(), not from_list()
+        if not data['archive']:
+            data.pop('archive')
+        return data
 
     @classmethod
     def from_info(cls, entry):
@@ -43,17 +125,9 @@ class Info(BaseModel):
         Given an lxml.etree info entry element, return a Info object.
         """
         return cls(
-            name=entry.get('path'),
-            kind=entry.get('kind'),
-            rev=entry.xpath('commit/@revision')[0],
-            date=entry.xpath('commit/date/text()')[0],
-            url=re.sub(
-                f"^{os.getenv('ARCHIVE_SERVER')}",
-                os.getenv('ARCHIVE_URL'),
-                entry.xpath('url/text()')[0],
-            ),
-            author=next(iter(entry.xpath('commit/author/text()')), None),
-            size=entry.get('size'),
+            archive=ArchiveInfo.from_info(entry),
+            path=PathInfo.from_info(entry),
+            version=VersionInfo.from_info(entry),
         )
 
     @classmethod
@@ -62,23 +136,7 @@ class Info(BaseModel):
         Given an lxml.etree list entry element, return an Info object.
         """
         return cls(
-            name=entry.xpath('name')[0].text,
-            kind=entry.get('kind'),
-            rev=entry.xpath('commit/@revision')[0],
-            date=entry.xpath('commit/date/text()')[0],
-            url=re.sub(
-                f"^{os.getenv('ARCHIVE_SERVER')}",
-                os.getenv('ARCHIVE_URL'),
-                '/'.join(
-                    [
-                        # if the entry is disconnected from its context, URL is relative
-                        next(iter(entry.xpath('parent::list/@path')), '.'),
-                        entry.xpath('name')[0].text,
-                    ]
-                ),
-            ),
-            author=next(iter(entry.xpath('commit/author/text()')), None),
-            size=next(iter(entry.xpath('size/text()')), None),
+            path=PathInfo.from_list(entry), version=VersionInfo.from_list(entry),
         )
 
 
@@ -98,7 +156,7 @@ class LogPath(BaseModel):
             prop_mods=path.get('prop-mods'),
             text_mods=path.get('text-mods'),
         )
-    
+
 
 class LogEntry(BaseModel):
     rev: int
@@ -112,9 +170,5 @@ class LogEntry(BaseModel):
             rev=entry.get('revision'),
             date=entry.find('date').text,
             message=entry.find('msg').text,
-            paths=[
-                LogPath.from_path(path)
-                for path in 
-                entry.xpath('paths/path')
-            ]
+            paths=[LogPath.from_path(path) for path in entry.xpath('paths/path')],
         )

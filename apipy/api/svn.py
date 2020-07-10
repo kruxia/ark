@@ -43,7 +43,7 @@ async def revprops(url, rev='HEAD'):
         xml = etree.fromstring(result.pop('output').encode())
         result['data'] = {
             property.get('name'): property.text
-            for property in xml.xpath(f'/properties/revprops/property')
+            for property in xml.xpath('/properties/revprops/property')
         }
     return result
 
@@ -75,5 +75,3 @@ async def log(url, rev='HEAD'):
             for entry in xml.xpath('/log/logentry')
         ]
     return result
-
-
