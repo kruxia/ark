@@ -41,7 +41,7 @@ class ArkParent(HTTPEndpoint):
         if len(repository_urls) > 0:
             # get the svn info for all listed repositories
             result = await svn.info(*repository_urls)
-            data = result['data']
+            data = result.get('data', []) 
         else:
             data = []
         return ORJSONResponse(data)

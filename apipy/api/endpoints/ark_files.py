@@ -19,7 +19,7 @@ class ArkFiles(HTTPEndpoint):
             [
                 os.getenv('ARCHIVE_SERVER'),
                 request.path_params['name'],
-                request.path_params['path'],
+                request.path_params.get('path', ''),
             ]
         )
         result = await svn.info(url)
