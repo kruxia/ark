@@ -1,5 +1,6 @@
 import os
 import re
+import typing
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -17,6 +18,12 @@ class HealthStatus(BaseModel):
     database: Status
 
 
+class ProcessOutput(BaseModel):
+    output: str
+    error: str
+    data: dict = None
+
+
 class Info(BaseModel):
     """
     An item created from a `svn info --xml` entry
@@ -24,7 +31,6 @@ class Info(BaseModel):
 
     name: str
     kind: str
-    # uuid: UUID
     rev: int
     date: datetime
     url: str = None
@@ -32,14 +38,13 @@ class Info(BaseModel):
     size: int = None
 
     @classmethod
-    def from_info_entry(cls, entry):
+    def from_info(cls, entry):
         """
         Given an lxml.etree info entry element, return a Info object.
         """
         return cls(
             name=entry.get('path'),
             kind=entry.get('kind'),
-            # uuid=entry.xpath('repository/uuid/text()')[0],
             rev=entry.xpath('commit/@revision')[0],
             date=entry.xpath('commit/date/text()')[0],
             url=re.sub(
@@ -52,7 +57,7 @@ class Info(BaseModel):
         )
 
     @classmethod
-    def from_list_entry(cls, entry):
+    def from_list(cls, entry):
         """
         Given an lxml.etree list entry element, return an Info object.
         """
@@ -74,4 +79,42 @@ class Info(BaseModel):
             ),
             author=next(iter(entry.xpath('commit/author/text()')), None),
             size=next(iter(entry.xpath('size/text()')), None),
+        )
+
+
+class LogPath(BaseModel):
+    name: str
+    kind: str
+    action: str
+    prop_mods: bool
+    text_mods: bool
+
+    @classmethod
+    def from_path(cls, path):
+        return cls(
+            name=path.text.lstrip('/'),
+            kind=path.get('kind'),
+            action=path.get('action'),
+            prop_mods=path.get('prop-mods'),
+            text_mods=path.get('text-mods'),
+        )
+    
+
+class LogEntry(BaseModel):
+    rev: int
+    date: datetime
+    message: str
+    paths: typing.List[LogPath]
+
+    @classmethod
+    def from_logentry(cls, entry):
+        return cls(
+            rev=entry.get('revision'),
+            date=entry.find('date').text,
+            message=entry.find('msg').text,
+            paths=[
+                LogPath.from_path(path)
+                for path in 
+                entry.xpath('paths/path')
+            ]
         )

@@ -1,3 +1,4 @@
+import asyncio
 import os
 from starlette.endpoints import HTTPEndpoint
 from api.responses import ORJSONResponse
@@ -21,24 +22,36 @@ class ArkFiles(HTTPEndpoint):
                 request.path_params['name'],
                 request.path_params.get('path', ''),
             ]
-        )
-        result = await svn.info(url)
-        print(result)
-        if 'data' in result:
-            info = result['data'][0]
-            result = await svn.proplist(url)
-            print(result)
-            properties = result['data']
-            data = {'info': info, 'properties': properties}
-            if info['kind'] == 'dir':
-                result = await svn.list_files(url)
-                print(result)
-                data['files'] = result.get('data', [])
-            response = ORJSONResponse(data)
-        else:
-            response = ORJSONResponse(
-                Status(code=404, message='NOT FOUND').dict(), status_code=404
+        ).rstrip('/')
+
+        kw = {}
+        result = {}
+        if 'rev' in request.query_params:
+            kw['rev'] = request.query_params['rev']
+
+        info = await svn.info(url, **kw)
+        if 'data' in info:
+            props = await svn.proplist(url, **kw)
+            result['info'] = next(iter(info['data']), {})
+            result['props'] = props['data'] if 'data' in props else {}
+
+        if 'rev' in kw:
+            revprops, log = await asyncio.gather(
+                svn.revproplist(url, **kw), svn.log(url, **kw)
             )
+            if 'data' in revprops:
+                result['revprops'] = revprops['data']
+            result['log'] = log['data'] if 'data' in log else []
+
+        if result.get('info', {}).get('kind') == 'dir':
+            files = await svn.list_files(url, **kw)
+            result['files'] = files['data'] if 'data' in files else []
+
+        if result:
+            response = ORJSONResponse(result)
+        else:
+            result = Status(code=404, message='NOT FOUND').dict()
+            response = ORJSONResponse(result, status_code=404)
 
         return response
 

@@ -1,3 +1,4 @@
+import logging
 import os
 import http.client
 import httpx
@@ -7,6 +8,8 @@ from api.models import Status
 from api.process import run_command, as_user
 from api.responses import ORJSONResponse
 from api import svn
+
+logger = logging.getLogger(__name__)
 
 
 class ArkParent(HTTPEndpoint):
@@ -34,14 +37,17 @@ class ArkParent(HTTPEndpoint):
 
         # get the list of repository URLs from the response.content
         content = response.content.decode().replace('<hr noshade>', '<hr/>').strip()
+        logger.debug(content)
         xml = etree.fromstring(content)
         repository_urls = [
-            f"{archive_server}/{name.rstrip('/')}" for name in xml.xpath("//li//text()")
+            f"{archive_server}/{name.rstrip('/')}"
+            for name in xml.xpath("//li//text()")
+            if not name.startswith('.')
         ]
         if len(repository_urls) > 0:
             # get the svn info for all listed repositories
             result = await svn.info(*repository_urls)
-            data = result.get('data', []) 
+            data = result.get('data', [])
         else:
             data = []
         return ORJSONResponse(data)
