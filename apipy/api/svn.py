@@ -2,6 +2,7 @@ import os
 import re
 import tempfile
 from lxml import etree
+from pathlib import Path
 from api import models
 from api import process
 
@@ -153,20 +154,59 @@ async def propset(url, data):
     return result
 
 
-async def put(url, body=None, message=None):
+async def put(url, body=None, message=None, revprops=None):
     message = message or 'PUT ' + re.sub(f"^{os.getenv('ARCHIVE_SERVER')}", "", url)
 
     if not body:
         # directory
-        cmd = ['svn', 'mkdir', '--parents', '--message', message, url]
+        cmd = ['svn', 'mkdir', '--parents', '--message', message]
+        for key, val in revprops.items():
+            cmd += ['--with-revprop', f"{key}={val}"]
+
+        cmd += [url]
         result = await process.run_command(*cmd)
 
     else:
         # file from body
+        cmd = ['svnmucc', '--message', message]
+        for key, val in revprops.items():
+            cmd += ['--with-revprop', f"{key}={val}"]
+
         with tempfile.NamedTemporaryFile() as tf:
             tf.write(body)
             tf.seek(0)
-            cmd = ['svnmucc', '--message', message, 'put', tf.name, url]
+            cmd += ['put', tf.name, url]
             result = await process.run_command(*cmd)
+
+    return result
+
+
+async def delete_repository(name):
+    """
+    This is a hard filesystem delete of the entire repository and its history, which
+    cannot be undone.
+    """
+    path = Path(os.getenv('ARCHIVE_FILES')) / name
+    if not os.path.exists(path):
+        result = {'error': f'Repository not found: {name}'}
+    else:
+        cmd = ['rm', '-rf', str(path)]
+        result = await process.run_command(*cmd)
+
+    return result
+
+
+async def remove(url, message=None, revprops=None):
+    message = message or 'DELETE ' + re.sub(f"^{os.getenv('ARCHIVE_SERVER')}", "", url)
+    cmd = ['svn', 'rm', '--message', message]
+    for key, val in revprops.items():
+        cmd += ['--with-revprop', f"{key}={val}"]
+    cmd += [url]
+    result = await process.run_command(*cmd)
+    result['error'] = re.sub(
+        f"'{os.getenv('ARCHIVE_SERVER')}",
+        f"'{os.getenv('ARCHIVE_URL')}",
+        result['error'],
+    )
 
     return result

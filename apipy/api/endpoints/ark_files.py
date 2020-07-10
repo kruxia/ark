@@ -97,7 +97,12 @@ class ArkPath(HTTPEndpoint):
             body = await request.body()
             url = request_url(request)
             message = request.query_params.get('message')
-            result = await svn.put(url, body=body, message=message)
+            revprops = {
+                key: val
+                for key, val in request.query_params.items()
+                if key != 'message'
+            }
+            result = await svn.put(url, body=body, message=message, revprops=revprops)
 
         return ORJSONResponse(
             result,
@@ -108,6 +113,19 @@ class ArkPath(HTTPEndpoint):
         """
         Delete the archive, file, or directory at path
         """
-        return ORJSONResponse(
-            Status(code=501, message="NOT IMPLEMENTED").dict(), status_code=501
-        )
+        name = request.path_params['name']
+        path = request.path_params.get('path')
+        message = request.query_params.get('message')
+        url = request_url(request)
+        revprops = {
+            key: val for key, val in request.query_params.items() if key != 'message'
+        }
+
+        if not path:
+            # delete repository
+            result = await svn.delete_repository(name)
+        else:
+            # delete file or folder
+            result = await svn.remove(url, message=message, revprops=revprops)
+
+        return ORJSONResponse(result, status_code=404 if result['error'] else 200)
