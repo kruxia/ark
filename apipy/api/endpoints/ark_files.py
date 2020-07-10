@@ -5,14 +5,16 @@ from api.responses import ORJSONResponse
 from api.models import Status
 from api import svn
 
+
 def request_url(request):
     return '/'.join(
-            [
-                os.getenv('ARCHIVE_SERVER'),
-                request.path_params['name'],
-                request.path_params.get('path', ''),
-            ]
-        ).rstrip('/')
+        [
+            os.getenv('ARCHIVE_SERVER'),
+            request.path_params['name'],
+            request.path_params.get('path', ''),
+        ]
+    ).rstrip('/')
+
 
 class ArkPath(HTTPEndpoint):
     """
@@ -34,7 +36,7 @@ class ArkPath(HTTPEndpoint):
 
         info, props = await asyncio.gather(svn.info(url, **kw), svn.props(url, **kw))
         if info.get('data'):
-            result['info'] = info['data']
+            result['info'] = info['data'][0]
         if props.get('data'):
             result['props'] = props['data']
 
@@ -73,8 +75,7 @@ class ArkPath(HTTPEndpoint):
             result = Status(code=400, message="Invalid JSON body").dict()
 
         url = request_url(request)
-        kw = {'rev': data.get('rev'), 'message': data.get('message')}
-        result = await svn.propset(url, data, **kw)
+        result = await svn.propset(url, data)
         if result.get('error'):
             result = Status(code=400, message=result['error']).dict()
 

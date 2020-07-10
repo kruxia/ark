@@ -77,50 +77,76 @@ async def revprops(url, rev='HEAD'):
     return result
 
 
-async def propset(url, data, rev='', message=None):
+async def propset(url, data):
     """
     Update props and revprops for the url / rev
     * props if no rev (--with-revprop if revprops)
     * revprops if ?rev=M (error if props)
     * error if ?rev=M:N
     """
-    rev = str(rev or '')
+    rev = str(data.get('rev', ''))
+    message = str(data.get('message', ''))
 
     if ':' in rev:
         result = {'error': f'Cannot set props on a revision range: rev={rev}'}
-    
-    elif rev: 
-        if data.get('props'):
-            result = {'error': f'Cannot set props on an existing revision: rev={rev}'}
+
+    elif rev:
+        if data.get('props') or data.get('propdel'):
+            result = {
+                'error': f'Cannot set or delete props on an existing revision: rev={rev}'
+            }
         else:
-            # set revprops on existing revision
             result = {'error': '', 'output': ''}
+            # set revprops on existing revision
             for key, val in data.get('revprops', {}).items():
                 cmd = ['svn', 'propset', key, '--revprop', '-r', rev, str(val), url]
                 res = await process.run_command(*cmd)
                 result['error'] += res['error']
                 result['output'] += res['output']
-                if result['error']: 
-                    break
-    
+
+            # del revprops on existing revision
+            for key in data.get('revpropdel'):
+                cmd = ['svn', 'propdel', key, '--revprop', '-r', rev, url]
+                res = await process.run_command(*cmd)
+                result['error'] += res['error']
+                result['output'] += res['output']
+
     else:
-        if data.get('props'):
-            # set props with new revision, optionally with revprops as well
-            cmd = ['svnmucc', '-m', message or f"""propset keys=['{"', '".join(data['props'].keys())}']"""]
+        if data.get('revpropdel'):
+            result = {'error': 'Cannot delete revprops without a revision'}
+
+        elif data.get('props') or data.get('propdel'):
+            if data.get('props'):
+                message += (
+                    "\npropset keys=['" + "', '".join(data['props'].keys()) + "']"
+                )
+            if data.get('propdel'):
+                message += "\npropdel keys=['" + "', '".join(data['propdel']) + "']"
+
+            # set/del props with new revision, optionally with revprops as well
+            cmd = ['svnmucc', '-m', message.strip()]
 
             for key, val in data.get('revprops', {}).items():
-                cmd += ['--with-revprop', f'{key}="{val}"']
+                cmd += ['--with-revprop', f'{key}={val}']
 
-            for key, val in data['props'].items():
+            for key, val in data.get('props', {}).items():
                 cmd += ['propset', key, val, url]
+
+            for key in data.get('propdel', []):
+                cmd += ['propdel', key, url]
 
             result = await process.run_command(*cmd)
 
         elif data.get('revprops'):
-            # can't set revprops in the absence of props
-            result = {'error': 'Could not set revprops without creating a propset revision'}
+            # can't set revprops in the absence of props or an existing revision
+            result = {
+                'error': (
+                    'Cannot set revprops without an existing revision or creating '
+                    + 'a propset revision'
+                )
+            }
 
         else:
-            result = {'error': '', 'output': ''}
+            result = {'error': '', 'output': 'No change'}
 
     return result

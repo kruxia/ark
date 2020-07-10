@@ -137,7 +137,9 @@ class Info(BaseModel):
             path=PathInfo.from_list(entry), version=VersionInfo.from_list(entry),
         )
 
+
 # == Log ==
+
 
 class LogPath(BaseModel):
     name: str
