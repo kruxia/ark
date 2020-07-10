@@ -39,7 +39,6 @@ async def log(url, rev='HEAD'):
     cmd = ['svn', 'log', '--revision', str(rev), '--xml', '--verbose', url]
     result = await process.run_command(*cmd)
     if not result['error']:
-        print(result['output'])
         xml = etree.fromstring(result.pop('output').encode())
         result['data'] = [
             models.LogEntry.from_logentry(entry).dict()
@@ -68,7 +67,6 @@ async def revprops(url, rev='HEAD'):
     cmd = ['svn', 'proplist', '--revprop', '--revision', rev, '--xml', '--verbose', url]
     result = await process.run_command(*cmd)
     if not result['error']:
-        print(result['output'])
         xml = etree.fromstring(result.pop('output').encode())
         result['data'] = {
             property.get('name'): property.text
