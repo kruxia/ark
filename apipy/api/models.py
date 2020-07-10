@@ -5,8 +5,6 @@ from datetime import datetime
 from pydantic import BaseModel
 from uuid import UUID
 
-# from uuid import UUID
-
 
 class Status(BaseModel):
     code: int
@@ -139,6 +137,7 @@ class Info(BaseModel):
             path=PathInfo.from_list(entry), version=VersionInfo.from_list(entry),
         )
 
+# == Log ==
 
 class LogPath(BaseModel):
     name: str

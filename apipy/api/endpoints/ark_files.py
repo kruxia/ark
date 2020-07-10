@@ -5,6 +5,14 @@ from api.responses import ORJSONResponse
 from api.models import Status
 from api import svn
 
+def request_url(request):
+    return '/'.join(
+            [
+                os.getenv('ARCHIVE_SERVER'),
+                request.path_params['name'],
+                request.path_params.get('path', ''),
+            ]
+        ).rstrip('/')
 
 class ArkPath(HTTPEndpoint):
     """
@@ -16,40 +24,34 @@ class ArkPath(HTTPEndpoint):
         """
         GET info and props for the path, list of files and folders if it's a directory
         """
-        url = '/'.join(
-            [
-                os.getenv('ARCHIVE_SERVER'),
-                request.path_params['name'],
-                request.path_params.get('path', ''),
-            ]
-        ).rstrip('/')
+        url = request_url(request)
 
         kw = {}
         if 'rev' in request.query_params:
             kw['rev'] = request.query_params['rev']
 
-        info = await svn.info(url, **kw)
-        if not info['error']:
-            result = {}
-            if 'data' in info:
-                props = await svn.props(url, **kw)
-                result['info'] = next(iter(info['data']), {})
-                result['props'] = props['data'] if 'data' in props else {}
+        result = {}
 
-            if 'rev' in kw:
-                revprops, log = await asyncio.gather(
-                    svn.revprops(url, **kw), svn.log(url, **kw)
-                )
-                if 'data' in revprops:
-                    result['revprops'] = revprops['data']
-                result['log'] = log['data'] if 'data' in log else []
+        info, props = await asyncio.gather(svn.info(url, **kw), svn.props(url, **kw))
+        if info.get('data'):
+            result['info'] = info['data']
+        if props.get('data'):
+            result['props'] = props['data']
 
-            if result.get('info', {}).get('path', {}).get('kind') == 'dir':
-                files = await svn.list_files(url, **kw)
-                result['files'] = files['data'] if 'data' in files else []
+        if 'rev' in kw:
+            revprops, log = await asyncio.gather(
+                svn.revprops(url, **kw), svn.log(url, **kw)
+            )
+            if 'data' in revprops:
+                result['revprops'] = revprops['data']
+            result['log'] = log['data'] if 'data' in log else []
 
+        if result.get('info', {}).get('path', {}).get('kind') == 'dir':
+            files = await svn.list_files(url, **kw)
+            result['files'] = files['data'] if 'data' in files else []
+
+        if result:
             response = ORJSONResponse(result)
-
         else:
             result = Status(code=404, message='NOT FOUND').dict()
             response = ORJSONResponse(result, status_code=404)
@@ -58,11 +60,25 @@ class ArkPath(HTTPEndpoint):
 
     async def post(self, request):
         """
-        Update props for the path
+        Update props for the path, redirect to GET the url
+        * props if no rev (--with-revprop if revprops)
+        * revprops if ?rev=M (400 if props)
+        * 400 if ?rev=M:N
         """
-        return ORJSONResponse(
-            Status(code=501, message="NOT IMPLEMENTED").dict(), status_code=501
-        )
+
+        try:
+            data = await request.json()
+            assert isinstance(data, dict)
+        except Exception:
+            result = Status(code=400, message="Invalid JSON body").dict()
+
+        url = request_url(request)
+        kw = {'rev': data.get('rev'), 'message': data.get('message')}
+        result = await svn.propset(url, data, **kw)
+        if result.get('error'):
+            result = Status(code=400, message=result['error']).dict()
+
+        return ORJSONResponse(result, status_code=result.get('code', 200))
 
     async def put(self, request):
         """

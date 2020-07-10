@@ -33,21 +33,21 @@ API = /api/v1
       - [x] properties on the path (at HEAD)
       - [x] folder: list of files (at HEAD)
       - [ ] pytest
-    * [ ] GET `?rev=N` = single revision on this archive/path
+    * [ ] GET `?rev=M` = single revision on this archive/path
       - [x] info on the path at the given revision
       - [x] properties on the path at the given revision
       - [x] revision properties for the given revision
       - [x] log on the path at the given revision
       - [x] folder: list of files at the given revision
       - [ ] pytest
-    * [ ] GET `?rev=N:M` = range of revisions on this archive/path
+    * [ ] GET `?rev=M:N` = range of revisions on this archive/path
       - [x] log on the path at the given revisions
       - [ ] pytest
     * [ ] POST = 
       - [ ] edit this file/folder properties (versioned properties only allowed)
       - [ ] 400 if revprops in body
       - [ ] pytest
-    * [ ] POST `?rev=N` = single revision (multiple revisions not allowed)
+    * [ ] POST `?rev=M` = single revision (multiple revisions not allowed)
       - [ ] edit the revision properties (editing versioned properties not allowed)
       - [ ] 400 if multiple revisions
       - [ ] 400 if versioned properties (props) in body
