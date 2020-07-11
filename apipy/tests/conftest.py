@@ -1,3 +1,4 @@
+import os
 import pytest
 import requests
 import subprocess
@@ -36,6 +37,7 @@ def launch_subprocess_app():
 @pytest.fixture(scope="session")
 def setup():
     app = launch_subprocess_app()
+    os.environ['ARK_TEST_PREFIX'] = '__ARK_TEST.'
     yield
     app.kill()
     app.communicate()  # wait for it to exit

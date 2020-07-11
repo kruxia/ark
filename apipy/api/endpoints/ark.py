@@ -69,13 +69,10 @@ class ArkParent(HTTPEndpoint):
         result = await run_command(*cmd, preexec_fn=as_user(100, 101))  # as apache u/g
         if 'is an existing repository' in result['error']:
             return JSONResponse(
-                Status(
-                    code=409, message=f"'{repo_name}' is an existing repository",
-                ),
+                Status(code=409, message=f"'{repo_name}' is an existing repository"),
                 status_code=409,
             )
         else:
             return JSONResponse(
-                Status(code=201, message=f"Created: '{data['name']}'"),
-                status_code=201,
+                Status(code=201, message=f"Created: '{data['name']}'"), status_code=201,
             )
