@@ -31,7 +31,8 @@ def list_ark_test_repos():
 
 def test_ark_get_ok(client):
     """
-    GET /ark returns 200 and a list of repositories (here we focus on os.getenv('ARK_TEST_PREFIX'))
+    GET /ark returns 200 and a list of repositories (here we focus on
+    os.getenv('ARK_TEST_PREFIX'))
     """
     cleanup()
 
@@ -45,12 +46,14 @@ def test_ark_get_ok(client):
     assert response.status_code == 200
     assert test_data == []
 
-    # create a new repository (backend)
+    # create a new archive (backend)
+    path = f"{os.getenv('ARCHIVE_FILES')}/{os.getenv('ARK_TEST_PREFIX')}01"
     subprocess.check_output(
-        ['svnadmin', 'create', f"{os.getenv('ARCHIVE_FILES')}/{os.getenv('ARK_TEST_PREFIX')}01"]
+        ['svnadmin', 'create', path,]
     )
 
-    # verify that the api now returns a single os.getenv('ARK_TEST_PREFIX') entry with expected data
+    # verify that the api now returns a single os.getenv('ARK_TEST_PREFIX') entry with
+    # expected data
     response = client.get('/ark')
     test_data = [
         entry
@@ -70,8 +73,8 @@ def test_ark_get_ok(client):
 
 def test_ark_post_ok(client):
     """
-    POST /ark with {"name": "..."} creates that repository if it doesn't exist and
-    returns 201 CREATED
+    POST /ark with {"name": "..."} creates that archive if it doesn't exist and returns
+    201 CREATED
     """
     cleanup()
     name = f"{os.getenv('ARK_TEST_PREFIX')}01"
