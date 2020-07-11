@@ -73,7 +73,8 @@ USER="$3"
 PROPNAME="$4"
 ACTION="$5"
 
-if [ "$ACTION" = "M" -a "$PROPNAME" = "svn:log" ]; then exit 0; fi
-
-echo "Changing revision properties other than svn:log is prohibited" >&2
-exit 1
+case $PROPNAME in
+    "svn:log")  exit 0 ;;   # svn:log can be changed
+    "svn:"*)    exit 1 ;;   # all other svn: revprops are immutable
+    *)          exit 0 ;;   # all other revprops can be changed
+esac
