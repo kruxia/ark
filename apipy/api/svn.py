@@ -1,3 +1,13 @@
+"""
+Interfaces to subversion archives, via both filesystem (svnadmin, svnlook) and HTTP
+server (svn, svnmucc).
+
+TODO: When api.process.run_command is updated to return the ProcessOutput data
+structure, in cases here where `data` is being added to the structure before return,
+instead return the data separately, or None if not created. This will change the
+functions' interface and so also require some refactoring in the consumers.
+"""
+
 import os
 import re
 import tempfile

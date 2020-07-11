@@ -7,28 +7,20 @@ from uuid import UUID
 
 
 class Status(BaseModel):
+    """
+    The base HTTP status response object for our API.
+    """
+
     code: int
     message: str
 
 
-class HealthStatus(BaseModel):
-    files: Status
-    archive: Status
-    database: Status
-
-
-class ProcessOutput(BaseModel):
-    output: str
-    error: str
-    data: dict = None
-
-
-# == Info ==
+# == SVN Info ==
 
 
 class ArchiveInfo(BaseModel):
     """
-    Info about a given archive itself
+    Data about an archive itself, as provided by `svn info`.
     """
 
     root: str
@@ -36,6 +28,9 @@ class ArchiveInfo(BaseModel):
 
     @classmethod
     def from_info(cls, entry):
+        """
+        Given a `svn info` entry element, return ArchiveInfo.
+        """
         return cls(
             root=re.sub(
                 f"^{os.getenv('ARCHIVE_SERVER')}",
@@ -47,6 +42,10 @@ class ArchiveInfo(BaseModel):
 
 
 class PathInfo(BaseModel):
+    """
+    Data about a path in an archive, as provided by either `svn info` or `svn list`.
+    """
+
     name: str
     kind: str
     url: str = None
@@ -54,6 +53,10 @@ class PathInfo(BaseModel):
 
     @classmethod
     def from_info(cls, entry, rev='HEAD'):
+        """
+        Given a `svn info` entry element, return PathInfo. Include the rev in the url if
+        the rev is not HEAD (to make the URL an accurate link to THIS rev of target.)
+        """
         return cls(
             name=entry.get('path'),
             kind=entry.get('kind'),
@@ -69,6 +72,10 @@ class PathInfo(BaseModel):
 
     @classmethod
     def from_list(cls, entry, rev='HEAD'):
+        """
+        Given a `svn list` entry element, return PathInfo. Include the rev in the url if
+        the rev is not HEAD (to make the URL an accurate link to THIS rev of target.)
+        """
         return cls(
             name=entry.find('name').text,
             kind=entry.get('kind'),
@@ -90,12 +97,19 @@ class PathInfo(BaseModel):
 
 
 class VersionInfo(BaseModel):
+    """
+    Data about a version in an archive, as provided by either `svn info` or `svn list`.
+    """
+
     rev: int
     date: datetime
     author: str = None
 
     @classmethod
     def from_info(cls, entry):
+        """
+        Given a `svn info` entry element, return VersionInfo.
+        """
         return cls(
             rev=entry.find('commit').get('revision'),
             date=entry.find('commit/date').text,
@@ -124,7 +138,7 @@ class Info(BaseModel):
     @classmethod
     def from_info(cls, entry, rev='HEAD'):
         """
-        Given an lxml.etree info entry element, return a Info object.
+        Given a `svn info` entry element, return Info.
         """
         return cls(
             archive=ArchiveInfo.from_info(entry),
@@ -135,7 +149,7 @@ class Info(BaseModel):
     @classmethod
     def from_list(cls, entry, rev='HEAD'):
         """
-        Given an lxml.etree list entry element, return an Info object.
+        Given a `svn list` entry element, return Info.
         """
         return cls(
             path=PathInfo.from_list(entry, rev=rev),
@@ -143,10 +157,14 @@ class Info(BaseModel):
         )
 
 
-# == Log ==
+# == SVN Log ==
 
 
 class LogPath(BaseModel):
+    """
+    Data structure for an archive file path, as returned by `svn log`.
+    """
+
     name: str
     kind: str
     action: str
@@ -155,6 +173,9 @@ class LogPath(BaseModel):
 
     @classmethod
     def from_path(cls, path):
+        """
+        Given a `svn log` path element, return LogPath.
+        """
         return cls(
             name=path.text.lstrip('/'),
             kind=path.get('kind'),
@@ -165,6 +186,10 @@ class LogPath(BaseModel):
 
 
 class LogEntry(BaseModel):
+    """
+    Data structure for an archive log entry, as returned by `svn log`.
+    """
+
     rev: int
     date: datetime
     message: str
@@ -172,6 +197,9 @@ class LogEntry(BaseModel):
 
     @classmethod
     def from_logentry(cls, entry):
+        """
+        Given a `svn log` logentry element, return LogEntry.
+        """
         return cls(
             rev=entry.get('revision'),
             date=entry.find('date').text,

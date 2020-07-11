@@ -14,12 +14,15 @@ logger = logging.getLogger(__name__)
 
 class ArkParent(HTTPEndpoint):
     """
-    /ark = the parent location for all repositories
+    Endpoint for /ark, the parent location for all repositories
     """
 
     async def get(self, request):
         """
-        list archives and their basic metadata.
+        List archives and their basic metadata.
+
+        200 OK = List retrieved successfully
+        [other status] = the archive server took it badly
         """
         archive_server = os.getenv('ARCHIVE_SERVER')
 
@@ -54,7 +57,10 @@ class ArkParent(HTTPEndpoint):
 
     async def post(self, request):
         """
-        create a new archive with the given {"name": "..."}
+        Create a new archive with the given {"name": "..."}.
+
+        201 CREATED = created the archive
+        409 CONFLICT = the archive already exists
         """
         try:
             data = await request.json()
@@ -69,7 +75,7 @@ class ArkParent(HTTPEndpoint):
         result = await run_command(*cmd, preexec_fn=as_user(100, 101))  # as apache u/g
         if 'is an existing repository' in result['error']:
             return JSONResponse(
-                Status(code=409, message=f"'{repo_name}' is an existing repository"),
+                Status(code=409, message=f"'{repo_name}' is an existing archive"),
                 status_code=409,
             )
         else:

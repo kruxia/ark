@@ -6,27 +6,30 @@ from api.models import Status
 from api import svn
 
 
-def request_url(request):
-    return '/'.join(
-        [
-            os.getenv('ARCHIVE_SERVER'),
-            request.path_params['name'],
-            request.path_params.get('path', ''),
-        ]
-    ).rstrip('/')
-
-
 class ArkPath(HTTPEndpoint):
     """
     Handle requests to /ark/NAME/files/PATH, where NAME is a repository name and PATH is
     a file path within the repository. If PATH is empty, then it is "/"
     """
 
+    @classmethod
+    def archive_url(cls, request):
+        """
+        For a given ArkPath request, build and return the archive URL for the request.
+        """
+        return '/'.join(
+            [
+                os.getenv('ARCHIVE_SERVER'),
+                request.path_params['name'],
+                request.path_params.get('path', ''),
+            ]
+        ).rstrip('/')
+
     async def get(self, request):
         """
         GET info and props for the path, list of files and folders if it's a directory
         """
-        url = request_url(request)
+        url = self.archive_url(request)
 
         kw = {}
         if 'rev' in request.query_params:
@@ -67,14 +70,13 @@ class ArkPath(HTTPEndpoint):
         * revprops if ?rev=M (400 if props)
         * 400 if ?rev=M:N
         """
-
         try:
             data = await request.json()
             assert isinstance(data, dict)
         except Exception:
             result = Status(code=400, message="Invalid JSON body")
 
-        url = request_url(request)
+        url = self.archive_url(request)
         result = await svn.propset(url, data)
         if result.get('error'):
             result = Status(code=400, message=result['error'])
@@ -95,7 +97,7 @@ class ArkPath(HTTPEndpoint):
 
         else:
             body = await request.body()
-            url = request_url(request)
+            url = self.archive_url(request)
             message = request.query_params.get('message')
             revprops = {
                 key: val
@@ -116,7 +118,7 @@ class ArkPath(HTTPEndpoint):
         name = request.path_params['name']
         path = request.path_params.get('path')
         message = request.query_params.get('message')
-        url = request_url(request)
+        url = self.archive_url(request)
         revprops = {
             key: val for key, val in request.query_params.items() if key != 'message'
         }
