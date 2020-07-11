@@ -28,7 +28,8 @@ RUN pip install -e .
 # use this user for all svnadmin and svnlook
 RUN userdel _apt \ 
     && groupadd -g 101 apache \
-    && useradd -m -d /var/svn -u 100 -g 101 apache
+    && useradd -m -d /var/svn -u 100 -g 101 apache \
+    && chown -R apache:apache svntemplate
 
 EXPOSE 8000
 

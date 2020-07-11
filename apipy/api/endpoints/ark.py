@@ -5,7 +5,6 @@ import httpx
 from lxml import etree
 from starlette.endpoints import HTTPEndpoint
 from api.models import Status
-from api.process import run_command, as_user
 from api.responses import JSONResponse
 from api import svn
 
@@ -64,21 +63,18 @@ class ArkParent(HTTPEndpoint):
         """
         try:
             data = await request.json()
-            repo_name = data['name']
+            archive_name = data['name']
         except Exception:
-            return JSONResponse(
-                Status(code=400, message='invalid input'), status_code=400,
-            )
+            status = Status(code=400, message='invalid input')
+            return JSONResponse(status, status_code=status.code)
 
-        path = os.getenv('ARCHIVE_FILES') + '/' + repo_name
-        cmd = ['svnadmin', 'create', path]
-        result = await run_command(*cmd, preexec_fn=as_user(100, 101))  # as apache u/g
+        result = await svn.create_archive(archive_name)
+
         if 'is an existing repository' in result['error']:
-            return JSONResponse(
-                Status(code=409, message=f"'{repo_name}' is an existing archive"),
-                status_code=409,
-            )
+            status = Status(code=409, message=f"'{archive_name}' already exists")
+        elif result['error']:
+            status = Status(code=409, message=result['error'])
         else:
-            return JSONResponse(
-                Status(code=201, message=f"Created: '{data['name']}'"), status_code=201,
-            )
+            status = Status(code=201, message=f"Created: '{data['name']}'")
+
+        return JSONResponse(status, status_code=status.code)

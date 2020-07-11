@@ -38,12 +38,13 @@ class ArkPath(HTTPEndpoint):
         result = {}
 
         info, props = await asyncio.gather(svn.info(url, **kw), svn.props(url, **kw))
-        if info.get('data'):
+
+        if 'data' in info and len(info['data']) > 0:
             result['info'] = info['data'][0]
-        if props.get('data'):
+        if 'data' in props:
             result['props'] = props['data']
 
-        if 'rev' in kw:
+        if 'rev' in kw and 'No such revision' not in info['error']:
             revprops, log = await asyncio.gather(
                 svn.revprops(url, **kw), svn.log(url, **kw)
             )
@@ -65,21 +66,18 @@ class ArkPath(HTTPEndpoint):
 
     async def post(self, request):
         """
-        Update props for the path, redirect to GET the url
-        * props if no rev (--with-revprop if revprops)
-        * revprops if ?rev=M (400 if props)
-        * 400 if ?rev=M:N
+        Update props for the archive path, return the result
         """
         try:
             data = await request.json()
             assert isinstance(data, dict)
         except Exception:
-            result = Status(code=400, message="Invalid JSON body")
+            result = Status(code=400, message="Invalid JSON body").dict()
 
         url = self.archive_url(request)
         result = await svn.propset(url, data)
         if result.get('error'):
-            result = Status(code=400, message=result['error'])
+            result = Status(code=400, message=result['error']).dict()
 
         return JSONResponse(result, status_code=result.get('code', 200))
 

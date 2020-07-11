@@ -17,7 +17,7 @@
     "dev": [],
     "test": []
   },
-  "packages": ["api"],
+  "packages": ["api", "tests"],
   "package_data": {
     "": []
   },

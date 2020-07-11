@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import traceback
 import typing
 from pydantic import BaseModel
 
@@ -28,13 +29,24 @@ async def run_command(*args, **kwargs):
     """
     # Create subprocess
     logger.debug('run_command: %r', args)
-    process = await asyncio.create_subprocess_exec(
-        *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, **kwargs
-    )
-    # Wait for the subprocess to finish
-    stdout, stderr = await process.communicate()
-    # Return stdout, stderr (both str)
-    result = {'output': stdout.decode(), 'error': stderr.decode()}
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            **kwargs
+        )
+        # Wait for the subprocess to finish
+        stdout, stderr = await process.communicate()
+
+        # Return stdout, stderr (both str)
+        result = {'output': stdout.decode(), 'error': stderr.decode()}
+
+    except Exception as err:
+        result = {'output': '', 'error': str(err)}
+        if os.getenv('DEBUG'):
+            result['traceback'] = traceback.format_exc()
+
     logger.debug(result)
     return result
 

@@ -3,27 +3,7 @@ import subprocess
 from uuid import UUID
 from datetime import datetime
 from api.models import Info
-
-
-# -- HELPERS --
-
-
-def cleanup():
-    # remove any repositories that begin with os.getenv('ARK_TEST_PREFIX')
-    ark_test_repos = list_ark_test_repos()
-    if len(ark_test_repos) > 0:
-        subprocess.check_output(['rm', '-rf'] + ark_test_repos)
-
-
-def list_ark_test_repos():
-    return [
-        f"{os.getenv('ARCHIVE_FILES')}/{name}"
-        for name in subprocess.check_output(['ls', f"{os.getenv('ARCHIVE_FILES')}"])
-        .decode()
-        .strip()
-        .split()
-        if name.startswith(os.getenv('ARK_TEST_PREFIX'))
-    ]
+from .helpers import cleanup, list_ark_test_archives
 
 
 # -- TESTS --
@@ -48,9 +28,7 @@ def test_ark_get_ok(client):
 
     # create a new archive (backend)
     path = f"{os.getenv('ARCHIVE_FILES')}/{os.getenv('ARK_TEST_PREFIX')}01"
-    subprocess.check_output(
-        ['svnadmin', 'create', path,]
-    )
+    subprocess.check_output(['svnadmin', 'create', path])
 
     # verify that the api now returns a single os.getenv('ARK_TEST_PREFIX') entry with
     # expected data
@@ -80,7 +58,7 @@ def test_ark_post_ok(client):
     name = f"{os.getenv('ARK_TEST_PREFIX')}01"
     path = f"{os.getenv('ARCHIVE_FILES')}/{name}"
     response = client.post('/ark', json={'name': name})
-    ark_test_repos = list_ark_test_repos()
+    ark_test_repos = list_ark_test_archives()
 
     assert response.status_code == 201
     assert path in ark_test_repos
@@ -99,7 +77,7 @@ def test_ark_post_exists(client):
         ['svnadmin', 'create', f"{os.getenv('ARCHIVE_FILES')}/{name}"]
     )
     response = client.post('/ark', json={'name': name})
-    ark_test_repos = list_ark_test_repos()
+    ark_test_repos = list_ark_test_archives()
 
     assert response.status_code == 409
     assert path in ark_test_repos
@@ -115,7 +93,7 @@ def test_ark_post_invalid(client):
 
     name = f"{os.getenv('ARK_TEST_PREFIX')}01"
     response = client.post('/ark', json={'NOT_VALID': name})
-    ark_test_repos = list_ark_test_repos()
+    ark_test_repos = list_ark_test_archives()
 
     assert response.status_code == 400
     assert len(ark_test_repos) == 0

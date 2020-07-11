@@ -17,6 +17,33 @@ from api import models
 from api import process
 
 
+async def create_archive(name):
+    """
+    Create the archive with the given name, including the template files to configure
+    the archive.
+    """
+    path = os.getenv('ARCHIVE_FILES') + '/' + name
+
+    # create the archive
+    cmds = [['svnadmin', 'create', path]]
+
+    # copy the current archive template files into the new archive filesystem
+    result = await process.run_command(*['ls', '/var/api/svntemplate'])
+    filenames = result['output'].strip().split('\n')
+    cmds += [['cp', '-R', f'/var/api/svntemplate/{fn}', path] for fn in filenames]
+    cmds += [['chown', '-R', 'apache:apache', path]]
+
+    result = {'output': '', 'error': ''}
+    for cmd in cmds:
+        r = await process.run_command(*cmd)
+        result['output'] += r['output']
+        result['error'] += r['error']
+        if result['error']:
+            break
+
+    return result
+
+
 async def info(*urls, rev='HEAD'):
     """
     Return a list of Info data on the given url(s) and revision.
@@ -153,7 +180,7 @@ async def propset(url, data):
                 result['output'] += res['output']
 
             # del revprops on existing revision
-            for key in data.get('revpropdel'):
+            for key in data.get('revpropdel', []):
                 cmd = ['svn', 'propdel', key, '--revprop', '-r', rev, url]
                 res = await process.run_command(*cmd)
                 result['error'] += res['error']
@@ -178,19 +205,20 @@ async def propset(url, data):
                 cmd += ['--with-revprop', f'{key}={val}']
 
             for key, val in data.get('props', {}).items():
-                cmd += ['propset', key, val, url]
+                cmd += ['propset', key, str(val), url]
 
             for key in data.get('propdel', []):
                 cmd += ['propdel', key, url]
 
+            print(cmd)
             result = await process.run_command(*cmd)
 
         elif data.get('revprops'):
-            # can't set revprops in the absence of props or an existing revision
+            # can't set revprops in the absence of editing/deleting props in a revision
             result = {
                 'error': (
                     'Cannot set revprops without an existing revision or creating '
-                    + 'a propset revision'
+                    + 'a revision to set/delete props'
                 )
             }
 
@@ -210,7 +238,7 @@ async def put(url, body=None, message=None, revprops=None):
 
     Rules:
 
-    * If body is given (not None), we assume that a file is intended.
+    * If body is given (not None or empty), we assume that a file is intended.
       * If the file doesn't exist, it will be created.
       * If the file exists, it will be updated.
       * If the given url is currently a folder, it and all its content will be
@@ -220,7 +248,7 @@ async def put(url, body=None, message=None, revprops=None):
         the file will not be created. (TODO? Check for the existence of the parent
         folder and create it if it doesn't exist?)
 
-    * If body is not given (is None), we assume that a directory is intended.
+    * If body is None or empty, we assume that a directory is intended.
       * If the directory doesn't exist, it will be created, along with all parents.
       * If the directory already exists, an error is returned (updating is meaningless).
 
@@ -230,7 +258,7 @@ async def put(url, body=None, message=None, revprops=None):
     """
     message = message or 'PUT ' + re.sub(f"^{os.getenv('ARCHIVE_SERVER')}", "", url)
 
-    if body is None:
+    if not body:
         # directory
         cmd = ['svn', 'mkdir', '--parents', '--message', message]
         for key, val in revprops.items():
