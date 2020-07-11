@@ -20,10 +20,7 @@ services:
       - pgdata:/var/lib/postgres/data
 
   api:
-    # image: kruxia/ark-api
-    # build: ./api
-    build: ./apipy
-    # command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "warning"]
+    build: ./api
     depends_on:
       - postgres
       - svn
@@ -37,9 +34,7 @@ services:
       - "8000:8000"
     volumes:
       - svndata:/var/svn
-      - /var/api/target
-      # - ./api:/var/api
-      - ./apipy:/var/api
+      - ./api:/var/api
 
 volumes:
   pgdata:

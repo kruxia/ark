@@ -1,6 +1,6 @@
 # Ark API
 
-API = /api/v1
+branch = rust-api
 
 * [x] rust
   * [x] / = 200 OK + welcome message [2020-07-03]
@@ -12,6 +12,8 @@ API = /api/v1
     * [x] PostgreSQL database – DATABASE_URL
     * [x] all at the same time (`futures::join!`)
     * [x] tests
+
+branch = master
 
 * [x] python
   * [x] GET / = 

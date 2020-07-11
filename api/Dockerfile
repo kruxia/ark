@@ -1,28 +1,38 @@
-FROM rust:1.44-slim-buster as build
+# development Dockerfile
+FROM python:3.8-slim-buster
 LABEL maintainer="Sean Harrison <sah@kruxia.com>"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
+        # run tools
         subversion \
+        # build tools
+        curl \
+        # development tools
         nano \
-        pkg-config \
-        libssl-dev \
         postgresql-client \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
+# install poetry
+
 WORKDIR /var/api
 
-RUN cargo install systemfd cargo-watch 
+COPY req/ req/
+RUN pip install -r req/dev.txt
+
 COPY ./ ./
-RUN cargo build
+RUN pip install -e .
 
 # create user apache -u 100 -g 101 to match what is in kruxia/svn(:alpine) -- we will
 # use this user for all svnadmin and svnlook
-RUN groupadd -g 101 apache \
-    & useradd -m -d /var/svn -u 100 -g 101 apache
+RUN userdel _apt \ 
+    && groupadd -g 101 apache \
+    && useradd -m -d /var/svn -u 100 -g 101 apache \
+    && chown -R apache:apache svntemplate
 
 EXPOSE 8000
 
-# for this development image, use cargo watch to auto-reload changes in the code.
-CMD ["systemfd", "--no-pid", "-s", "http::0.0.0.0:8000", "--", "cargo", "watch", "-x", "run"]
+# for this development image, use uvicorn --reload
+ENTRYPOINT ["/var/api/docker-entrypoint.sh"]
+CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
