@@ -53,7 +53,7 @@ class PathInfo(BaseModel):
     size: int = None
 
     @classmethod
-    def from_info(cls, entry):
+    def from_info(cls, entry, rev='HEAD'):
         return cls(
             name=entry.get('path'),
             kind=entry.get('kind'),
@@ -61,12 +61,14 @@ class PathInfo(BaseModel):
                 f"^{os.getenv('ARCHIVE_SERVER')}",
                 os.getenv('ARCHIVE_URL'),
                 entry.find('url').text,
-            ),
+            )
+            # include the revision (p=peg, r=rev) if not HEAD
+            + (f"?p={rev}" if rev and rev != 'HEAD' else ''),
             size=entry.get('size'),
         )
 
     @classmethod
-    def from_list(cls, entry):
+    def from_list(cls, entry, rev='HEAD'):
         return cls(
             name=entry.find('name').text,
             kind=entry.get('kind'),
@@ -79,7 +81,9 @@ class PathInfo(BaseModel):
                         next(iter(entry.xpath('parent::list/@path')), '.'),
                         entry.find('name').text,
                     ]
-                ),
+                )
+                # include the revision (p=peg rev) if not HEAD
+                + (f"?p={rev}" if rev and rev != 'HEAD' else ''),
             ),
             size=next(iter(entry.xpath('size/text()')), None),
         )
@@ -118,23 +122,24 @@ class Info(BaseModel):
         return data
 
     @classmethod
-    def from_info(cls, entry):
+    def from_info(cls, entry, rev='HEAD'):
         """
         Given an lxml.etree info entry element, return a Info object.
         """
         return cls(
             archive=ArchiveInfo.from_info(entry),
-            path=PathInfo.from_info(entry),
+            path=PathInfo.from_info(entry, rev=rev),
             version=VersionInfo.from_info(entry),
         )
 
     @classmethod
-    def from_list(cls, entry):
+    def from_list(cls, entry, rev='HEAD'):
         """
         Given an lxml.etree list entry element, return an Info object.
         """
         return cls(
-            path=PathInfo.from_list(entry), version=VersionInfo.from_list(entry),
+            path=PathInfo.from_list(entry, rev=rev),
+            version=VersionInfo.from_list(entry),
         )
 
 

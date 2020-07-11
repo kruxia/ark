@@ -17,7 +17,7 @@ async def info(*urls, rev='HEAD'):
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = [
-                models.Info.from_info(entry).dict()
+                models.Info.from_info(entry, rev=rev).dict()
                 for entry in xml.xpath('/info/entry')
             ]
     return result
@@ -33,7 +33,7 @@ async def list_files(url, rev='HEAD'):
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = [
-                models.Info.from_list(entry).dict()
+                models.Info.from_list(entry, rev=rev).dict()
                 for entry in xml.xpath(f'/lists/list[@path="{url}"]/entry')
             ]
     return result
