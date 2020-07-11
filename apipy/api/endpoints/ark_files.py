@@ -8,8 +8,8 @@ from api import svn
 
 class ArkPath(HTTPEndpoint):
     """
-    Handle requests to /ark/NAME/files/PATH, where NAME is a repository name and PATH is
-    a file path within the repository. If PATH is empty, then it is "/"
+    Handle requests to /ark/NAME/files/PATH, where NAME is an archive name and PATH is a
+    file path within the archive. If PATH is empty, then it is "/"
     """
 
     @classmethod
@@ -124,8 +124,8 @@ class ArkPath(HTTPEndpoint):
         }
 
         if not path:
-            # delete repository
-            result = await svn.delete_repository(name)
+            # delete archive
+            result = await svn.delete_archive(name)
         else:
             # delete file or folder
             result = await svn.remove(url, message=message, revprops=revprops)

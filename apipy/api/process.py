@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class ProcessOutput(BaseModel):
     """
-    Data structure for process output, as produced by run_command(). 
+    Data structure for process output, as produced by run_command().
 
     * `output` = the stdout of the process
     * `error` = the stderr of the process

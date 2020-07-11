@@ -38,18 +38,18 @@ class ArkParent(HTTPEndpoint):
                 status_code=response.status_code,
             )
 
-        # get the list of repository URLs from the response.content
+        # get the list of archive URLs from the response.content
         content = response.content.decode().replace('<hr noshade>', '<hr/>').strip()
         logger.debug(content)
         xml = etree.fromstring(content)
-        repository_urls = [
+        archive_urls = [
             f"{archive_server}/{name.rstrip('/')}"
             for name in xml.xpath("//li//text()")
             if not name.startswith('.')
         ]
-        if len(repository_urls) > 0:
+        if len(archive_urls) > 0:
             # get the svn info for all listed repositories
-            result = await svn.info(*repository_urls)
+            result = await svn.info(*archive_urls)
             data = result.get('data', [])
         else:
             data = []
@@ -73,7 +73,7 @@ class ArkParent(HTTPEndpoint):
         path = os.getenv('ARCHIVE_FILES') + '/' + repo_name
         cmd = ['svnadmin', 'create', path]
         result = await run_command(*cmd, preexec_fn=as_user(100, 101))  # as apache u/g
-        if 'is an existing repository' in result['error']:
+        if 'is an existing archive' in result['error']:
             return JSONResponse(
                 Status(code=409, message=f"'{repo_name}' is an existing archive"),
                 status_code=409,

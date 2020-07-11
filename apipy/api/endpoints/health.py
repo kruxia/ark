@@ -28,7 +28,7 @@ class Health(HTTPEndpoint):
         Gather and return health status about all services in the cluster. These include
 
         * Archive filesystem
-        * Archive server 
+        * Archive server
         * PostgreSQL database
         """
         files_status, archive_status, database_status = await asyncio.gather(
