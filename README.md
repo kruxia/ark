@@ -8,23 +8,31 @@ Ark is a file storage server that provides:
 * [REST API](api/README.md)
 * file interface UI
 * full-text-search on file contents and metadata, supporting NN languages
-* efficient binary file revision storage [via using Subversion]
+* efficient binary file revision storage [via Subversion] — large repositories with many
+  binary files that have numerous revisions typically require only fractionally more
+  storage space than the files themselves.
 
 Better than Dropbox:
 
-* Check-out+Lock, Modify, Check-in+Unlock workflow help prevent file and workflow conflicts
-* unlimited version history — no time limit. 
+* Unlimited version history — no time limit, no limit to the number of revisions.
   [Dropbox limits 30, 180, 365 days. OneDrive, Box store a fixed number of versions.]
-* shared content via folder includes [svn:external, like symlink]
-  [Other file storage platforms don't have this capability]
-* file and folder locking for lock-based collaboration
-* revision messages and metadata
-* self-hostable, portable, open-source — no vendor lock-in
+* Shared content via folder includes [svn:external, like symlink] — no need to copy
+  shared files/ [Other file storage platforms don't have this capability]
+* Check-out / Modify / Check-in workflow with file and folder locking for collaboration
+  without conflicts. 
+* Revision messages — easily review progress and find exactly what you're looking for.
+  Find and compare different versions of a file spanning years or decades. [Other file
+  storage platforms don't provide revision messaging, so you're left guessing or having
+  to inspect and compare files manually to see what happened in a given revision.]
+* File and revision properties (metadata) — Attach arbitrary key/value pairs to files
+  and folders, and the project archive itself, for your own use cases.
+* Self-hostable, portable, open-source — no vendor lock-in. [Other cloud file storage
+  systems are completely proprietary.]
 
 Architecture:
 
 * File storage server: Apache Subversion
-* REST API and search engine: Rust Actix PostgreSQL 
+* REST API and search engine: Python Starlette PostgreSQL 
 * File interface UI: 
   * XHTML 
   * CSS + {Pure|Tailwind|Boostrap?} 
