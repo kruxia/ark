@@ -34,6 +34,6 @@ Architecture:
 * File storage server: Apache Subversion
 * REST API and search engine: Python Starlette PostgreSQL 
 * File interface UI: 
-  * XHTML 
-  * CSS + {Pure|Tailwind|Boostrap?} 
-  * JS + {mithril.js.org|VueJS|React?}
+  * XHTML — use XML syntax
+  * CSS + TailwindCSS — chosen over bootstrap and other, utility classes look to be the future.
+  * JS + mithril.js.org — chosen over VueJS and React for its small size.
