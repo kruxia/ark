@@ -1,6 +1,8 @@
 import databases
 import os
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route
 from api.endpoints.index import Index
 from api.endpoints.health import Health
@@ -24,6 +26,8 @@ async def app_shutdown():
     await app.database.disconnect()
 
 
+middleware = [Middleware(CORSMiddleware, allow_origins=['*'])]
+
 routes = [
     Route('/', endpoint=Index),
     Route('/health', endpoint=Health),
@@ -32,5 +36,9 @@ routes = [
     Route('/ark/{name}/{path:path}', endpoint=ArkPath),
 ]
 
-
-app = Starlette(routes=routes, on_startup=[app_startup], on_shutdown=[app_shutdown])
+app = Starlette(
+    routes=routes,
+    middleware=middleware,
+    on_startup=[app_startup],
+    on_shutdown=[app_shutdown],
+)
