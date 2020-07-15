@@ -1,4 +1,5 @@
-import m from "mithril";
-m.render(document.getElementById("main"), 
-    <h1 class="font-mono">hello world</h1>
-);
+const m = require("mithril")
+const { DirectoryList } = require("./directory")
+
+
+m.mount(document.getElementById("main"), DirectoryList);
