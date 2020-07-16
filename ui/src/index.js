@@ -1,7 +1,7 @@
 const m = require("mithril")
-const { DirectoryList } = require("./directory")
+const { PathView } = require("./path")
 
 m.route(document.getElementById("main"), '/', {
-    '/': DirectoryList,
-    '/:path...': DirectoryList,
+    '/': PathView,
+    '/:path...': PathView,
 });
