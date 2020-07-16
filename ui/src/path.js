@@ -16,16 +16,53 @@ var Path = {
     },
 }
 
+var PathLink = {
+    view: function (vnode) {
+        return (
+            <span>{vnode.attrs.prefix || ''}
+                <a href={vnode.attrs.path} onclick={(event) => {
+                    // TODO: Back button not working
+                    event.preventDefault()
+                    m.route.set('/:path...', { path: vnode.attrs.path })
+                    Path.load(vnode.attrs.path)
+                }}>
+                    {vnode.attrs.name}
+                </a>
+            </span>
+        )
+    }
+}
+
+var Breadcrumbs = {
+    view: function () {
+        return (
+            <div class="mx-2">
+                <PathLink path="" name="archives" />
+                {
+                    Path.path.split('/').map((slug, index) => {
+                        if (slug) {
+                            var path = Path.path.split('/').slice(0, index + 1).join('/')
+                            return <PathLink path={path} name={slug} prefix=" » " />
+                        }
+                        else
+                            return ""
+                    })
+                }
+            </div>
+        )
+    }
+}
+
 var DirectoryView = {
     view: function () {
         return (
             <table class="table-auto w-full">
                 <thead>
                     <tr>
-                        <th class="border-b px-3 py-2 text-left">name</th>
-                        <th class="border-b px-3 py-2 text-left">size</th>
-                        <th class="border-b px-3 py-2 text-left">last modified</th>
-                        <th class="border-b px-3 py-2 text-right">rev</th>
+                        <th class="border-b px-2 py-2 text-left">name</th>
+                        <th class="border-b px-2 py-2 text-left">size</th>
+                        <th class="border-b px-2 py-2 text-left">last modified</th>
+                        <th class="border-b px-2 py-2 text-right">rev</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,7 +72,7 @@ var DirectoryView = {
                         ).replace(/^\//, '')
                         return (
                             <tr key={index}>
-                                <td class="border-b px-3 py-2 text-left">
+                                <td class="border-b px-2 py-2 text-left">
                                     <a href={item_path} onclick={(event) => {
                                         // TODO: Back button not working
                                         event.preventDefault()
@@ -45,17 +82,17 @@ var DirectoryView = {
                                         {item.path.name}
                                     </a>
                                 </td>
-                                <td class="border-b px-3 py-2 text-left">
+                                <td class="border-b px-2 py-2 text-left">
                                     {item.path.size}
                                 </td>
-                                <td class="border-b px-3 py-2 text-left">
+                                <td class="border-b px-2 py-2 text-left">
                                     {
                                         item.version.date
                                             .replace(/\.\d+/, '').replace('T', ' ')
                                             .replace('+00:00', ' UTC')
                                     }
                                 </td>
-                                <td class="border-b px-3 py-2 text-right">
+                                <td class="border-b px-2 py-2 text-right">
                                     {item.version.rev}
                                 </td>
                             </tr>
@@ -68,12 +105,12 @@ var DirectoryView = {
 }
 
 var FileView = {
-    view: function() {
+    view: function () {
         return (
             // TODO: replace this with a more responsible method of creating a preview
             // (since this will only work for files that are already displayable.)
             <div class="m-2 border w-auto h-screen">
-                <iframe src={Path.data.info.path.url} class="w-full h-full"/>
+                <iframe src={Path.data.info.path.url} class="w-full h-full" />
             </div>
         )
     }
@@ -94,4 +131,15 @@ var PathView = {
     }
 }
 
-module.exports = { PathView }
+var ArchiveView = {
+    view: function () {
+        return (
+            <div>
+                <Breadcrumbs />
+                <PathView />
+            </div>
+        )
+    }
+}
+
+module.exports = { ArchiveView }

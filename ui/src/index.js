@@ -1,7 +1,7 @@
 const m = require("mithril")
-const { PathView } = require("./path")
+const { ArchiveView } = require("./path")
 
 m.route(document.getElementById("main"), '/', {
-    '/': PathView,
-    '/:path...': PathView,
+    '/': ArchiveView,
+    '/:path...': ArchiveView,
 });
