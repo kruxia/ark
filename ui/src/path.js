@@ -42,7 +42,7 @@ var Breadcrumbs = {
                     Path.path.split('/').map((slug, index) => {
                         if (slug) {
                             var path = Path.path.split('/').slice(0, index + 1).join('/')
-                            return <PathLink path={path} name={slug} prefix=" » " />
+                            return <PathLink path={path} name={slug} prefix=" > " />
                         }
                         else
                             return ""
@@ -72,7 +72,7 @@ var DirectoryView = {
                         ).replace(/^\//, '')
                         return (
                             <tr key={index}>
-                                <td class="border-b px-2 py-2 text-left">
+                                <td class="border-b px-2 py-2 text-left align-top">
                                     <a href={item_path} onclick={(event) => {
                                         // TODO: Back button not working
                                         event.preventDefault()
@@ -82,18 +82,24 @@ var DirectoryView = {
                                         {item.path.name}
                                     </a>
                                 </td>
-                                <td class="border-b px-2 py-2 text-left">
-                                    {item.path.size}
-                                </td>
-                                <td class="border-b px-2 py-2 text-left">
+                                <td class="border-b px-2 py-2 text-left align-top">
                                     {
+                                        // TODO: Readable size
+                                        item.path.size
+                                    }
+                                </td>
+                                <td class="border-b px-2 py-2 text-left align-top">
+                                    {
+                                        // TODO: Better date formatting
                                         item.version.date
                                             .replace(/\.\d+/, '').replace('T', ' ')
                                             .replace('+00:00', ' UTC')
                                     }
                                 </td>
-                                <td class="border-b px-2 py-2 text-right">
-                                    {item.version.rev}
+                                <td class="border-b px-2 py-2 text-right align-top">
+                                    {
+                                        item.version.rev
+                                    }
                                 </td>
                             </tr>
                         )
