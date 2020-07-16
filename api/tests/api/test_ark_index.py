@@ -20,7 +20,7 @@ def test_ark_get_ok(client):
     response = client.get('/ark')
     test_data = [
         entry
-        for entry in response.json()
+        for entry in response.json()['files']
         if entry.get('path').get('name').startswith(os.getenv('ARK_TEST_PREFIX'))
     ]
     assert response.status_code == 200
@@ -35,7 +35,7 @@ def test_ark_get_ok(client):
     response = client.get('/ark')
     test_data = [
         entry
-        for entry in response.json()
+        for entry in response.json()['files']
         if entry.get('path').get('name').startswith(os.getenv('ARK_TEST_PREFIX'))
     ]
     assert response.status_code == 200

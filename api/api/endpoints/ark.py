@@ -49,9 +49,9 @@ class ArkParent(HTTPEndpoint):
         if len(archive_urls) > 0:
             # get the svn info for all listed repositories
             result = await svn.info(*archive_urls)
-            data = result.get('data', [])
+            data = {'files': result.get('data', [])}
         else:
-            data = []
+            data = {}
         return JSONResponse(data)
 
     async def post(self, request):
