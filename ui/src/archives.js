@@ -1,5 +1,5 @@
 const m = require("mithril")
-const {fileSizeStr} = require('./lib')
+const { fileSizeStr } = require('./lib')
 
 var PATH = {
     data: {},
@@ -17,20 +17,46 @@ var PATH = {
     },
 }
 
+// View List of Archives
+var ArchiveListView = {
+    view: function () {
+        return (
+            <>
+                <Breadcrumbs />
+                <CreateArchive />
+                <PathView />
+            </>
+        )
+    }
+}
+
+// View Path in Archive
+var ArchivePathView = {
+    view: function () {
+        return (
+            <>
+                <Breadcrumbs />
+                <PathView />
+            </>
+        )
+    }
+}
+
 var PathLink = {
     view: function (vnode) {
         return (
             <span>{vnode.attrs.prefix || ''}
-                <a href={vnode.attrs.path} onclick={(event) => {
-                    // TODO: Back button not working
-                    event.preventDefault()
-                    m.route.set('/:path...', { path: vnode.attrs.path })
-                    PATH.load(vnode.attrs.path)
-                }}>
+                <a href={vnode.attrs.path} onclick={(event) => {PathLink.clickLink(event, vnode)}}>
                     {vnode.attrs.name}
                 </a>
             </span>
         )
+    },
+    clickLink: function (event, vnode) {
+        // TODO: Back button not working
+        event.preventDefault()
+        m.route.set('/:path...', { path: vnode.attrs.path })
+        PATH.load(vnode.attrs.path)
     }
 }
 
@@ -133,20 +159,40 @@ var PathView = {
         } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
             return <FileView />
         } else {
-            return "loading..."
+            return <div class="mx-2">loading...</div>
         }
     }
 }
 
-var ArchiveView = {
+// Create an Archive
+var CreateArchive = {
     view: function () {
         return (
-            <div>
-                <Breadcrumbs />
-                <PathView />
+            <div class="mx-2">
+                <a href="" onclick={CreateArchive.viewModal}>Create Archive</a>
             </div>
         )
+    },
+    viewModal: function (event) {
+        event.preventDefault();
+        const archiveName = window.prompt("Archive Name:", "")
+        if (archiveName) {
+            m.request({
+                // POST the request to create a new archive
+                method: 'POST',
+                url: 'http://localhost:8000/ark',
+                withCredentials: false,
+                body: { name: archiveName },
+            }).then(function () {
+                // TODO: This should update the display. Why not?
+                Path.load()
+            }).catch(function (error) {
+                if (error.response) {
+                    alert(error.response.message)
+                }
+            })
+        }
     }
 }
 
-module.exports = { ArchiveView }
+module.exports = { ArchiveListView, ArchivePathView }
