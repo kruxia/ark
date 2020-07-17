@@ -16,6 +16,7 @@ module.exports = {
         open: false,
         historyApiFallback: {
             index: 'index.html',
+            disableDotRule: true,
         },
         contentBase: 'dist',
     },
