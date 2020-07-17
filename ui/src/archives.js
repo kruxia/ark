@@ -36,6 +36,9 @@ var ArchivePathView = {
         return (
             <>
                 <Breadcrumbs />
+                <div class="mx-2">
+                    <ViewHistory />
+                </div>
                 <PathView />
             </>
         )
@@ -46,7 +49,7 @@ var PathLink = {
     view: function (vnode) {
         return (
             <span>{vnode.attrs.prefix || ''}
-                <a href={vnode.attrs.path} onclick={(event) => {PathLink.clickLink(event, vnode)}}>
+                <a href={vnode.attrs.path} onclick={(event) => { PathLink.clickLink(event, vnode) }}>
                     {vnode.attrs.name}
                 </a>
             </span>
@@ -194,5 +197,36 @@ var CreateArchive = {
         }
     }
 }
+
+// == PATH ACTIONS ==
+// (both files and directories)
+
+var ViewHistory = {
+    view: function () {
+        return (
+            <span class="mr-2 text-gray-500">View History</span>
+        )
+    }
+}
+
+// == DIRECTORY ACTIONS ==
+// (only on directories)
+
+var CreateFolder = {
+    view: function () {
+        return (
+            <span class="mr-2 text-gray-500">Create Folder</span>
+        )
+    }
+}
+
+var UploadFile = {
+    view: function () {
+        return (
+            <span class="mr-2 text-gray-500">Upload File</span>
+        )
+    }
+}
+
 
 module.exports = { ArchiveListView, ArchivePathView }
