@@ -26,7 +26,7 @@ async def app_shutdown():
     await app.database.disconnect()
 
 
-middleware = [Middleware(CORSMiddleware, allow_origins=['*'])]
+middleware = [Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'])]
 
 routes = [
     Route('/', endpoint=Index),
