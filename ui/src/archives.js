@@ -30,18 +30,18 @@ var PathView = {
                     <div class="mx-2">
                         <CreateArchive />
                     </div>
-                    <DirectoryView />
+                    <DirectoryList />
                 </div>
             )
         } else if (PATH.data.files) {
-            // DirectoryView
+            // DirectoryList
             return (
                 <div>
                     <Breadcrumbs />
                     <div class="mx-2">
                         <CreateFolder />
                     </div>
-                    <DirectoryView />
+                    <DirectoryList />
                 </div>
             )
         } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
@@ -54,12 +54,12 @@ var PathView = {
             )
         } else {
             // nothing yet
-            return <div class="mx-2">loading...</div>
+            // return <div class="mx-2">loading...</div>
         }
     }
 }
 
-var DirectoryView = {
+var DirectoryList = {
     view: function () {
         return (
             <table class="table-auto w-full">
@@ -134,7 +134,7 @@ var PathLink = {
     clickLink: function (event, vnode) {
         // TODO: Back button not working
         // event.preventDefault()
-        // m.route.set('/:path...', { path: vnode.attrs.path })
+        // m.route.set('/:path...', { 'path': vnode.attrs.path || '' })
         // PATH.load(vnode.attrs.path)
     }
 
