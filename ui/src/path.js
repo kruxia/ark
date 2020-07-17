@@ -1,6 +1,6 @@
 const m = require("mithril")
 
-var Path = {
+var PATH = {
     data: {},
     path: '',
     load: function (path) {
@@ -10,8 +10,8 @@ var Path = {
             url: 'http://localhost:8000/ark/' + path,
             withCredentials: false,
         }).then(function (result) {
-            Path.data = result
-            Path.path = path
+            PATH.data = result
+            PATH.path = path
         })
     },
 }
@@ -24,7 +24,7 @@ var PathLink = {
                     // TODO: Back button not working
                     event.preventDefault()
                     m.route.set('/:path...', { path: vnode.attrs.path })
-                    Path.load(vnode.attrs.path)
+                    PATH.load(vnode.attrs.path)
                 }}>
                     {vnode.attrs.name}
                 </a>
@@ -39,9 +39,9 @@ var Breadcrumbs = {
             <div class="mx-2">
                 <PathLink path="" name="archives" />
                 {
-                    Path.path.split('/').map((slug, index) => {
+                    PATH.path.split('/').map((slug, index) => {
                         if (slug) {
-                            var path = Path.path.split('/').slice(0, index + 1).join('/')
+                            var path = PATH.path.split('/').slice(0, index + 1).join('/')
                             return <PathLink path={path} name={slug} prefix=" > " />
                         }
                         else
@@ -66,9 +66,9 @@ var DirectoryView = {
                     </tr>
                 </thead>
                 <tbody>
-                    {Path.data.files.map((item, index) => {
+                    {PATH.data.files.map((item, index) => {
                         var item_path = (
-                            Path.path + '/' + item.path.name
+                            PATH.path + '/' + item.path.name
                         ).replace(/^\//, '')
                         return (
                             <tr key={index}>
@@ -77,7 +77,7 @@ var DirectoryView = {
                                         // TODO: Back button not working
                                         event.preventDefault()
                                         m.route.set('/:path...', { path: item_path })
-                                        Path.load(item_path)
+                                        PATH.load(item_path)
                                     }}>
                                         {item.path.name}
                                     </a>
@@ -116,7 +116,7 @@ var FileView = {
             // TODO: replace this with a more responsible method of creating a preview
             // (since this will only work for files that are already displayable.)
             <div class="m-2 border w-auto h-screen">
-                <iframe src={Path.data.info.path.url} class="w-full h-full" />
+                <iframe src={PATH.data.info.path.url} class="w-full h-full" />
             </div>
         )
     }
@@ -124,12 +124,12 @@ var FileView = {
 
 var PathView = {
     oninit: (vnode) => {
-        Path.load(vnode.attrs.path)
+        PATH.load(vnode.attrs.path)
     },
     view: function () {
-        if (Path.data.files) {
+        if (PATH.data.files) {
             return <DirectoryView />
-        } else if (Path.data.info && Path.data.info.path.kind == 'file') {
+        } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
             return <FileView />
         } else {
             return "loading..."
@@ -169,7 +169,7 @@ function fileSizeStr(size) {
                 (unit == '' ? size : size.toFixed(FILE_SIZE_DECIMALS))
                 + FILE_SIZE_SEP
                 + unit
-                + 'B'
+                + (unit == '' ? 'bytes' : FILE_SIZE_SUFFIX)
             )
         }
         size = size / FILE_SIZE_K
