@@ -60,9 +60,9 @@ var DirectoryView = {
                 <thead>
                     <tr>
                         <th class="border-b px-2 py-2 text-left">name</th>
-                        <th class="border-b px-2 py-2 text-left">size</th>
-                        <th class="border-b px-2 py-2 text-left">last modified</th>
-                        <th class="border-b px-2 py-2 text-right">rev</th>
+                        <th class="border-b px-2 py-2 text-left w-24">size</th>
+                        <th class="border-b px-2 py-2 text-left w-56">last modified</th>
+                        <th class="border-b px-2 py-2 text-right w-8">rev</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -85,7 +85,7 @@ var DirectoryView = {
                                 <td class="border-b px-2 py-2 text-left align-top">
                                     {
                                         // TODO: Readable size
-                                        item.path.size
+                                        fileSizeStr(item.path.size)
                                     }
                                 </td>
                                 <td class="border-b px-2 py-2 text-left align-top">
@@ -145,6 +145,34 @@ var ArchiveView = {
                 <PathView />
             </div>
         )
+    }
+}
+
+// Given a file size in bytes, return a size string
+const FILE_SIZE_K = 1000
+const FILE_SIZE_SUFFIX = 'B'
+const FILE_SIZE_DECIMALS = 1
+const FILE_SIZE_SEP = '\u00a0'
+const FILE_SIZE_UNITS = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+const FILE_SIZE_UNITS_LAST_INDEX = FILE_SIZE_UNITS.length - 1
+
+function fileSizeStr(size) {
+    if (!size) {
+        return ''
+    }
+    for (unit of FILE_SIZE_UNITS) {
+        if (
+            Math.abs(size) < FILE_SIZE_K
+            || unit == FILE_SIZE_UNITS[FILE_SIZE_UNITS_LAST_INDEX]
+        ) {
+            return (
+                (unit == '' ? size : size.toFixed(FILE_SIZE_DECIMALS))
+                + FILE_SIZE_SEP
+                + unit
+                + 'B'
+            )
+        }
+        size = size / FILE_SIZE_K
     }
 }
 
