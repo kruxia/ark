@@ -17,69 +17,45 @@ var PATH = {
     },
 }
 
-// View List of Archives
-var ArchiveListView = {
-    view: function () {
-        return (
-            <>
-                <Breadcrumbs />
-                <CreateArchive />
-                <PathView />
-            </>
-        )
-    }
-}
-
-// View Path in Archive
-var ArchivePathView = {
-    view: function () {
-        return (
-            <>
-                <Breadcrumbs />
-                <div class="mx-2">
-                    <ViewHistory />
-                </div>
-                <PathView />
-            </>
-        )
-    }
-}
-
-var PathLink = {
-    view: function (vnode) {
-        return (
-            <span>{vnode.attrs.prefix || ''}
-                <a href={vnode.attrs.path} onclick={(event) => { PathLink.clickLink(event, vnode) }}>
-                    {vnode.attrs.name}
-                </a>
-            </span>
-        )
-    },
-    clickLink: function (event, vnode) {
-        // TODO: Back button not working
-        event.preventDefault()
-        m.route.set('/:path...', { path: vnode.attrs.path })
+var PathView = {
+    oninit: (vnode) => {
         PATH.load(vnode.attrs.path)
-    }
-}
-
-var Breadcrumbs = {
+    },
     view: function () {
-        return (
-            <div class="mx-2">
-                <PathLink path="" name="archives" />
-                {
-                    PATH.path.split('/').map((slug, index) => {
-                        if (slug) {
-                            var path = PATH.path.split('/').slice(0, index + 1).join('/')
-                            return <PathLink path={path} name={slug} prefix=" > " />
-                        }
-                        else
-                            return ""
-                    })
-                }
-            </div>
-        )
+        if (!PATH.data.info && PATH.data.files) {
+            // List Archives View
+            return (
+                <div>
+                    <Breadcrumbs />
+                    <div class="mx-2">
+                        <CreateArchive />
+                    </div>
+                    <DirectoryView />
+                </div>
+            )
+        } else if (PATH.data.files) {
+            // DirectoryView
+            return (
+                <div>
+                    <Breadcrumbs />
+                    <div class="mx-2">
+                        <CreateFolder />
+                    </div>
+                    <DirectoryView />
+                </div>
+            )
+        } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
+            // File View
+            return (
+                <div>
+                    <Breadcrumbs />
+                    <FileView />
+                </div>
+            )
+        } else {
+            // nothing yet
+            return <div class="mx-2">loading...</div>
+        }
     }
 }
 
@@ -103,14 +79,7 @@ var DirectoryView = {
                         return (
                             <tr key={index}>
                                 <td class="border-b px-2 py-2 text-left align-top">
-                                    <a href={item_path} onclick={(event) => {
-                                        // TODO: Back button not working
-                                        event.preventDefault()
-                                        m.route.set('/:path...', { path: item_path })
-                                        PATH.load(item_path)
-                                    }}>
-                                        {item.path.name}
-                                    </a>
+                                    <PathLink path={item_path} name={item.path.name} />
                                 </td>
                                 <td class="border-b px-2 py-2 text-left align-top">
                                     {
@@ -152,18 +121,43 @@ var FileView = {
     }
 }
 
-var PathView = {
-    oninit: (vnode) => {
-        PATH.load(vnode.attrs.path)
+var PathLink = {
+    view: function (vnode) {
+        return (
+            <span>{vnode.attrs.prefix || ''}
+                <a href={vnode.attrs.path} onclick={(event) => { PathLink.clickLink(event, vnode) }}>
+                    {vnode.attrs.name}
+                </a>
+            </span>
+        )
     },
+    clickLink: function (event, vnode) {
+        // TODO: Back button not working
+        // event.preventDefault()
+        // m.route.set('/:path...', { path: vnode.attrs.path })
+        // PATH.load(vnode.attrs.path)
+    }
+
+}
+
+var Breadcrumbs = {
     view: function () {
-        if (PATH.data.files) {
-            return <DirectoryView />
-        } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
-            return <FileView />
-        } else {
-            return <div class="mx-2">loading...</div>
-        }
+        return (
+            <div class="mx-2">
+                <PathLink path="/" name="archives" />
+                {
+                    PATH.path.split('/').map((slug, index) => {
+                        if (slug) {
+                            var path = "/" + PATH.path.split('/').slice(0, index + 1).join('/')
+                            return <PathLink path={path} name={slug} prefix=" > " />
+                        }
+                        else {
+                            return ""
+                        }
+                    })
+                }
+            </div>
+        )
     }
 }
 
@@ -171,9 +165,9 @@ var PathView = {
 var CreateArchive = {
     view: function () {
         return (
-            <div class="mx-2">
+            <span class="mr-2">
                 <a href="" onclick={CreateArchive.viewModal}>Create Archive</a>
-            </div>
+            </span>
         )
     },
     viewModal: function (event) {
@@ -186,9 +180,8 @@ var CreateArchive = {
                 url: 'http://localhost:8000/ark',
                 withCredentials: false,
                 body: { name: archiveName },
-            }).then(function () {
-                // TODO: This should update the display. Why not?
-                Path.load()
+            }).then(function (response) {
+                PATH.load('')
             }).catch(function (error) {
                 if (error.response) {
                     alert(error.response.message)
@@ -204,7 +197,9 @@ var CreateArchive = {
 var ViewHistory = {
     view: function () {
         return (
-            <span class="mr-2 text-gray-500">View History</span>
+            <span class="mr-2 text-gray-500">
+                View History
+            </span>
         )
     }
 }
@@ -215,7 +210,9 @@ var ViewHistory = {
 var CreateFolder = {
     view: function () {
         return (
-            <span class="mr-2 text-gray-500">Create Folder</span>
+            <span class="mr-2 text-gray-500">
+                Create Folder
+            </span>
         )
     }
 }
@@ -223,10 +220,12 @@ var CreateFolder = {
 var UploadFile = {
     view: function () {
         return (
-            <span class="mr-2 text-gray-500">Upload File</span>
+            <span class="mr-2 text-gray-500">
+                Upload File
+            </span>
         )
     }
 }
 
 
-module.exports = { ArchiveListView, ArchivePathView }
+module.exports = { PathView }
