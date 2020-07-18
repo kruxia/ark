@@ -83,7 +83,8 @@ class ArkPath(HTTPEndpoint):
 
     async def put(self, request):
         """
-        Create or update a file at path, if the parent is a directory and exists.
+        Create a folder, or create or update a file, at path, if the parent is a
+        directory and exists.
         """
         if not request.path_params.get('path'):
             result = Status(
