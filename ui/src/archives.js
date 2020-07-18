@@ -6,7 +6,7 @@ var PATH = {
     data: {},
     path: '',
     load: function (path) {
-        path = path || ''
+        path = path || PATH.path
         return m.request({
             method: 'GET',
             url: 'http://localhost:8000/ark/' + path,
@@ -218,7 +218,7 @@ var ActionCreateArchive = {
                 withCredentials: false,
                 body: { name: archiveName },
             }).then(function (response) {
-                PATH.load('')
+                window.location = '/' + archiveName
             }).catch(function (error) {
                 if (error.response) {
                     alert(error.response.message)
@@ -247,11 +247,32 @@ var ViewHistory = {
 var ActionCreateFolder = {
     view: function () {
         return (
-            <span class="mr-2 text-gray-500">
-                <IconFolderNew class="h-6 mr-1 align-top"/>
-                Create Folder
-            </span>
+            <a href="" onclick={ActionCreateFolder.viewModal}>
+                <span class="mr-2 text-gray-500">
+                    <IconFolderNew class="h-6 mr-1 align-top" />
+                    Create Folder
+                </span>
+            </a>
         )
+    },
+    viewModal: function (event) {
+        event.preventDefault();
+        const folderName = window.prompt("Folder Name:", "")
+        console.log(folderName)
+        if (folderName) {
+            m.request({
+                // PUT the request to create a new folder
+                method: 'PUT',
+                url: 'http://localhost:8000/ark/' + PATH.path + '/' + folderName,
+                withCredentials: false,
+            }).then(function (response) {
+                window.location = '/' + PATH.path + '/' + folderName
+            }).catch(function (error) {
+                if (error.response) {
+                    alert(error.response.message)
+                }
+            })
+        }
     }
 }
 
