@@ -1,5 +1,6 @@
 const m = require("mithril")
 const { fileSizeStr } = require('./lib')
+const { IconArchiveNew, IconFolderNew } = require('./icons')
 
 var PATH = {
     data: {},
@@ -24,38 +25,60 @@ var PathView = {
     view: function () {
         if (!PATH.data.info && PATH.data.files) {
             // List Archives View
-            return (
-                <div>
-                    <Breadcrumbs />
-                    <div class="mx-2">
-                        <CreateArchive />
-                    </div>
-                    <DirectoryList />
-                </div>
-            )
+            return <ArchivesView />
         } else if (PATH.data.files) {
-            // DirectoryList
-            return (
-                <div>
-                    <Breadcrumbs />
-                    <div class="mx-2">
-                        <CreateFolder />
-                    </div>
-                    <DirectoryList />
-                </div>
-            )
+            return <DirectoryView />
         } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
             // File View
-            return (
-                <div>
-                    <Breadcrumbs />
-                    <FileView />
-                </div>
-            )
-        } else {
-            // nothing yet
-            // return <div class="mx-2">loading...</div>
-        }
+            return <FileView />
+        } // else {
+        // nothing yet
+        // return <div class="mx-2">loading...</div>
+        // }
+    }
+}
+
+var ArchivesView = {
+    view: function () {
+        return (
+            <div>
+                <Breadcrumbs />
+                <ArchivesActions />
+                <DirectoryList />
+            </div>
+        )
+    }
+}
+
+var ArchivesActions = {
+    view: function () {
+        return (
+            <div class="mx-2">
+                <ActionCreateArchive />
+            </div>
+        )
+    }
+}
+
+var DirectoryView = {
+    view: function () {
+        return (
+            <div>
+                <Breadcrumbs />
+                <DirectoryActions />
+                <DirectoryList />
+            </div>
+        )
+    }
+}
+
+var DirectoryActions = {
+    view: function () {
+        return (
+            <div class="mx-2">
+                <ActionCreateFolder />
+            </div>
+        )
     }
 }
 
@@ -112,6 +135,17 @@ var DirectoryList = {
 var FileView = {
     view: function () {
         return (
+            <div>
+                <Breadcrumbs />
+                <FileIFrame />
+            </div>
+        )
+    }
+}
+
+var FileIFrame = {
+    view: function () {
+        return (
             // TODO: replace this with a more responsible method of creating a preview
             // (since this will only work for files that are already displayable.)
             <div class="m-2 border w-auto h-screen">
@@ -162,11 +196,14 @@ var Breadcrumbs = {
 }
 
 // Create an Archive
-var CreateArchive = {
+var ActionCreateArchive = {
     view: function () {
         return (
             <span class="mr-2">
-                <a href="" onclick={CreateArchive.viewModal}>Create Archive</a>
+                <a href="" onclick={ActionCreateArchive.viewModal}>
+                    <IconArchiveNew class="h-6 mr-1" />
+                    Create Archive
+                </a>
             </span>
         )
     },
@@ -207,10 +244,11 @@ var ViewHistory = {
 // == DIRECTORY ACTIONS ==
 // (only on directories)
 
-var CreateFolder = {
+var ActionCreateFolder = {
     view: function () {
         return (
             <span class="mr-2 text-gray-500">
+                <IconFolderNew class="h-6 mr-1 align-top"/>
                 Create Folder
             </span>
         )
