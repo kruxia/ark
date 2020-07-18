@@ -302,10 +302,8 @@ var ActionUploadFile = {
         // TODO: Support multiple file upload
         for (file of event.target.files) {
             const url = 'http://localhost:8000/ark/' + PATH.path + '/' + file.name
-            console.log(url)
             var body = new FormData(form)
             body["file"] = file
-            console.log(url)
             m.request({
                 method: "PUT",
                 url: url,
@@ -315,6 +313,7 @@ var ActionUploadFile = {
                 PATH.load()
             }).catch((error) => {
                 console.log(error.response)
+                alert(error.response.error)
             })
         }
     }
