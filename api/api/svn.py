@@ -270,7 +270,7 @@ async def put(url, body=None, message=None, revprops=None):
     else:
         # file from body
         cmd = ['svnmucc', '--message', message]
-        for key, val in revprops.items():
+        for key, val in (revprops or {}).items():
             cmd += ['--with-revprop', f"{key}={val}"]
 
         with tempfile.NamedTemporaryFile() as tf:

@@ -24,8 +24,10 @@ def create_archive(client, n):
 
 
 def create_file(client, name, path, body=b'hello'):
+    # PUT the form to the file
     url = f"/ark/{name}/{path}"
-    response = client.put(url, data=BytesIO(body))
+    # The body must be posted as a multipart form with "file" for the file data.
+    response = client.put(url, files={'file': body})
     return response
 
 
@@ -335,14 +337,16 @@ def test_put_ark_name_path(client):
     ]
 
     for fixture in fixtures:
+        print(fixture)
         response = client.put(
             f"{url}/{fixture['path']}",
-            data=BytesIO(fixture['body']) if fixture['body'] is not None else None,
+            files={'file': fixture['body']} if fixture['body'] is not None else None,
         )
         assert response.status_code == fixture['status']
+        
         response = client.get(f"{url}/{fixture['path']}")
         data = response.json()
-        print(data)
+        print(' ', data)
         if fixture['kind'] is None:
             assert response.status_code == 404  # create failed, thing doesn't exist
         else:

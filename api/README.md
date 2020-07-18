@@ -63,7 +63,7 @@ branch = master
     - [x] pytest
   * [x] PUT `/ark/NAME[/PATH]` = 
     - [x] PATH must be non-empty — cannot PUT to repository root (instead, POST to /ark)
-    - [x] create/update this folder/file content 
+    - [x] create folder / create or update file at this path
     - [x] new w/empty body => svn mkdir, non-empty body => svnmucc put
     - [x] mkdir: make directories down to the given path
     - [x] update existing folder w/body makes it a file (replacing it and all children)

@@ -86,25 +86,23 @@ class ArkPath(HTTPEndpoint):
         Create a folder, or create or update a file, at path, if the parent is a
         directory and exists.
         """
-        if not request.path_params.get('path'):
-            result = Status(
-                **{
-                    'code': 409,
-                    'message': "It’s meaningless to PUT to the archive root",
-                }
-            ).dict()
-
+        url = self.archive_url(request)
+        message = request.query_params.get('message')
+        form = await request.form()
+        revprops = {
+            key: val
+            for key, val in request.query_params.items()
+            if key != 'message'
+        }
+        file = form.get('file')
+        if not file:
+            # directory
+            result = await svn.put(url, message=message, revprops=revprops)
         else:
-            body = await request.body()
-            url = self.archive_url(request)
-            message = request.query_params.get('message')
-            revprops = {
-                key: val
-                for key, val in request.query_params.items()
-                if key != 'message'
-            }
+            # file
+            body = await file.read()
             result = await svn.put(url, body=body, message=message, revprops=revprops)
-
+            
         return JSONResponse(
             result,
             status_code=result.get('code') or (409 if result.get('error') else 201),

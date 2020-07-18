@@ -1,6 +1,6 @@
 const m = require("mithril")
 const { fileSizeStr } = require('./lib')
-const { IconArchiveNew, IconFolderNew } = require('./icons')
+const { IconArchiveNew, IconFolderNew, IconUpload } = require('./icons')
 
 var PATH = {
     data: {},
@@ -77,6 +77,7 @@ var DirectoryActions = {
         return (
             <div class="mx-2">
                 <ActionCreateFolder />
+                <ActionUploadFile />
             </div>
         )
     }
@@ -96,9 +97,7 @@ var DirectoryList = {
                 </thead>
                 <tbody>
                     {PATH.data.files.map((item, index) => {
-                        var item_path = (
-                            PATH.path + '/' + item.path.name
-                        ).replace(/^\//, '')
+                        var item_path = ('/' + PATH.path + '/' + item.path.name).replace(/^\/\//, '/')
                         return (
                             <tr key={index}>
                                 <td class="border-b px-2 py-2 text-left align-top">
@@ -249,7 +248,7 @@ var ActionCreateFolder = {
     view: function () {
         return (
             <a href="" onclick={ActionCreateFolder.create}>
-                <span class="mr-2 text-gray-500">
+                <span class="mr-2">
                     <IconFolderNew class="h-6 mr-1 align-top" />
                     Create Folder
                 </span>
@@ -261,6 +260,8 @@ var ActionCreateFolder = {
         const folderName = window.prompt("Folder Name:", "")
         console.log(folderName)
         if (folderName) {
+            const url = 'http://localhost:8000/ark/' + PATH.path + '/' + folderName
+            console.log('PUT: ' + url)
             m.request({
                 // PUT the request to create a new folder
                 method: 'PUT',
@@ -271,20 +272,51 @@ var ActionCreateFolder = {
                 window.location = '/' + PATH.path + '/' + folderName
             }).catch(function (error) {
                 if (error.response) {
-                    alert(error.response.message)
+                    console.log(error.response)
+                    alert(error.response.error)
                 }
             })
         }
     }
 }
 
-var UploadFile = {
+var ActionUploadFile = {
     view: function () {
         return (
-            <span class="mr-2 text-gray-500">
-                Upload File
+            <span class="mr-2">
+                <IconUpload class="h6 mr-1 align-top" />
+                <a href="" onclick={ActionUploadFile.click}>Upload File</a>
+                <form class="inline" enctype="multipart/form-data" class="hidden">
+                    <input id="upload_file" name="file" type="file" onchange={ActionUploadFile.upload} />
+                </form>
             </span>
         )
+    },
+    click: function (event) {
+        event.preventDefault();
+        document.getElementById('upload_file').click()
+    },
+    upload: function (event) {
+        event.preventDefault()
+        var form = event.target.parentNode
+        // TODO: Support multiple file upload
+        for (file of event.target.files) {
+            const url = 'http://localhost:8000/ark/' + PATH.path + '/' + file.name
+            console.log(url)
+            var body = new FormData(form)
+            body["file"] = file
+            console.log(url)
+            m.request({
+                method: "PUT",
+                url: url,
+                body: body,
+            }).then((result) => {
+                console.log(result)
+                PATH.load()
+            }).catch((error) => {
+                console.log(error.response)
+            })
+        }
     }
 }
 
