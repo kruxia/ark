@@ -1,7 +1,7 @@
 const m = require("mithril")
-const { PathView } = require("./archives")
+const { ArchivePathView } = require("./archives")
 
 m.route.prefix = ''
 m.route(document.getElementById("main"), '/:path...', {
-    '/:path...': PathView,
+    '/:path...': ArchivePathView,
 });

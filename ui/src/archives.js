@@ -18,7 +18,7 @@ var PATH = {
     },
 }
 
-var PathView = {
+var ArchivePathView = {
     oninit: (vnode) => {
         PATH.load(vnode.attrs.path)
     },
@@ -266,4 +266,4 @@ var UploadFile = {
 }
 
 
-module.exports = { PathView }
+module.exports = { ArchivePathView }
