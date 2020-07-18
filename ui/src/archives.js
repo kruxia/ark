@@ -200,14 +200,14 @@ var ActionCreateArchive = {
     view: function () {
         return (
             <span class="mr-2">
-                <a href="" onclick={ActionCreateArchive.viewModal}>
+                <a href="" onclick={ActionCreateArchive.create}>
                     <IconArchiveNew class="h-6 mr-1" />
                     Create Archive
                 </a>
             </span>
         )
     },
-    viewModal: function (event) {
+    create: function (event) {
         event.preventDefault();
         const archiveName = window.prompt("Archive Name:", "")
         if (archiveName) {
@@ -218,6 +218,7 @@ var ActionCreateArchive = {
                 withCredentials: false,
                 body: { name: archiveName },
             }).then(function (response) {
+                // browse to the new archive
                 window.location = '/' + archiveName
             }).catch(function (error) {
                 if (error.response) {
@@ -247,7 +248,7 @@ var ViewHistory = {
 var ActionCreateFolder = {
     view: function () {
         return (
-            <a href="" onclick={ActionCreateFolder.viewModal}>
+            <a href="" onclick={ActionCreateFolder.create}>
                 <span class="mr-2 text-gray-500">
                     <IconFolderNew class="h-6 mr-1 align-top" />
                     Create Folder
@@ -255,7 +256,7 @@ var ActionCreateFolder = {
             </a>
         )
     },
-    viewModal: function (event) {
+    create: function (event) {
         event.preventDefault();
         const folderName = window.prompt("Folder Name:", "")
         console.log(folderName)
@@ -266,6 +267,7 @@ var ActionCreateFolder = {
                 url: 'http://localhost:8000/ark/' + PATH.path + '/' + folderName,
                 withCredentials: false,
             }).then(function (response) {
+                // browse to the new folder
                 window.location = '/' + PATH.path + '/' + folderName
             }).catch(function (error) {
                 if (error.response) {
