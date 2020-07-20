@@ -49,7 +49,7 @@ var PathLink = {
         return (
             <span>{vnode.attrs.prefix || ''}
                 <a href={vnode.attrs.path} onclick={(event) => { PathLink.clickLink(event, vnode) }}>
-                    {vnode.attrs.name}
+                    {decodeURI(vnode.attrs.name)}
                 </a>
             </span>
         )
