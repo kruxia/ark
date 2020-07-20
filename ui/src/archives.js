@@ -1,7 +1,8 @@
 const m = require("mithril")
 const { fileSizeStr } = require('./lib')
-const { IconArchiveNew, IconFolderNew, IconUpload } = require('./icons')
-var {PATH, Breadcrumbs, PathLink} = require('./path')
+const { IconArchiveNew, IconFolderNew, IconUpload, IconDelete, IconHistory, IconHistoryOff } = require('./icons')
+const { HistoryPanel } = require('./history-panel')
+var { PATH, Breadcrumbs, PathLink } = require('./path')
 
 var ArchivePathView = {
     oninit: (vnode) => {
@@ -17,8 +18,8 @@ var ArchivePathView = {
             // File View
             return <FileView />
         } else {
-        // nothing yet
-        // return <div class="mx-2">loading...</div>
+            // nothing yet
+            // return <div class="mx-2">loading...</div>
         }
     }
 }
@@ -51,6 +52,7 @@ var DirectoryView = {
             <div>
                 <Breadcrumbs />
                 <DirectoryActions />
+                <HistoryPanel />
                 <DirectoryList />
             </div>
         )
@@ -63,6 +65,7 @@ var DirectoryActions = {
             <div class="mx-2">
                 <ActionCreateFolder />
                 <ActionUploadFile />
+                <ActionViewHistory />
             </div>
         )
     }
@@ -73,49 +76,49 @@ var DirectoryList = {
         return (
             <div class="m-2 p-2 border shadow">
                 <h2>Contents</h2>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th class="border-b px-2 py-2 text-left">name</th>
-                        <th class="border-b px-2 py-2 text-left w-24">size</th>
-                        <th class="border-b px-2 py-2 text-left w-56">last modified</th>
-                        <th class="border-b px-2 py-2 text-right w-8">rev</th>
-                    </tr>
-                </thead>
-                <tbody>
+                <table class="table-auto w-full">
+                    <thead>
+                        <tr>
+                            <th class="border-b px-2 py-2 text-left">name</th>
+                            <th class="border-b px-2 py-2 text-left w-24">size</th>
+                            <th class="border-b px-2 py-2 text-left w-56">last modified</th>
+                            <th class="border-b px-2 py-2 text-right w-8">rev</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         {
                             PATH.data.files.map((item, index) => {
-                        var item_path = ('/' + PATH.path + '/' + item.path.name).replace(/^\/\//, '/')
-                        return (
-                            <tr key={index}>
-                                <td class="border-b px-2 py-2 text-left align-top">
-                                    <PathLink path={item_path} name={item.path.name} />
-                                </td>
-                                <td class="border-b px-2 py-2 text-left align-top">
-                                    {
-                                        // TODO: Readable size
-                                        fileSizeStr(item.path.size)
-                                    }
-                                </td>
-                                <td class="border-b px-2 py-2 text-left align-top">
-                                    {
-                                        // TODO: Better date formatting
-                                        item.version.date
-                                            .replace(/\.\d+/, '').replace('T', ' ')
-                                            .replace('+00:00', ' UTC')
-                                    }
-                                </td>
-                                <td class="border-b px-2 py-2 text-right align-top">
-                                    {
-                                        item.version.rev
-                                    }
-                                </td>
-                            </tr>
-                        )
+                                var item_path = ('/' + PATH.path + '/' + item.path.name).replace(/^\/\//, '/')
+                                return (
+                                    <tr key={index}>
+                                        <td class="border-b px-2 py-2 text-left align-top">
+                                            <PathLink path={item_path} name={item.path.name} />
+                                        </td>
+                                        <td class="border-b px-2 py-2 text-left align-top">
+                                            {
+                                                // TODO: Readable size
+                                                fileSizeStr(item.path.size)
+                                            }
+                                        </td>
+                                        <td class="border-b px-2 py-2 text-left align-top">
+                                            {
+                                                // TODO: Better date formatting
+                                                item.version.date
+                                                    .replace(/\.\d+/, '').replace('T', ' ')
+                                                    .replace('+00:00', ' UTC')
+                                            }
+                                        </td>
+                                        <td class="border-b px-2 py-2 text-right align-top">
+                                            {
+                                                item.version.rev
+                                            }
+                                        </td>
+                                    </tr>
+                                )
                             })
                         }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
             </div>
         )
     }
@@ -175,19 +178,6 @@ var ActionCreateArchive = {
                 }
             })
         }
-    }
-}
-
-// == PATH ACTIONS ==
-// (both files and directories)
-
-var ViewHistory = {
-    view: function () {
-        return (
-            <span class="mr-2 text-gray-500">
-                View History
-            </span>
-        )
     }
 }
 
@@ -269,5 +259,36 @@ var ActionUploadFile = {
     }
 }
 
+// == PATH ACTIONS ==
+// (both files and directories)
+
+var ActionViewHistory = {
+    view: function () {
+        if (HistoryPanel.visible == false) {
+            return (
+                <a href="" class="mr-2" onclick={ActionViewHistory.viewHistory}>
+                    <IconHistory class="h6 mr-1 align-top" />
+                    View History
+                </a>
+            )
+        } else {
+            return (
+                <a href="" class="mr-2" onclick={ActionViewHistory.viewHistory}>
+                    <IconHistoryOff class="h6 mr-1 align-top" />
+                    Hide History
+                </a>
+            )
+        }
+    },
+    viewHistory: function (event) {
+        event.preventDefault()
+        if (HistoryPanel.visible == false) {
+            HistoryPanel.load()
+            HistoryPanel.visible = true
+        } else {
+            HistoryPanel.visible = false
+        }
+    }
+}
 
 module.exports = { ArchivePathView }
