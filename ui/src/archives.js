@@ -129,7 +129,19 @@ var FileView = {
         return (
             <div>
                 <Breadcrumbs />
+                <FileActions />
+                <HistoryPanel />
                 <FileIFrame />
+            </div>
+        )
+    }
+}
+
+var FileActions = {
+    view: function () {
+        return (
+            <div class="mx-2">
+                <ActionViewHistory />
             </div>
         )
     }
@@ -288,6 +300,17 @@ var ActionViewHistory = {
         } else {
             HistoryPanel.visible = false
         }
+    }
+}
+
+var ActionDeletePath = {
+    view: function () {
+        return (
+            <span class="mr-2">
+                <IconDelete class="h6 mr-1 align-top" />
+                Delete
+            </span>
+        )
     }
 }
 
