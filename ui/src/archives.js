@@ -1,8 +1,9 @@
 const m = require("mithril")
 const { fileSizeStr } = require('./lib')
-const { IconArchiveNew, IconFolderNew, IconUpload, IconDelete, IconHistory, IconHistoryOff } = require('./icons')
+const { IconArchiveNew, IconFolderNew, IconUpload, IconCopy, IconDelete, IconHistory, IconHistoryOff } = require('./icons')
 const { HistoryPanel } = require('./history-panel')
 var { PATH, Breadcrumbs, PathLink } = require('./path')
+var ARCHIVE_URL = process.env.ARCHIVE_URL
 
 var ArchivePathView = {
     oninit: (vnode) => {
@@ -66,6 +67,7 @@ var DirectoryActions = {
                 <ActionCreateFolder />
                 <ActionUploadFile />
                 <ActionViewHistory />
+                <ActionCopyArchiveURL />
             </div>
         )
     }
@@ -268,6 +270,30 @@ var ActionUploadFile = {
                 alert(error.response.error)
             })
         }
+    }
+}
+
+var ActionCopyArchiveURL = {
+    view: function () {
+        return (
+            <span class="mr-2">
+                <a href="" onclick={ActionCopyArchiveURL.click}>
+                    <IconCopy class="h-6 mr-1" />
+                    Copy URL
+                </a>
+                <input type="text" id="path-archive-url-data" value={'http://localhost:7000/' + PATH.path} class="w-full opacity-0 absolute" hidden="hidden"/>
+            </span>
+        )
+    },
+    click: function (event) {
+        event.preventDefault()
+        var element = document.getElementById('path-archive-url-data')
+        element.hidden = false
+        element.select()
+        element.setSelectionRange(0, 99999)
+        document.execCommand('copy')
+        element.hidden = true
+        alert('Copied URL: ' + element.value)
     }
 }
 
