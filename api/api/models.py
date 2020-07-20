@@ -2,6 +2,7 @@ import os
 import re
 import typing
 from datetime import datetime
+from enum import Enum
 from pydantic import BaseModel
 from uuid import UUID
 
@@ -16,6 +17,11 @@ class Status(BaseModel):
 
 
 # == SVN Info ==
+
+
+class NodeKind(Enum):
+    File = 'file'
+    Dir = 'dir'
 
 
 class ArchiveInfo(BaseModel):
@@ -47,7 +53,7 @@ class PathInfo(BaseModel):
     """
 
     name: str
-    kind: str
+    kind: NodeKind
     url: str = None
     size: int = None
 
@@ -160,14 +166,21 @@ class Info(BaseModel):
 # == SVN Log ==
 
 
+class LogPathAction(Enum):
+    Added = 'A'
+    Deleted = 'D'
+    Modified = 'M'
+    Replaced = 'R'
+
+
 class LogPath(BaseModel):
     """
     Data structure for an archive file path, as returned by `svn log`.
     """
 
     name: str
-    kind: str
-    action: str
+    kind: NodeKind
+    action: LogPathAction
     prop_mods: bool
     text_mods: bool
 
@@ -179,7 +192,7 @@ class LogPath(BaseModel):
         return cls(
             name=path.text.lstrip('/'),
             kind=path.get('kind'),
-            action=path.get('action'),
+            action=LogPathAction(path.get('action')),
             prop_mods=path.get('prop-mods'),
             text_mods=path.get('text-mods'),
         )
@@ -192,7 +205,7 @@ class LogEntry(BaseModel):
 
     rev: int
     date: datetime
-    message: str
+    message: str = None
     paths: typing.List[LogPath]
 
     @classmethod

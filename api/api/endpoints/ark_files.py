@@ -2,7 +2,7 @@ import asyncio
 import os
 from starlette.endpoints import HTTPEndpoint
 from api.responses import JSONResponse
-from api.models import Status
+from api.models import NodeKind, Status
 from api import svn
 
 
@@ -52,7 +52,7 @@ class ArkPath(HTTPEndpoint):
                 result['revprops'] = revprops['data']
             result['log'] = log['data'] if 'data' in log else []
 
-        if result.get('info', {}).get('path', {}).get('kind') == 'dir':
+        if result.get('info', {}).get('path', {}).get('kind') == NodeKind.Dir:
             files = await svn.list_files(url, **kw)
             result['files'] = files['data'] if 'data' in files else []
 
