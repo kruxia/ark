@@ -1,5 +1,12 @@
 const m = require('mithril')
 
+var ACTIONS = {
+    A: 'Added',
+    D: 'Deleted',
+    M: 'Modified',
+    R: 'Replaced',
+}
+
 var PATH = {
     data: {},
     path: '',
@@ -56,4 +63,4 @@ var PathLink = {
 
 }
 
-module.exports = { PATH, Breadcrumbs, PathLink }
+module.exports = { ACTIONS, PATH, Breadcrumbs, PathLink }
