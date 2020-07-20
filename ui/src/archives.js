@@ -71,6 +71,8 @@ var DirectoryActions = {
 var DirectoryList = {
     view: function () {
         return (
+            <div class="m-2 p-2 border shadow">
+                <h2>Contents</h2>
             <table class="table-auto w-full">
                 <thead>
                     <tr>
@@ -81,7 +83,8 @@ var DirectoryList = {
                     </tr>
                 </thead>
                 <tbody>
-                    {PATH.data.files.map((item, index) => {
+                        {
+                            PATH.data.files.map((item, index) => {
                         var item_path = ('/' + PATH.path + '/' + item.path.name).replace(/^\/\//, '/')
                         return (
                             <tr key={index}>
@@ -109,9 +112,11 @@ var DirectoryList = {
                                 </td>
                             </tr>
                         )
-                    })}
+                            })
+                        }
                 </tbody>
             </table>
+            </div>
         )
     }
 }
