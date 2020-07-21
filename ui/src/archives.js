@@ -92,6 +92,7 @@ var DirectoryActions = {
                 <ActionUploadFile />
                 <ActionViewHistory />
                 <ActionCopyArchiveURL />
+                <ActionDeleteThisPath />
             </div>
         )
     }
@@ -155,6 +156,7 @@ var FileActions = {
         return (
             <div class="mx-2">
                 <ActionViewHistory />
+                <ActionDeleteThisPath />
             </div>
         )
     }
@@ -305,6 +307,39 @@ var ActionCopyArchiveURL = {
         document.execCommand('copy')
         element.hidden = true
         alert('Copied URL: ' + element.value)
+    }
+}
+
+var ActionDeleteThisPath = {
+    view: function (vnode) {
+        const deletePath = vnode.attrs.path || PATH.path
+        if (deletePath != PATH.data.info.archive.name) {
+            return (
+                <a href={'/' + deletePath} class="mr-2" onclick={ActionDeleteThisPath.delete}>
+                    <IconDelete class="h6 mr-1 align-top" />
+                    Delete {deletePath}
+                </a>
+            )
+        }
+    },
+    delete: function (event) {
+        event.preventDefault()
+        var deleteURL = event.target.getAttribute('href')
+        m.request({
+            // DELETE the given path
+            method: 'DELETE',
+            url: 'http://localhost:8000/ark' + deleteURL,
+            withCredentials: false,
+        }).then(function (response) {
+            // browse to the new archive
+            var newLocation = deleteURL.replace(/\/[^\/]*$/, '')
+            window.location = newLocation
+        }).catch(function (error) {
+            if (error.response) {
+                alert(error.response.message)
+            }
+        })
+
     }
 }
 
