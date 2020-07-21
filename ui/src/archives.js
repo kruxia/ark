@@ -57,8 +57,27 @@ var DirectoryView = {
                     <div class="w-full sm:w-5/12 lg:w-4/12">
                         <HistoryPanel />
                     </div>
-                    <div class="w-full sm:w-7/12 lg:w-8/12">
+                    <div class="w-full pr-2 sm:w-7/12 lg:w-8/12">
                         <DirectoryList />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+
+var FileView = {
+    view: function () {
+        return (
+            <div>
+                <Breadcrumbs />
+                <FileActions />
+                <div class="flex flex-wrap flex-row-reverse justify-end">
+                    <div class="w-full sm:w-5/12 lg:w-4/12">
+                        <HistoryPanel />
+                    </div>
+                    <div class="w-full sm:w-7/12 lg:w-8/12">
+                        <FileIFrame />
                     </div>
                 </div>
             </div>
@@ -127,25 +146,6 @@ var DirectoryList = {
                         }
                     </tbody>
                 </table>
-            </div>
-        )
-    }
-}
-
-var FileView = {
-    view: function () {
-        return (
-            <div>
-                <Breadcrumbs />
-                <FileActions />
-                <div>
-                    <div class="mx-2 w-full">
-                        <HistoryPanel />
-                    </div>
-                    <div class="mx-2 w-full">
-                        <FileIFrame />
-                    </div>
-                </div>
             </div>
         )
     }
