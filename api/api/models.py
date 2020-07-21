@@ -29,6 +29,7 @@ class ArchiveInfo(BaseModel):
     Data about an archive itself, as provided by `svn info`.
     """
 
+    name: str
     root: str
     uuid: UUID
 
@@ -37,12 +38,15 @@ class ArchiveInfo(BaseModel):
         """
         Given a `svn info` entry element, return ArchiveInfo.
         """
-        return cls(
-            root=re.sub(
+        root = re.sub(
                 f"^{os.getenv('ARCHIVE_SERVER')}",
                 os.getenv('ARCHIVE_URL'),
                 entry.find('repository/root').text,
-            ),
+            )
+        name = root.split('/')[-1]
+        return cls(
+            name=name,
+            root=root,
             uuid=entry.find('repository/uuid').text,
         )
 
