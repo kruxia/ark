@@ -7,33 +7,24 @@ var HistoryPanel = {
     oninit: function () {
     },
     load: function () {
-        if (PATH.query.has('rev') && parseInt(PATH.query.get('rev'))) {
-            var revs = [
-                'HEAD:' + (parseInt(PATH.query.get('rev')) + 1),
-                PATH.query.get('rev') + ':0']
+        if (PATH.query.has('rev')) {
+            var rev = PATH.query.get('rev') + ':0'
         } else {
-            var revs = ['HEAD:0']
+            var rev = 'HEAD:0'
         }
-        HistoryPanel.data = []
-        function updateHistoryData(revs) {
-            if (revs.length > 0) {
-                var rev = revs.shift()
-                var url = 'http://localhost:8000/ark/' + PATH.path + "?rev=" + rev
-                m.request({
-                    method: 'GET',
-                    url: url,
-                    withCredentials: false,
-                }).then((result) => {
-                    for (entry of result.log) {
-                        HistoryPanel.data.push(entry)
-                    }
-                    updateHistoryData(revs)
-                }).catch((error) => {
-                    console.log(error.response)
-                })
+        var url = 'http://localhost:8000/ark/' + PATH.path + "?rev=" + rev
+        m.request({
+            method: 'GET',
+            url: url,
+            withCredentials: false,
+        }).then((result) => {
+            for (entry of result.log) {
+                HistoryPanel.data.push(entry)
             }
-        }
-        updateHistoryData(revs)
+            updateHistoryData(revs)
+        }).catch((error) => {
+            console.log(error.response)
+        })
     },
     view: function () {
         if (HistoryPanel.visible == true && HistoryPanel.data.length > 0) {
