@@ -18,15 +18,15 @@ var HistoryPanel = {
     view: function () {
         if (HistoryPanel.visible == true && HistoryPanel.data.length > 0) {
             return (
-                <div class="p-2 border shadow">
+                <div class="p-2 border">
                     <h2>History</h2>
                     <table class="table-auto w-full">
                         <thead>
                             <tr>
-                                <th class="align-bottom px-2 py-2 text-left w-12">
+                                <th class="align-bottom pr-2 py-2 text-left w-12">
                                     rev
                                 </th>
-                                <th class="align-bottom px-2 py-2 text-left" colspan="2">
+                                <th class="align-bottom py-2 text-left" colspan="2">
                                     details
                                 </th>
                             </tr>
@@ -36,10 +36,10 @@ var HistoryPanel = {
                                 HistoryPanel.data.map((item, index) => {
                                     return (
                                         <tr key={index}>
-                                            <td class="align-top px-2 py-2 border-t text-left w-12">
+                                            <td class="align-top pr-2 py-2 border-t text-left w-12">
                                                 {item.rev}
                                             </td>
-                                            <td class="px-2 py-2 border-t">
+                                            <td class="py-2 border-t">
                                                 <table class="table-auto w-full">
                                                     <tbody>
                                                         <tr>

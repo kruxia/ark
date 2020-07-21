@@ -53,11 +53,11 @@ var DirectoryView = {
             <div>
                 <Breadcrumbs />
                 <DirectoryActions />
-                <div class="flex flex-wrap flex-row-reverse justify-end -mx-2">
-                    <div class="mx-2 w-full md:w-5/12 lg:w-4/12">
+                <div class="flex flex-wrap flex-row-reverse justify-end">
+                    <div class="w-full sm:w-5/12 md:w-5/12 lg:w-4/12">
                         <HistoryPanel />
                     </div>
-                    <div class="mx-2 w-full md:w-6/12 lg:w-7/12">
+                    <div class="w-full sm:w-7/12 md:w-7/12 lg:w-8/12">
                         <DirectoryList />
                     </div>
                 </div>
@@ -82,15 +82,15 @@ var DirectoryActions = {
 var DirectoryList = {
     view: function () {
         return (
-            <div class="p-2 border shadow">
+            <div class="p-2">
                 <h2>Contents</h2>
                 <table class="table-auto w-full">
                     <thead>
                         <tr>
-                            <th class="border-b px-2 py-2 text-left">name</th>
-                            <th class="border-b px-2 py-2 text-left w-24">size</th>
-                            <th class="border-b px-2 py-2 text-left w-56">last modified</th>
-                            <th class="border-b px-2 py-2 text-right w-8">rev</th>
+                            <th class="border-b pr-2 py-2 text-left">name</th>
+                            <th class="border-b pr-2 py-2 text-left w-24">size</th>
+                            <th class="border-b pr-2 py-2 text-left w-56">last modified</th>
+                            <th class="border-b py-2 text-right w-8">rev</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,16 +99,16 @@ var DirectoryList = {
                                 var item_path = ('/' + PATH.path + '/' + item.path.name).replace(/^\/\//, '/')
                                 return (
                                     <tr key={index}>
-                                        <td class="border-b px-2 py-2 text-left align-top">
+                                        <td class="border-b pr-2 py-2 text-left align-top">
                                             <PathLink path={item_path} name={item.path.name} />
                                         </td>
-                                        <td class="border-b px-2 py-2 text-left align-top">
+                                        <td class="border-b pr-2 py-2 text-left align-top">
                                             {
                                                 // TODO: Readable size
                                                 fileSizeStr(item.path.size)
                                             }
                                         </td>
-                                        <td class="border-b px-2 py-2 text-left align-top">
+                                        <td class="border-b pr-2 py-2 text-left align-top">
                                             {
                                                 // TODO: Better date formatting
                                                 item.version.date
@@ -116,7 +116,7 @@ var DirectoryList = {
                                                     .replace('+00:00', ' UTC')
                                             }
                                         </td>
-                                        <td class="border-b px-2 py-2 text-right align-top">
+                                        <td class="border-b py-2 text-right align-top">
                                             {
                                                 item.version.rev
                                             }
