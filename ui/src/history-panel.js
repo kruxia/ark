@@ -7,13 +7,33 @@ var HistoryPanel = {
     oninit: function () {
     },
     load: function () {
-        return m.request({
-            method: 'GET',
-            url: 'http://localhost:8000/ark/' + PATH.path + "?rev=HEAD:0",
-            withCredentials: false,
-        }).then(function (result) {
-            HistoryPanel.data = result.log
-        })
+        if (PATH.query.has('rev') && parseInt(PATH.query.get('rev'))) {
+            var revs = [
+                'HEAD:' + (parseInt(PATH.query.get('rev')) + 1),
+                PATH.query.get('rev') + ':0']
+        } else {
+            var revs = ['HEAD:0']
+        }
+        HistoryPanel.data = []
+        function updateHistoryData(revs) {
+            if (revs.length > 0) {
+                var rev = revs.shift()
+                var url = 'http://localhost:8000/ark/' + PATH.path + "?rev=" + rev
+                m.request({
+                    method: 'GET',
+                    url: url,
+                    withCredentials: false,
+                }).then((result) => {
+                    for (entry of result.log) {
+                        HistoryPanel.data.push(entry)
+                    }
+                    updateHistoryData(revs)
+                }).catch((error) => {
+                    console.log(error.response)
+                })
+            }
+        }
+        updateHistoryData(revs)
     },
     view: function () {
         if (HistoryPanel.visible == true && HistoryPanel.data.length > 0) {
@@ -38,7 +58,7 @@ var HistoryPanel = {
                                     return (
                                         <tr key={index}>
                                             <td class="align-top pr-2 py-2 border-t text-left w-12">
-                                                <PathLink path={'/' + PATH.path} query={query} name={item.rev}/>
+                                                <PathLink path={'/' + PATH.path} query={query} name={item.rev} />
                                             </td>
                                             <td class="py-2 border-t">
                                                 <table class="table-auto w-full">
