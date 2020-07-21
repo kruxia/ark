@@ -52,7 +52,10 @@ async def info(*urls, rev='HEAD'):
     if ':' in rev:
         result = {'error': f"Revision range not allowed: rev={rev}"}
     else:
-        cmd = ['svn', 'info', '--revision', rev, '--xml'] + list(urls)
+        if rev != 'HEAD':
+            # add `@{rev}` to each url to get the info at that rev.
+            urls = [url + f'@{rev}' for url in urls]
+        cmd = ['svn', 'info', '--xml'] + list(urls)
         result = await process.run_command(*cmd)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
@@ -60,6 +63,7 @@ async def info(*urls, rev='HEAD'):
                 models.Info.from_info(entry, rev=rev).dict()
                 for entry in xml.xpath('/info/entry')
             ]
+
     return result
 
 
@@ -72,7 +76,11 @@ async def list_files(url, rev='HEAD'):
     if ':' in rev:
         result = {'error': f'Revision range not allowed: rev={rev}'}
     else:
-        cmd = ['svn', 'list', '--revision', rev, '--xml', url]
+        if rev != 'HEAD':
+            rev_url = f'{url}@{rev}'
+        else:
+            rev_url = url
+        cmd = ['svn', 'list', '--xml', rev_url]
         result = await process.run_command(*cmd)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
@@ -80,6 +88,7 @@ async def list_files(url, rev='HEAD'):
                 models.Info.from_list(entry, rev=rev).dict()
                 for entry in xml.xpath(f'/lists/list[@path="{url}"]/entry')
             ]
+
     return result
 
 
@@ -87,6 +96,8 @@ async def log(url, rev='HEAD'):
     """
     Return a list of LogEntry data on the given url and revision (single or range).
     """
+    if rev != 'HEAD':
+        url += f"@{rev.split(':')[0]}"
     cmd = ['svn', 'log', '--revision', str(rev), '--xml', '--verbose', url]
     result = await process.run_command(*cmd)
     if not result['error']:
@@ -95,6 +106,7 @@ async def log(url, rev='HEAD'):
             models.LogEntry.from_logentry(entry).dict()
             for entry in xml.xpath('/log/logentry')
         ]
+
     return result
 
 
@@ -106,7 +118,11 @@ async def props(url, rev='HEAD'):
     if ':' in rev:
         result = {'error': f'Revision range not allowed: rev={rev}'}
     else:
-        cmd = ['svn', 'proplist', '--revision', rev, '--xml', '--verbose', url]
+        if rev != 'HEAD':
+            rev_url = f"{url}@{rev}"
+        else:
+            rev_url = url
+        cmd = ['svn', 'proplist', '--xml', '--verbose', rev_url]
         result = await process.run_command(*cmd)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
@@ -114,6 +130,7 @@ async def props(url, rev='HEAD'):
                 property.get('name'): property.text
                 for property in xml.xpath(f'/properties/target[@path="{url}"]/property')
             }
+
     return result
 
 
@@ -129,6 +146,7 @@ async def revprops(url, rev='HEAD'):
             property.get('name'): property.text
             for property in xml.xpath('/properties/revprops/property')
         }
+
     return result
 
 

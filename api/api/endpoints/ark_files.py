@@ -90,9 +90,7 @@ class ArkPath(HTTPEndpoint):
         message = request.query_params.get('message')
         form = await request.form()
         revprops = {
-            key: val
-            for key, val in request.query_params.items()
-            if key != 'message'
+            key: val for key, val in request.query_params.items() if key != 'message'
         }
         file = form.get('file')
         if not file:
@@ -102,7 +100,7 @@ class ArkPath(HTTPEndpoint):
             # file
             body = await file.read()
             result = await svn.put(url, body=body, message=message, revprops=revprops)
-            
+
         return JSONResponse(
             result,
             status_code=result.get('code') or (409 if result.get('error') else 201),

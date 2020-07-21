@@ -39,16 +39,12 @@ class ArchiveInfo(BaseModel):
         Given a `svn info` entry element, return ArchiveInfo.
         """
         root = re.sub(
-                f"^{os.getenv('ARCHIVE_SERVER')}",
-                os.getenv('ARCHIVE_URL'),
-                entry.find('repository/root').text,
-            )
-        name = root.split('/')[-1]
-        return cls(
-            name=name,
-            root=root,
-            uuid=entry.find('repository/uuid').text,
+            f"^{os.getenv('ARCHIVE_SERVER')}",
+            os.getenv('ARCHIVE_URL'),
+            entry.find('repository/root').text,
         )
+        name = root.split('/')[-1]
+        return cls(name=name, root=root, uuid=entry.find('repository/uuid').text,)
 
 
 class PathInfo(BaseModel):

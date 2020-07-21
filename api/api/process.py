@@ -47,7 +47,7 @@ async def run_command(*args, **kwargs):
         if os.getenv('DEBUG'):
             result['traceback'] = traceback.format_exc()
 
-    logger.debug(result)
+    logger.debug('--> %r', result)
     return result
 
 

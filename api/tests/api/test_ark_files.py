@@ -23,6 +23,12 @@ def create_archive(client, n):
     return name
 
 
+def create_folder(client, name, path):
+    url = f"/ark/{name}/{path}"
+    response = client.put(url)
+    return response
+
+
 def create_file(client, name, path, body=b'hello'):
     # PUT the form to the file
     url = f"/ark/{name}/{path}"
@@ -47,7 +53,7 @@ def test_get_ark_name_ok(client):
 
     assert response.status_code == 200
     assert info.path.name == name
-    assert info.path.kind == 'dir'
+    assert info.path.kind.value == 'dir'
     assert info.path.url == f"{os.getenv('ARCHIVE_URL')}/{name}"
     assert info.path.size is None
     assert info.version.rev == 0
@@ -343,7 +349,7 @@ def test_put_ark_name_path(client):
             files={'file': fixture['body']} if fixture['body'] is not None else None,
         )
         assert response.status_code == fixture['status']
-        
+
         response = client.get(f"{url}/{fixture['path']}")
         data = response.json()
         print(' ', data)
@@ -351,7 +357,7 @@ def test_put_ark_name_path(client):
             assert response.status_code == 404  # create failed, thing doesn't exist
         else:
             info = Info(**data['info'])
-            assert info.path.kind == fixture['kind']
+            assert info.path.kind.value == fixture['kind']
 
 
 def test_delete_ark_name_path(client):
@@ -392,3 +398,58 @@ def test_delete_ark_name_path(client):
     # delete fails -- archive is gone
     response = client.delete(url)
     assert response.status_code == 404
+
+
+def test_deleted_folder_available_at_rev(client):
+    """
+    When a folder has been deleted, the log, info, files, props, and revprops should 
+    still be available at the previous rev 
+    """
+    name = create_archive(client, 1)
+    r1 = create_folder(client, name, 'd1')  # rev=1
+    print(r1.status_code, r1.json())
+    assert r1.json()['error'] == ''
+
+    r2 = create_file(client, name, 'd1/f1.txt')  # rev=2
+    print(r2.status_code, r2.json())
+    assert r2.json()['error'] == ''
+
+    r3 = client.delete(f'/ark/{name}/d1')  # rev=3
+    print(r3.status_code, r3.json())
+    assert r3.json()['error'] == ''
+
+    r4 = client.get(f'/ark/{name}/d1')
+    print(r4.status_code, r4.json())
+    assert r4.status_code == 404
+
+    # d1 exists @ rev=2, so the following request should return all data
+    r5 = client.get(f'/ark/{name}/d1?rev=2')
+    data = r5.json()
+    print(r5.status_code, data)
+    assert r5.status_code == 200
+    for key in ['info', 'files', 'log', 'revprops']:
+        assert key in data.keys()
+
+    assert data['info']['path']['name'] == 'd1'
+    assert data['info']['path']['kind'] == 'dir'
+    assert data['info']['version']['rev'] == 2
+
+    for key in ['svn:date', 'svn:log']:
+        assert key in data['revprops']
+
+    # There should be one file in data['files]
+    assert len(data['files']) == 1
+
+    # There should be one log entry with one path
+    assert len(data['log']) == 1
+    assert data['log'][0]['rev'] == 2
+    assert len(data['log'][0]['paths']) == 1
+    assert data['log'][0]['paths'][0]['name'] == 'd1/f1.txt'
+    assert data['log'][0]['paths'][0]['kind'] == 'file'
+    assert data['log'][0]['paths'][0]['action'] == 'A'
+    assert data['log'][0]['paths'][0]['text_mods'] == True
+    assert data['log'][0]['paths'][0]['prop_mods'] == False
+
+    assert len(data['files']) == 1
+    assert data['files'][0]['path']['name'] == 'f1.txt'
+    assert data['files'][0]['version']['rev'] == 2
