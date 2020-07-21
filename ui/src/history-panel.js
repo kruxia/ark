@@ -1,5 +1,5 @@
 const m = require('mithril')
-const { ACTIONS, PATH } = require('./path')
+const { ACTIONS, PATH, PathLink } = require('./path')
 
 var HistoryPanel = {
     data: [],
@@ -34,10 +34,11 @@ var HistoryPanel = {
                         <tbody>
                             {
                                 HistoryPanel.data.map((item, index) => {
+                                    var query = new URLSearchParams('?rev=' + item.rev)
                                     return (
                                         <tr key={index}>
                                             <td class="align-top pr-2 py-2 border-t text-left w-12">
-                                                {item.rev}
+                                                <PathLink path={'/' + PATH.path} query={query} name={item.rev}/>
                                             </td>
                                             <td class="py-2 border-t">
                                                 <table class="table-auto w-full">

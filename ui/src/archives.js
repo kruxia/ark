@@ -3,7 +3,6 @@ const { fileSizeStr } = require('./lib')
 const { IconArchiveNew, IconFolderNew, IconUpload, IconCopy, IconDelete, IconHistory, IconHistoryOff } = require('./icons')
 const { HistoryPanel } = require('./history-panel')
 var { PATH, Breadcrumbs, PathLink } = require('./path')
-var ARCHIVE_URL = process.env.ARCHIVE_URL
 
 var ArchivePathView = {
     oninit: (vnode) => {
@@ -119,7 +118,7 @@ var DirectoryList = {
                                 return (
                                     <tr key={index}>
                                         <td class="border-b pr-2 py-2 text-left align-top">
-                                            <PathLink path={item_path} name={item.path.name} />
+                                            <PathLink path={item_path} name={item.path.name} query={PATH.query} />
                                         </td>
                                         <td class="border-b pr-2 py-2 text-left align-top">
                                             {

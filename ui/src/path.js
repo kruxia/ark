@@ -10,15 +10,19 @@ var ACTIONS = {
 var PATH = {
     data: {},
     path: '',
-    load: function (path) {
+    query: new URLSearchParams(),
+    load: function (path, queryStr) {
         path = path || PATH.path
+        queryStr = queryStr || window.location.search
+        var url = 'http://localhost:8000/ark/' + path + queryStr
         return m.request({
             method: 'GET',
-            url: 'http://localhost:8000/ark/' + path,
+            url: url,
             withCredentials: false,
         }).then(function (result) {
             PATH.data = result
             PATH.path = path
+            PATH.query = new URLSearchParams(queryStr)
         })
     },
 }
@@ -32,12 +36,20 @@ var Breadcrumbs = {
                     PATH.path.split('/').map((slug, index) => {
                         if (slug) {
                             var path = "/" + PATH.path.split('/').slice(0, index + 1).join('/')
-                            return <PathLink path={path} name={slug} prefix=" > " />
+                            return <PathLink path={path} query={PATH.query} name={slug} prefix=" > " />
                         }
                         else {
                             return ""
                         }
                     })
+                }
+                &#x2002;
+                {
+                    PATH.query.has('rev') ? ('@ rev=' + PATH.query.get('rev')) : ''
+                }
+                &#x2002;
+                {
+                    PATH.query.has('rev') ? <PathLink path={'/' + PATH.path} name="view current"/> : ''
                 }
             </span>
         )
@@ -46,9 +58,13 @@ var Breadcrumbs = {
 
 var PathLink = {
     view: function (vnode) {
+        var href = vnode.attrs.path
+        if (vnode.attrs.query && vnode.attrs.query.toString() != '') {
+            href = href + '?' + vnode.attrs.query.toString()
+        }
         return (
             <span>{vnode.attrs.prefix || ''}
-                <a href={vnode.attrs.path} onclick={(event) => { PathLink.clickLink(event, vnode) }}>
+                <a href={href} onclick={(event) => { PathLink.clickLink(event, vnode) }}>
                     {decodeURI(vnode.attrs.name)}
                 </a>
             </span>
