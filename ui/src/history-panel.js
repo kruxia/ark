@@ -21,37 +21,33 @@ var HistoryPanel = {
                 <div class="p-2 border shadow">
                     <h2>History</h2>
                     <table class="table-auto w-full">
-                        <thead>
-                            <tr>
-                                <th class="border-b px-2 py-2 text-left w-8">rev</th>
-                                <th class="border-b px-2 py-2 text-left w-56">date</th>
-                                <th class="border-b px-2 py-2 text-left">changes</th>
-                            </tr>
-                        </thead>
                         <tbody>
                             {
                                 HistoryPanel.data.map((item, index) => {
                                     return (
-                                        <tr key={index}>
-                                            <td class="align-top border-b px-2 py-2 text-left">
-                                                {item.rev}
+                                        <>
+                                        <tr key={index+'a'}>
+                                            <td class="align-top px-2 pt-2 border-t w-20 text-left">
+                                                rev {item.rev}
                                             </td>
-                                            <td class="align-top border-b px-2 py-2 text-left">
+                                            <td class="align-top px-2 pt-2 border-t text-left">
                                                 {item.date
                                                     .replace(/\.\d+/, '').replace('T', ' ')
                                                     .replace('+00:00', ' UTC')}
                                             </td>
-                                            <td class="align-top border-b px-2 py-2 text-left">
-                                                <p class="font-semibold">{item.message || ' '}</p>
+                                        </tr>
+                                        <tr key={index+'b'}>
+                                            <td colspan="2" class="align-top px-2 pb-2 text-left">
+                                                <p class="font-semibold">{item.message }</p>
                                                 <table class="table-auto w-full">
                                                     <tbody>
                                                         {item.paths.map((path, index) => {
                                                             return (
                                                                 <tr>
-                                                                    <td class="align-top w-20 border-t">
+                                                                    <td class="align-top w-20">
                                                                         {ACTIONS[path.action]}
                                                                     </td>
-                                                                    <td class="align-top border-t">
+                                                                    <td class="align-top">
                                                                         {decodeURI(path.name)}
                                                                     </td>
                                                                 </tr>
@@ -61,6 +57,7 @@ var HistoryPanel = {
                                                 </table>
                                             </td>
                                         </tr>
+                                        </>
                                     )
                                 })
                             }
