@@ -53,8 +53,14 @@ var DirectoryView = {
             <div>
                 <Breadcrumbs />
                 <DirectoryActions />
-                <HistoryPanel />
-                <DirectoryList />
+                <div class="flex flex-wrap flex-row-reverse justify-end -mx-2">
+                    <div class="ml-2 mr-4 w-full md:w-5/12 lg:w-4/12">
+                        <HistoryPanel />
+                    </div>
+                    <div class="ml-4 mr-2 w-full md:w-6/12 lg:w-7/12">
+                        <DirectoryList />
+                    </div>
+                </div>
             </div>
         )
     }
@@ -76,7 +82,7 @@ var DirectoryActions = {
 var DirectoryList = {
     view: function () {
         return (
-            <div class="m-2 p-2 border shadow">
+            <div class="p-2 border shadow">
                 <h2>Contents</h2>
                 <table class="table-auto w-full">
                     <thead>
@@ -132,8 +138,14 @@ var FileView = {
             <div>
                 <Breadcrumbs />
                 <FileActions />
-                <HistoryPanel />
-                <FileIFrame />
+                <div>
+                    <div class="mx-2 w-full">
+                        <HistoryPanel />
+                    </div>
+                    <div class="mx-2 w-full">
+                        <FileIFrame />
+                    </div>
+                </div>
             </div>
         )
     }
@@ -281,7 +293,7 @@ var ActionCopyArchiveURL = {
                     <IconCopy class="h-6 mr-1" />
                     Copy URL
                 </a>
-                <input type="text" id="path-archive-url-data" value={'http://localhost:7000/' + PATH.path} class="w-full opacity-0 absolute" hidden="hidden"/>
+                <input type="text" id="path-archive-url-data" value={'http://localhost:7000/' + PATH.path} class="w-full opacity-0 absolute" hidden="hidden" />
             </span>
         )
     },

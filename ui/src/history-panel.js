@@ -18,7 +18,7 @@ var HistoryPanel = {
     view: function () {
         if (HistoryPanel.visible == true && HistoryPanel.data.length > 0) {
             return (
-                <div class="m-2 p-2 border shadow">
+                <div class="p-2 border shadow">
                     <h2>History</h2>
                     <table class="table-auto w-full">
                         <thead>
