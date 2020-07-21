@@ -217,7 +217,7 @@ var ActionCreateFolder = {
             <a href="" onclick={ActionCreateFolder.create}>
                 <span class="mr-2">
                     <IconFolderNew class="h-6 mr-1 align-top" />
-                    Create Folder
+                    Create Subfolder
                 </span>
             </a>
         )
@@ -291,7 +291,7 @@ var ActionCopyArchiveURL = {
         return (
             <span class="mr-2">
                 <a href="" onclick={ActionCopyArchiveURL.click}>
-                    <IconCopy class="h-6 mr-1" />
+                    <IconCopy class="h-5 mr-1 align-text-top" />
                     Copy URL
                 </a>
                 <input type="text" id="path-archive-url-data" value={'http://localhost:7000/' + PATH.path} class="w-full opacity-0 absolute" hidden="hidden" />
