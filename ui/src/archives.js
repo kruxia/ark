@@ -54,10 +54,10 @@ var DirectoryView = {
                 <Breadcrumbs />
                 <DirectoryActions />
                 <div class="flex flex-wrap flex-row-reverse justify-end -mx-2">
-                    <div class="ml-2 mr-4 w-full md:w-5/12 lg:w-4/12">
+                    <div class="mx-2 w-full md:w-5/12 lg:w-4/12">
                         <HistoryPanel />
                     </div>
-                    <div class="ml-4 mr-2 w-full md:w-6/12 lg:w-7/12">
+                    <div class="mx-2 w-full md:w-6/12 lg:w-7/12">
                         <DirectoryList />
                     </div>
                 </div>
