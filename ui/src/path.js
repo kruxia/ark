@@ -23,6 +23,8 @@ var PATH = {
             PATH.data = result
             PATH.path = path
             PATH.query = new URLSearchParams(queryStr)
+        }).catch((error) => {
+            console.log(error.response)
         })
     },
 }
