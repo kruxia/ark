@@ -32,8 +32,14 @@ var ArchivesView = {
         return (
             <div>
                 <Breadcrumbs />
-                <ArchivesActions />
-                <DirectoryList />
+                <div class="flex flex-wrap flex-row-reverse justify-end">
+                    <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
+                        <ArchivesActions />
+                    </div>
+                    <div class="w-full pr-2 sm:w-7/12 lg:w-8/12">
+                        <DirectoryList />
+                    </div>
+                </div>
             </div>
         )
     }
@@ -43,7 +49,7 @@ var ArchivesActions = {
     view: function () {
         return (
             <div class="mx-2">
-                <ActionCreateArchive />
+                <p><ActionCreateArchive /></p>
             </div>
         )
     }
@@ -54,9 +60,9 @@ var DirectoryView = {
         return (
             <div>
                 <Breadcrumbs />
-                <DirectoryActions />
                 <div class="flex flex-wrap flex-row-reverse justify-end">
-                    <div class="w-full sm:w-5/12 lg:w-4/12">
+                    <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
+                        <DirectoryActions />
                         <HistoryPanel />
                     </div>
                     <div class="w-full pr-2 sm:w-7/12 lg:w-8/12">
@@ -68,35 +74,16 @@ var DirectoryView = {
     }
 }
 
-var FileView = {
-    view: function () {
-        return (
-            <div>
-                <Breadcrumbs />
-                <FileActions />
-                <div class="flex flex-wrap flex-row-reverse justify-end">
-                    <div class="w-full sm:w-5/12 lg:w-4/12">
-                        <HistoryPanel />
-                    </div>
-                    <div class="w-full sm:w-7/12 lg:w-8/12">
-                        <FileIFrame />
-                    </div>
-                </div>
-            </div>
-        )
-    }
-}
-
 var DirectoryActions = {
     view: function () {
         return (
             <div class="mx-2">
-                <ActionCreateFolder />
-                <ActionUploadFile />
-                <ActionViewHistory />
-                <ActionCopyArchiveURL />
-                <ActionDeleteThisPath />
-                <ActionDownloadThisPath />
+                <p><ActionCopyArchiveURL /></p>
+                <p><ActionCreateFolder /></p>
+                <p><ActionUploadFile /></p>
+                <p><ActionDownloadThisPath /></p>
+                <p><ActionDeleteThisPath /></p>
+                <p><ActionViewHistory /></p>
             </div>
         )
     }
@@ -105,15 +92,14 @@ var DirectoryActions = {
 var DirectoryList = {
     view: function () {
         return (
-            <div class="p-2">
-                <h2>Contents</h2>
+            <div class="px-2">
                 <table class="table-auto w-full">
                     <thead>
                         <tr>
-                            <th class="border-b pr-2 py-2 text-left">name</th>
-                            <th class="border-b pr-2 py-2 text-left w-24">size</th>
-                            <th class="border-b pr-2 py-2 text-left w-56">last modified</th>
-                            <th class="border-b py-2 text-right w-8">rev</th>
+                            <th class="border-b pr-2 text-left">name</th>
+                            <th class="border-b pr-2 text-left w-24">size</th>
+                            <th class="border-b pr-2 text-left w-56">last modified</th>
+                            <th class="border-b text-right w-8">rev</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -155,13 +141,32 @@ var DirectoryList = {
     }
 }
 
+var FileView = {
+    view: function () {
+        return (
+            <div class="h-screen">
+                <Breadcrumbs />
+                <div class="h-full flex flex-wrap flex-row-reverse justify-end">
+                    <div class="w-full sm:w-5/12 lg:w-4/12">
+                        <FileActions />
+                        <HistoryPanel />
+                    </div>
+                    <div class="h-full w-full sm:w-7/12 lg:w-8/12">
+                        <FileIFrame />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+
 var FileActions = {
     view: function () {
         return (
             <div class="mx-2">
-                <ActionViewHistory />
-                <ActionDeleteThisPath />
-                <ActionDownloadThisPath />
+                <p><ActionDownloadThisPath /></p>
+                <p><ActionDeleteThisPath /></p>
+                <p><ActionViewHistory /></p>
             </div>
         )
     }
@@ -172,7 +177,7 @@ var FileIFrame = {
         return (
             // TODO: replace this with a more responsible method of creating a preview
             // (since this will only work for files that are already displayable.)
-            <div class="m-2 border w-auto h-screen">
+            <div class="m-2 border w-auto h-full">
                 <iframe src={PATH.data.info.path.url} class="w-full h-full" />
             </div>
         )
