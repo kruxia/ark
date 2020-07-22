@@ -55,7 +55,7 @@ def test_get_ark_name_ok(client):
     assert info.path.name == name
     assert info.path.kind.value == 'dir'
     assert info.path.url == f"{os.getenv('ARCHIVE_URL')}/{name}"
-    assert info.path.size is None
+    assert info.path.size > 0
     assert info.version.rev == 0
     assert info.archive.root == info.path.url
     assert data['files'] == []

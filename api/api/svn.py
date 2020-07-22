@@ -57,14 +57,35 @@ async def info(*urls, rev='HEAD'):
         if rev != 'HEAD':
             # add `@{rev}` to each url to get the info at that rev.
             urls = [url + f'@{rev}' for url in urls]
-        cmd = ['svn', 'info', '--xml'] + list(urls)
-        result = await process.run_command(*cmd)
+        result = await process.run_command('svn', 'info', '--xml', *urls)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = [
                 models.Info.from_info(entry, rev=rev).dict()
                 for entry in xml.xpath('/info/entry')
             ]
+            # --------------------------------------------------------------------------
+            # NOTE: The following is a first attempt at showing archive sizes in the
+            # archive list. This procedure is too slow to scale, and points to the need
+            # to use the database to index such metadata about archives so it's more
+            # readily available to the API. The Apache Subversion HTTP server wasn't
+            # intended to feed a high-performance API, and that is showing. Still,
+            # having the functionality is better than not having it.
+            # --------------------------------------------------------------------------
+            for entry in result['data']:
+                # for any archives as entries, get the filesystem size of the archive
+                if entry.get('path', {}).get('url') is not None and entry.get(
+                    'path', {}
+                ).get('url') == entry.get('archive', {}).get('root'):
+                    archive_path = os.path.join(
+                        os.getenv('ARCHIVE_FILES'),
+                        os.path.split(entry['path']['url'])[-1],
+                    )
+                    du_result = await process.run_command(
+                        'du', '-s', '-B', '1', archive_path,
+                    )
+                    if du_result.get('output'):
+                        entry['path']['size'] = int(du_result['output'].split()[0])
 
     return result
 
@@ -128,7 +149,7 @@ async def export(url, rev='HEAD'):
                                 filename = os.path.join(root, file)
                                 arcname = os.path.relpath(filename, tempdir)
                                 zf.write(filename, arcname)
-                
+
                 outpath = '/var/tmp/' + os.path.split(tempdir)[-1]
                 os.makedirs(outpath)
 

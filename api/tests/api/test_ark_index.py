@@ -45,6 +45,7 @@ def test_ark_get_ok(client):
     assert repo_info.version.rev == 0
     assert isinstance(repo_info.version.date, datetime)
     assert isinstance(repo_info.archive.uuid, UUID)
+    assert repo_info.path.size > 0  # archive sizes are included
 
     cleanup()
 
