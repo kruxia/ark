@@ -18,10 +18,7 @@ var HistoryPanel = {
             url: url,
             withCredentials: false,
         }).then((result) => {
-            for (entry of result.log) {
-                HistoryPanel.data.push(entry)
-            }
-            updateHistoryData(revs)
+            HistoryPanel.data = result.log
         }).catch((error) => {
             console.log(error.response)
         })
