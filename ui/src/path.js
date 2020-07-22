@@ -47,14 +47,13 @@ var Breadcrumbs = {
                         }
                     })
                 }
-                &#x2002;
                 {
-                    PATH.query.has('rev') ? ('@ rev=' + PATH.query.get('rev')) : ''
+                    PATH.query.has('rev') ? (' @ rev=' + PATH.query.get('rev')) : ''
                 }
                 &#x2002;
                 {
                     PATH.query.has('rev') ? (
-                        <PathLink path={'/' + PATH.path} name="view current" />
+                        <PathLink path={'/' + PATH.path} name="(view current)" />
                     ) : ''
                 }
             </span>
