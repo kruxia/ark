@@ -30,8 +30,10 @@ var ArchivePathView = {
 var ArchivesView = {
     view: function () {
         return (
-            <div>
-                <Breadcrumbs />
+            <div class="leading-relaxed">
+                <h1 class="text-2xl font-light">
+                    <Breadcrumbs />
+                </h1>
                 <div class="flex flex-wrap flex-row-reverse justify-end">
                     <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
                         <ArchivesActions />
@@ -48,9 +50,9 @@ var ArchivesView = {
 var ArchivesActions = {
     view: function () {
         return (
-            <div class="mx-2">
-                <p><ActionCreateArchive /></p>
-            </div>
+            <ul class="mx-2">
+                <li class="my-2"><ActionCreateArchive /></li>
+            </ul>
         )
     }
 }
@@ -58,8 +60,10 @@ var ArchivesActions = {
 var DirectoryView = {
     view: function () {
         return (
-            <div>
-                <Breadcrumbs />
+            <div class="leading-relaxed">
+                <h1 class="text-2xl font-light">
+                    <Breadcrumbs />
+                </h1>
                 <div class="flex flex-wrap flex-row-reverse justify-end">
                     <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
                         <DirectoryActions />
@@ -77,14 +81,14 @@ var DirectoryView = {
 var DirectoryActions = {
     view: function () {
         return (
-            <div class="mx-2">
-                <p><ActionCopyArchiveURL /></p>
-                <p><ActionCreateFolder /></p>
-                <p><ActionUploadFile /></p>
-                <p><ActionDownloadThisPath /></p>
-                <p><ActionDeleteThisPath /></p>
-                <p><ActionViewHistory /></p>
-            </div>
+            <ul class="mx-2">
+                <li class="my-2"><ActionCopyArchiveURL /></li>
+                <li class="my-2"><ActionCreateFolder /></li>
+                <li class="my-2"><ActionUploadFile /></li>
+                <li class="my-2"><ActionDownloadThisPath /></li>
+                <li class="my-2"><ActionDeleteThisPath /></li>
+                <li class="my-2"><ActionViewHistory /></li>
+            </ul>
         )
     }
 }
@@ -105,33 +109,7 @@ var DirectoryList = {
                     <tbody>
                         {
                             PATH.data.files.map((item, index) => {
-                                var item_path = ('/' + PATH.path + '/' + item.path.name).replace(/^\/\//, '/')
-                                return (
-                                    <tr key={index}>
-                                        <td class="border-b pr-2 py-2 text-left align-top">
-                                            <PathLink path={item_path} name={item.path.name} query={PATH.query} />
-                                        </td>
-                                        <td class="border-b pr-2 py-2 text-left align-top">
-                                            {
-                                                // TODO: Readable size
-                                                fileSizeStr(item.path.size)
-                                            }
-                                        </td>
-                                        <td class="border-b pr-2 py-2 text-left align-top">
-                                            {
-                                                // TODO: Better date formatting
-                                                item.version.date
-                                                    .replace(/\.\d+/, '').replace('T', ' ')
-                                                    .replace('+00:00', ' UTC')
-                                            }
-                                        </td>
-                                        <td class="border-b py-2 text-right align-top">
-                                            {
-                                                item.version.rev
-                                            }
-                                        </td>
-                                    </tr>
-                                )
+                                return <DirectoryListItem item={item} index={index} />
                             })
                         }
                     </tbody>
@@ -141,11 +119,47 @@ var DirectoryList = {
     }
 }
 
+var DirectoryListItem = {
+    view: function (vnode) {
+        var item = vnode.attrs.item
+        var index = vnode.attrs.index
+        var item_path = ('/' + PATH.path + '/' + item.path.name).replace(/^\/\//, '/')
+        return (
+            <tr key={index}>
+                <td class="border-b pr-2 py-2 text-left align-top">
+                    <PathLink path={item_path} name={item.path.name} query={PATH.query} />
+                </td>
+                <td class="border-b pr-2 py-2 text-left align-top">
+                    {
+                        // TODO: Readable size
+                        fileSizeStr(item.path.size)
+                    }
+                </td>
+                <td class="border-b pr-2 py-2 text-left align-top">
+                    {
+                        // TODO: Better date formatting
+                        item.version.date
+                            .replace(/\.\d+/, '').replace('T', ' ')
+                            .replace('+00:00', ' UTC')
+                    }
+                </td>
+                <td class="border-b py-2 text-right align-top">
+                    {
+                        item.version.rev
+                    }
+                </td>
+            </tr>
+        )
+    }
+}
+
 var FileView = {
     view: function () {
         return (
-            <div class="h-screen">
-                <Breadcrumbs />
+            <div class="h-screen leading-relaxed">
+                <h1 class="text-2xl font-light">
+                    <Breadcrumbs />
+                </h1>
                 <div class="h-full flex flex-wrap flex-row-reverse justify-end">
                     <div class="w-full sm:w-5/12 lg:w-4/12">
                         <FileActions />
@@ -163,11 +177,11 @@ var FileView = {
 var FileActions = {
     view: function () {
         return (
-            <div class="mx-2">
-                <p><ActionDownloadThisPath /></p>
-                <p><ActionDeleteThisPath /></p>
-                <p><ActionViewHistory /></p>
-            </div>
+            <ul class="mx-2">
+                <li class="my-2"><ActionDownloadThisPath /></li>
+                <li class="my-2"><ActionDeleteThisPath /></li>
+                <li class="my-2"><ActionViewHistory /></li>
+            </ul>
         )
     }
 }
@@ -326,7 +340,7 @@ var ActionCopyArchiveURL = {
             <span class="mr-2">
                 <a href="" onclick={ActionCopyArchiveURL.click}>
                     <IconCopy class="h-5 mr-1 align-text-top" />
-                    Copy URL
+                    Copy Archive URL
                 </a>
                 <input type="text" id="path-archive-url-data" value={copyURL} class="w-full opacity-0 absolute" hidden="hidden" />
             </span>
@@ -340,7 +354,7 @@ var ActionCopyArchiveURL = {
         element.setSelectionRange(0, 99999)
         document.execCommand('copy')
         element.hidden = true
-        alert('Copied URL: ' + element.value)
+        alert('Copied Archive URL: ' + element.value)
     }
 }
 
