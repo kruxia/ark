@@ -177,7 +177,7 @@ var FileIFrame = {
         return (
             // TODO: replace this with a more responsible method of creating a preview
             // (since this will only work for files that are already displayable.)
-            <div class="m-2 border w-auto h-full">
+            <div class="w-auto h-full">
                 <iframe src={PATH.data.info.path.url} class="w-full h-full" />
             </div>
         )
