@@ -8,7 +8,7 @@ from api import svn
 
 class ArkPath(HTTPEndpoint):
     """
-    Handle requests to /ark/NAME/files/PATH, where NAME is an archive name and PATH is a
+    Handle requests to /ark/NAME/PATH, where NAME is an archive name and PATH is a
     file path within the archive. If PATH is empty, then it is "/"
     """
 

@@ -8,6 +8,7 @@ from api.endpoints.index import Index
 from api.endpoints.health import Health
 from api.endpoints.ark import ArkParent
 from api.endpoints.ark_files import ArkPath
+from api.endpoints.export import ExportPath
 
 
 async def app_startup():
@@ -34,6 +35,7 @@ routes = [
     Route('/ark', endpoint=ArkParent),
     Route('/ark/{name}', endpoint=ArkPath),
     Route('/ark/{name}/{path:path}', endpoint=ArkPath),
+    Route('/export/{name}/{path:path}', endpoint=ExportPath),
 ]
 
 app = Starlette(

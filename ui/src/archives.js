@@ -1,6 +1,9 @@
 const m = require("mithril")
 const { fileSizeStr } = require('./lib')
-const { IconArchiveNew, IconFolderNew, IconUpload, IconCopy, IconDelete, IconHistory, IconHistoryOff } = require('./icons')
+const {
+    IconArchiveNew, IconFolderNew, IconUpload, IconDownload, IconCopy, IconDelete,
+    IconHistory, IconHistoryOff
+} = require('./icons')
 const { HistoryPanel } = require('./history-panel')
 var { PATH, Breadcrumbs, PathLink } = require('./path')
 
@@ -93,6 +96,7 @@ var DirectoryActions = {
                 <ActionViewHistory />
                 <ActionCopyArchiveURL />
                 <ActionDeleteThisPath />
+                <ActionDownloadThisPath />
             </div>
         )
     }
@@ -157,6 +161,7 @@ var FileActions = {
             <div class="mx-2">
                 <ActionViewHistory />
                 <ActionDeleteThisPath />
+                <ActionDownloadThisPath />
             </div>
         )
     }
@@ -286,6 +291,29 @@ var ActionUploadFile = {
     }
 }
 
+var ActionDownloadThisPath = {
+    view: function () {
+        return (
+            <span class="mr-2">
+                <IconDownload class="h6 mr-1 align-top" />
+                <a href="" onclick={ActionDownloadThisPath.click}>
+                    Export {decodeURI(PATH.path)}
+                    {PATH.query.has('rev') ? ' @ rev=' + PATH.query.get('rev') : ''}
+                </a>
+            </span>
+        )
+    },
+    click: function () {
+        event.preventDefault()
+        var url = (
+            'http://localhost:8000/export/' + PATH.path
+            + (PATH.query.has('rev') ? '?rev=' + PATH.query.get('rev') : '')
+        )
+        console.log(url)
+        window.open(url)
+    }
+}
+
 var ActionCopyArchiveURL = {
     view: function () {
         return (
@@ -313,11 +341,11 @@ var ActionCopyArchiveURL = {
 var ActionDeleteThisPath = {
     view: function (vnode) {
         const deletePath = vnode.attrs.path || PATH.path
-        if (deletePath != PATH.data.info.archive.name) {
+        if (deletePath != PATH.data.info.archive.name && !PATH.query.has('rev')) {
             return (
                 <a href={'/' + deletePath} class="mr-2" onclick={ActionDeleteThisPath.delete}>
                     <IconDelete class="h6 mr-1 align-top" />
-                    Delete {deletePath}
+                    Delete {decodeURI(deletePath)}
                 </a>
             )
         }

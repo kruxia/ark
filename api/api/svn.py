@@ -10,7 +10,9 @@ functions' interface and so also require some refactoring in the consumers.
 
 import os
 import re
+import shutil
 import tempfile
+import zipfile
 from lxml import etree
 from pathlib import Path
 from api import models
@@ -88,6 +90,57 @@ async def list_files(url, rev='HEAD'):
                 models.Info.from_list(entry, rev=rev).dict()
                 for entry in xml.xpath(f'/lists/list[@path="{url}"]/entry')
             ]
+
+    return result
+
+
+async def export(url, rev='HEAD'):
+    """
+    Export the content of the given URL. If it's a folder, zip it. Return result dict.
+    """
+    if ':' in rev:
+        result = {'error': f'Revision range not allowed: rev={rev}'}
+    else:
+        if rev != 'HEAD':
+            rev_url = f'{url}@{rev}'
+        else:
+            rev_url = url
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            filepath = os.path.join(tempdir, url.split('/')[-1])
+
+            cmd = ['svn', 'export', rev_url, filepath]
+            result = await process.run_command(*cmd)
+
+            if not result['error']:
+                if os.path.isfile(filepath):
+                    srcpath = filepath
+                else:
+                    # directory -- zip it
+                    srcpath = filepath + '.zip'
+                    with zipfile.ZipFile(srcpath, 'w', zipfile.ZIP_DEFLATED) as zf:
+                        for root, dirs, files in os.walk(filepath):
+                            for directory in dirs:
+                                filename = os.path.join(root, directory)
+                                arcname = os.path.relpath(filename, tempdir)
+                                zf.write(filename, arcname)
+                            for file in files:
+                                filename = os.path.join(root, file)
+                                arcname = os.path.relpath(filename, tempdir)
+                                zf.write(filename, arcname)
+                
+                outpath = '/var/tmp/' + os.path.split(tempdir)[-1]
+                os.makedirs(outpath)
+
+                if rev == 'HEAD':
+                    filename = os.path.split(srcpath)[-1]
+                else:
+                    fp, ext = os.path.splitext(srcpath)
+                    basename = os.path.basename(fp)
+                    filename = f"{basename}@{rev}{ext}"
+
+                result['filepath'] = f"{outpath}/{filename}"
+                shutil.copy(srcpath, result['filepath'])
 
     return result
 
