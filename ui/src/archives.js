@@ -373,21 +373,26 @@ var ActionDeleteThisPath = {
     delete: function (event) {
         event.preventDefault()
         var deleteURL = event.target.getAttribute('href')
-        m.request({
-            // DELETE the given path
-            method: 'DELETE',
-            url: 'http://localhost:8000/ark' + deleteURL,
-            withCredentials: false,
-        }).then(function (response) {
-            // browse to the new archive
-            var newLocation = deleteURL.replace(/\/[^\/]*$/, '')
-            window.location = newLocation
-        }).catch(function (error) {
-            if (error.response) {
-                alert(error.response.message)
-            }
-        })
-
+        console.log(PATH.data)
+        if (confirm(
+            'Delete ' + deleteURL + '?\nThe content will continue to be available in '
+            + 'the history at ' +  deleteURL + '?rev=' + PATH.data.info.version.rev
+        )) {
+            m.request({
+                // DELETE the given path
+                method: 'DELETE',
+                url: 'http://localhost:8000/ark' + deleteURL,
+                withCredentials: false,
+            }).then(function (response) {
+                // browse to the new archive
+                var newLocation = deleteURL.replace(/\/[^\/]*$/, '')
+                window.location = newLocation
+            }).catch(function (error) {
+                if (error.response) {
+                    alert(error.response.message)
+                }
+            })
+        }
     }
 }
 
