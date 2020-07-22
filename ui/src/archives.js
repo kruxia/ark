@@ -316,13 +316,14 @@ var ActionDownloadThisPath = {
 
 var ActionCopyArchiveURL = {
     view: function () {
+        const copyURL = 'http://localhost:7000/' + PATH.path
         return (
             <span class="mr-2">
                 <a href="" onclick={ActionCopyArchiveURL.click}>
                     <IconCopy class="h-5 mr-1 align-text-top" />
                     Copy URL
                 </a>
-                <input type="text" id="path-archive-url-data" value={'http://localhost:7000/' + PATH.path} class="w-full opacity-0 absolute" hidden="hidden" />
+                <input type="text" id="path-archive-url-data" value={copyURL} class="w-full opacity-0 absolute" hidden="hidden" />
             </span>
         )
     },
