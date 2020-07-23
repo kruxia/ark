@@ -4,7 +4,7 @@ const {
     IconArchiveNew, IconFolderNew, IconUpload, IconDownload, IconCopy, IconDelete,
     IconHistory, IconHistoryOff
 } = require('./icons')
-const { HistoryPanel } = require('./history-panel')
+const { HistoryPanel } = require('./history')
 var { PATH, Breadcrumbs, PathLink } = require('./path')
 
 var ArchivePathView = {
