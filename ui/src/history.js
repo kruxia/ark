@@ -14,6 +14,7 @@ var HistoryPanel = {
             var rev = 'HEAD:0'
         }
         var url = 'http://localhost:8000/ark/' + PATH.path + "?rev=" + rev
+        console.log(url)
         m.request({
             method: 'GET',
             url: url,
@@ -84,16 +85,14 @@ var HistoryPanel = {
                                                         <tr style={HistoryPanel.filesDisplayStyle}>
                                                             <td class="align-top text-left" colspan="2">
                                                                 <table class="table-auto w-full -m-px">
-                                                                    {item.paths.map((path, index) => {
+                                                                    {item.paths.map((path) => {
                                                                         return (
                                                                             <tr>
-                                                                                <td class="align-top text-left w-6">
-                                                                                    <span title={ACTIONS[path.action]}>
-                                                                                        {path.action}
-                                                                                    </span>
+                                                                                <td class="align-text-top font-medium pr-2 text-left text-xs uppercase w-6">
+                                                                                    {ACTIONS[path.action]}
                                                                                 </td>
-                                                                                <td class="align-top text-left" style="word-break:break-word;">
-                                                                                    {decodeURI(path.name)}
+                                                                                <td class="align-text-top text-left" style="word-break:break-word;">
+                                                                                    {decodeURI(path.relpath)}
                                                                                 </td>
                                                                             </tr>
                                                                         )

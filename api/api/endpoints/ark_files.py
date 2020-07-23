@@ -30,6 +30,7 @@ class ArkPath(HTTPEndpoint):
         GET info and props for the path, list of files and folders if it's a directory
         """
         url = self.archive_url(request)
+        request_path = request.path_params.get('path', '')
 
         kw = {}
         if 'rev' in request.query_params:
@@ -51,6 +52,22 @@ class ArkPath(HTTPEndpoint):
             if 'data' in revprops:
                 result['revprops'] = revprops['data']
             result['log'] = log['data'] if 'data' in log else []
+            # filter the log messages to those that are under this path, relative to this path
+            for entry in result['log']:
+                if entry.get('paths'):
+                    entry['paths'] = list(
+                        filter(
+                            lambda path: path['name'].startswith(request_path),
+                            entry['paths'],
+                        )
+                    )
+                    for path in entry['paths']:
+                        if path['name'] == request_path:
+                            path['relpath'] = os.path.split(path['name'])[-1]
+                        else:
+                            path['relpath'] = os.path.relpath(
+                                path['name'], os.path.dirname(request_path)
+                            )
 
         if result.get('info', {}).get('path', {}).get('kind') == NodeKind.Dir:
             files = await svn.list_files(url, **kw)
