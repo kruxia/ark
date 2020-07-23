@@ -24,6 +24,9 @@ var PATH = {
             PATH.path = path
             PATH.query = new URLSearchParams(queryStr)
         }).catch((error) => {
+            PATH.error = error.response
+            PATH.path = path
+            PATH.query = new URLSearchParams(queryStr)
             console.log(error.response)
         })
     },
@@ -48,7 +51,7 @@ var Breadcrumbs = {
                     })
                 }
                 {
-                    PATH.query.has('rev') ? (' @ rev=' + PATH.query.get('rev')) : ''
+                    PATH.query.has('rev') ? (' @ rev=' + PATH.query.get('rev')) : ''
                 }
                 &#x2002;
                 {

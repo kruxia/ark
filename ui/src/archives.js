@@ -20,6 +20,8 @@ var ArchivePathView = {
         } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
             // File View
             return <FileView />
+        } else if (PATH.error) {
+            return <ErrorView />
         } else {
             // nothing yet
             // return <div class="mx-2">loading...</div>
@@ -27,13 +29,32 @@ var ArchivePathView = {
     }
 }
 
+var ErrorView = {
+    view: function () {
+        return (
+            <div class="leading-tight">
+                <div class="text-2xl font-light">
+                    <Breadcrumbs />
+                </div>
+                <h1 class="mx-2 mt-2 text-4xl font-black">{PATH.error.code}</h1>
+                <p class="mx-2 uppercase">{PATH.error.message}</p>
+                <div class="mx-2 my-2">
+                    {/* An HTTP status dog to brighten your day */}
+                    <img src={'https://httpstatusdogs.com/img/' + PATH.error.code + '.jpg'} 
+                        alt={'HTTP ' + PATH.error.code + ' dog'}/>
+                </div>
+            </div>
+        )
+    }
+}
+
 var ArchivesView = {
     view: function () {
         return (
             <div class="leading-tight">
-                <h1 class="text-2xl font-light">
+                <div class="text-2xl font-light">
                     <Breadcrumbs />
-                </h1>
+                </div>
                 <div class="flex flex-wrap flex-row-reverse justify-end">
                     <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
                         <ArchivesActions />
@@ -61,9 +82,9 @@ var DirectoryView = {
     view: function () {
         return (
             <div class="leading-tight">
-                <h1 class="text-2xl font-light">
+                <div class="text-2xl font-light">
                     <Breadcrumbs />
-                </h1>
+                </div>
                 <div class="flex flex-wrap flex-row-reverse justify-end">
                     <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
                         <DirectoryActions />
@@ -157,9 +178,9 @@ var FileView = {
     view: function () {
         return (
             <div class="h-screen leading-tight">
-                <h1 class="text-2xl font-light">
+                <div class="text-2xl font-light">
                     <Breadcrumbs />
-                </h1>
+                </div>
                 <div class="h-full flex flex-wrap flex-row-reverse justify-end">
                     <div class="w-full sm:w-5/12 lg:w-4/12">
                         <FileActions />
@@ -377,7 +398,7 @@ var ActionDeleteThisPath = {
         console.log(PATH.data)
         if (confirm(
             'Delete ' + deleteURL + '?\nThe content will continue to be available in '
-            + 'the history at ' +  deleteURL + '?rev=' + PATH.data.info.version.rev
+            + 'the history at ' + deleteURL + '?rev=' + PATH.data.info.version.rev
         )) {
             m.request({
                 // DELETE the given path
