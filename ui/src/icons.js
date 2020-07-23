@@ -70,6 +70,13 @@ const IconHistory = {
     )
 }
 
+const IconSpinningCircles = {
+    view: (vnode) => (
+        <img class={(vnode.attrs.class || "h-6") + " inline"} src="/icons/spinning-circles.svg"
+            aria-label="icon: spinning circles" alt="spinning circles" title="spinning circles" />
+    )
+}
+
 module.exports = {
     IconArchive,
     IconArchiveNew,
@@ -81,4 +88,5 @@ module.exports = {
     IconDelete,
     IconHistoryOff,
     IconHistory,
+    IconSpinningCircles,
 }

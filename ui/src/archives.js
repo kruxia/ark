@@ -2,7 +2,7 @@ const m = require("mithril")
 const { fileSizeStr } = require('./lib')
 const {
     IconArchiveNew, IconFolderNew, IconUpload, IconDownload, IconCopy, IconDelete,
-    IconHistory, IconHistoryOff
+    IconHistory, IconHistoryOff, IconSpinningCircles
 } = require('./icons')
 const { HistoryPanel } = require('./history')
 var { PATH, Breadcrumbs, PathLink } = require('./path')
@@ -40,8 +40,8 @@ var ErrorView = {
                 <p class="mx-2 uppercase">{PATH.error.message}</p>
                 <div class="mx-2 my-2">
                     {/* An HTTP status dog to brighten your day */}
-                    <img src={'https://httpstatusdogs.com/img/' + PATH.error.code + '.jpg'} 
-                        alt={'HTTP ' + PATH.error.code + ' dog'}/>
+                    <img src={'https://httpstatusdogs.com/img/' + PATH.error.code + '.jpg'}
+                        alt={'HTTP ' + PATH.error.code + ' dog'} />
                 </div>
             </div>
         )
@@ -225,7 +225,7 @@ var ActionCreateArchive = {
         return (
             <span class="mr-2">
                 <a href="" onclick={ActionCreateArchive.create}>
-                    <IconArchiveNew class="h-6 mr-1" />
+                    <IconArchiveNew class="w-6 mr-1" />
                     Create Archive
                 </a>
             </span>
@@ -261,7 +261,7 @@ var ActionCreateFolder = {
         return (
             <a href="" onclick={ActionCreateFolder.create}>
                 <span class="mr-2">
-                    <IconFolderNew class="h-6 mr-1 align-top" />
+                    <IconFolderNew class="w-6 mr-1 align-top" />
                     Create Subfolder
                 </span>
             </a>
@@ -296,7 +296,7 @@ var ActionUploadFile = {
     view: function () {
         return (
             <span class="mr-2">
-                <IconUpload class="h6 mr-1 align-top" />
+                <IconUpload class="w-6 mr-1 align-top" />
                 <a href="" onclick={ActionUploadFile.click}>Upload File</a>
                 <form class="inline" enctype="multipart/form-data" class="hidden">
                     <input id="upload_file" name="file" type="file" onchange={ActionUploadFile.upload} />
@@ -336,7 +336,7 @@ var ActionDownloadThisPath = {
     view: function () {
         return (
             <span class="mr-2">
-                <IconDownload class="h6 mr-1 align-top" />
+                <IconDownload class="w-6 mr-1 align-top" />
                 <a href="" onclick={ActionDownloadThisPath.click}>
                     Export {decodeURI(PATH.data.info.path.name)}
                     {PATH.query.has('rev') ? ' @ rev=' + PATH.query.get('rev') : ''}
@@ -362,7 +362,7 @@ var ActionCopyArchiveURL = {
         return (
             <span class="mr-2">
                 <a href="" onclick={ActionCopyArchiveURL.click}>
-                    <IconCopy class="h-5 mr-1 align-text-top" />
+                    <IconCopy class="w-6 mr-1 align-text-top" />
                     Copy Archive URL
                 </a>
                 <input type="text" id="path-archive-url-data" value={copyURL} class="w-full opacity-0 absolute" hidden="hidden" />
@@ -386,7 +386,7 @@ var ActionDeleteThisPath = {
         if (PATH.path != PATH.data.info.archive.name && !PATH.query.has('rev')) {
             return (
                 <a href={'/' + PATH.path} class="mr-2" onclick={ActionDeleteThisPath.delete}>
-                    <IconDelete class="h6 mr-1 align-top" />
+                    <IconDelete class="w-6 mr-1 align-top" />
                     Delete {decodeURI(PATH.data.info.path.name)}
                 </a>
             )
@@ -423,19 +423,26 @@ var ActionDeleteThisPath = {
 
 var ActionViewHistory = {
     view: function () {
-        if (HistoryPanel.visible == false) {
+        if (HistoryPanel.waiting == true) {
             return (
-                <a href="" class="mr-2" onclick={ActionViewHistory.viewHistory}>
-                    <IconHistory class="h6 mr-1 align-top" />
+                <div class="mr-2">
+                    <IconSpinningCircles class="w-6 mr-1 align-top" />
+                    Loading History...
+                </div>
+            )
+        } else if (HistoryPanel.visible == false) {
+            return (
+                <button class="mr-2" onclick={ActionViewHistory.viewHistory}>
+                    <IconHistory class="w-6 mr-1 align-top" />
                     View History
-                </a>
+                </button>
             )
         } else {
             return (
-                <a href="" class="mr-2" onclick={ActionViewHistory.viewHistory}>
-                    <IconHistoryOff class="h6 mr-1 align-top" />
+                <button class="mr-2" onclick={ActionViewHistory.viewHistory}>
+                    <IconHistoryOff class="w-6 mr-1 align-top" />
                     Hide History
-                </a>
+                </button>
             )
         }
     },
@@ -443,7 +450,6 @@ var ActionViewHistory = {
         event.preventDefault()
         if (HistoryPanel.visible == false) {
             HistoryPanel.load()
-            HistoryPanel.visible = true
         } else {
             HistoryPanel.visible = false
         }
@@ -454,7 +460,7 @@ var ActionDeletePath = {
     view: function () {
         return (
             <span class="mr-2">
-                <IconDelete class="h6 mr-1 align-top" />
+                <IconDelete class="w-6 mr-1 align-top" />
                 Delete
             </span>
         )
