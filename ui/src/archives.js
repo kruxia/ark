@@ -30,7 +30,7 @@ var ArchivePathView = {
 var ArchivesView = {
     view: function () {
         return (
-            <div class="leading-relaxed">
+            <div class="leading-tight">
                 <h1 class="text-2xl font-light">
                     <Breadcrumbs />
                 </h1>
@@ -50,7 +50,7 @@ var ArchivesView = {
 var ArchivesActions = {
     view: function () {
         return (
-            <ul class="mx-2">
+            <ul class="mx-2 leading-relaxed">
                 <li class="my-2"><ActionCreateArchive /></li>
             </ul>
         )
@@ -60,7 +60,7 @@ var ArchivesActions = {
 var DirectoryView = {
     view: function () {
         return (
-            <div class="leading-relaxed">
+            <div class="leading-tight">
                 <h1 class="text-2xl font-light">
                     <Breadcrumbs />
                 </h1>
@@ -81,7 +81,7 @@ var DirectoryView = {
 var DirectoryActions = {
     view: function () {
         return (
-            <ul class="mx-2">
+            <ul class="leading-relaxed mx-2">
                 <li class="my-2"><ActionCopyArchiveURL /></li>
                 <li class="my-2"><ActionCreateFolder /></li>
                 <li class="my-2"><ActionUploadFile /></li>
@@ -96,7 +96,7 @@ var DirectoryActions = {
 var DirectoryList = {
     view: function () {
         return (
-            <div class="px-2">
+            <div class="px-2 mt-2">
                 <table class="table-auto w-full">
                     <thead>
                         <tr>
@@ -156,7 +156,7 @@ var DirectoryListItem = {
 var FileView = {
     view: function () {
         return (
-            <div class="h-screen leading-relaxed">
+            <div class="h-screen leading-tight">
                 <h1 class="text-2xl font-light">
                     <Breadcrumbs />
                 </h1>
@@ -177,7 +177,7 @@ var FileView = {
 var FileActions = {
     view: function () {
         return (
-            <ul class="mx-2">
+            <ul class="leading-relaxed mx-2">
                 <li class="my-2"><ActionDownloadThisPath /></li>
                 <li class="my-2"><ActionDeleteThisPath /></li>
                 <li class="my-2"><ActionViewHistory /></li>
@@ -316,8 +316,9 @@ var ActionDownloadThisPath = {
             <span class="mr-2">
                 <IconDownload class="h6 mr-1 align-top" />
                 <a href="" onclick={ActionDownloadThisPath.click}>
-                    Export {decodeURI(PATH.path)}
+                    Export {decodeURI(PATH.data.info.path.name)}
                     {PATH.query.has('rev') ? ' @ rev=' + PATH.query.get('rev') : ''}
+                    {PATH.data.info.path.kind == 'dir' ? ' (.zip)' : ''}
                 </a>
             </span>
         )
@@ -359,13 +360,12 @@ var ActionCopyArchiveURL = {
 }
 
 var ActionDeleteThisPath = {
-    view: function (vnode) {
-        const deletePath = vnode.attrs.path || PATH.path
-        if (deletePath != PATH.data.info.archive.name && !PATH.query.has('rev')) {
+    view: function () {
+        if (PATH.path != PATH.data.info.archive.name && !PATH.query.has('rev')) {
             return (
-                <a href={'/' + deletePath} class="mr-2" onclick={ActionDeleteThisPath.delete}>
+                <a href={'/' + PATH.path} class="mr-2" onclick={ActionDeleteThisPath.delete}>
                     <IconDelete class="h6 mr-1 align-top" />
-                    Delete {decodeURI(deletePath)}
+                    Delete {decodeURI(PATH.data.info.path.name)}
                 </a>
             )
         }

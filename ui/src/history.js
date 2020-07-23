@@ -84,14 +84,14 @@ var HistoryPanel = {
                                                         </tr>
                                                         <tr style={HistoryPanel.filesDisplayStyle}>
                                                             <td class="align-top text-left" colspan="2">
-                                                                <table class="table-auto w-full -m-px">
+                                                                <table class="table-auto w-full -mx-px mt-2">
                                                                     {item.paths.map((path) => {
                                                                         return (
                                                                             <tr>
-                                                                                <td class="align-text-top font-medium pr-2 text-left text-xs uppercase w-6">
+                                                                                <td class="align-text-top font-medium pb-1 pr-2 text-left text-xs uppercase w-6">
                                                                                     {ACTIONS[path.action]}
                                                                                 </td>
-                                                                                <td class="align-text-top text-left" style="word-break:break-word;">
+                                                                                <td class="align-text-top pb-1 text-left" style="word-break:break-word;">
                                                                                     {decodeURI(path.relpath)}
                                                                                 </td>
                                                                             </tr>
