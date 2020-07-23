@@ -32,7 +32,7 @@ var PATH = {
 var Breadcrumbs = {
     view: function () {
         return (
-            <span class="mx-2">
+            <div class="mx-2 leading-none">
                 <PathLink path="/" name="archives" />
                 {
                     PATH.path.split('/').map((slug, index) => {
@@ -56,10 +56,10 @@ var Breadcrumbs = {
                         <PathLink path={'/' + PATH.path} name="(view current)" />
                     ) : ''
                 }
-            </span>
+            </div>
         )
     }
-}
+} 
 
 var PathLink = {
     view: function (vnode) {
