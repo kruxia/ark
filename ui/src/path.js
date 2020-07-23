@@ -1,4 +1,5 @@
 const m = require('mithril')
+const mime = require('mime-types')
 
 var ACTIONS = {
     A: 'Added',
@@ -10,6 +11,7 @@ var ACTIONS = {
 var PATH = {
     data: {},
     path: '',
+    mimetype: null,
     query: new URLSearchParams(),
     load: function (path, queryStr) {
         path = path || PATH.path
@@ -22,10 +24,12 @@ var PATH = {
         }).then(function (result) {
             PATH.data = result
             PATH.path = path
+            PATH.mimetype = mime.lookup(PATH.path) || 'application/octet-stream'
             PATH.query = new URLSearchParams(queryStr)
         }).catch((error) => {
             PATH.error = error.response
             PATH.path = path
+            PATH.mimetype = mime.lookup(PATH.path) || 'application/octet-stream'
             PATH.query = new URLSearchParams(queryStr)
             console.log(error.response)
         })
@@ -72,9 +76,9 @@ var PathLink = {
         }
         return (
             <span>{vnode.attrs.prefix || ''}
-                <a href={href} onclick={(event) => {
-                    PathLink.clickLink(event, vnode)
-                }}>
+                <a class="word-break" style="word-break:break-all;" href={href} 
+                    onclick={(event) => {PathLink.clickLink(event, vnode)}}
+                >
                     {decodeURI(vnode.attrs.name)}
                 </a>
             </span>

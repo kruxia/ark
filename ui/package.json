@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "mime-types": "^2.1.27",
     "mithril": "^2.0.4"
   },
   "devDependencies": {

@@ -187,7 +187,13 @@ var FileView = {
                         <HistoryPanel />
                     </div>
                     <div class="h-full w-full sm:w-7/12 lg:w-8/12">
-                        <FileIFrame />
+                        {
+                            PATH.mimetype.match(/(?:^(?:text|image)|(?:xml|pdf)$)/) ? (
+                                <FileIFrame />
+                            ) : (
+                                <FileNoPreview />
+                            )
+                        }
                     </div>
                 </div>
             </div>
@@ -212,8 +218,23 @@ var FileIFrame = {
         return (
             // TODO: replace this with a more responsible method of creating a preview
             // (since this will only work for files that are already displayable.)
-            <div class="w-auto h-full">
+            <div class="m-2 w-auto h-full">
                 <iframe src={PATH.data.info.path.url} class="w-full h-full" />
+            </div>
+        )
+    }
+}
+
+var FileNoPreview = {
+    view: function () {
+        return (
+            <div class="m-2 w-auto h-full">
+                <h2>
+                    No preview is available 
+                    for {PATH.path.match(/\.[^\.]*$/)} ({PATH.mimetype}) type files.
+                    You can use the "Export" action to download and preview the file 
+                    on your system.
+                </h2>
             </div>
         )
     }
