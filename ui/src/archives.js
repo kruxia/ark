@@ -310,12 +310,12 @@ var FileNoPreview = {
 var ActionCreateFolder = {
     view: function () {
         return (
-            <a href="" onclick={this.create}>
+            <button onclick={this.create}>
                 <span class="mr-2">
                     <IconFolderNew class="w-6 mr-1 align-top" />
                     Create Subfolder
                 </span>
-            </a>
+            </button>
         )
     },
     create: function (event) {
@@ -347,7 +347,7 @@ var ActionUploadFile = {
         return (
             <span class="mr-2">
                 <IconUpload class="w-6 mr-1 align-top" />
-                <a href="" onclick={this.click}>Upload File</a>
+                <button onclick={this.click}>Upload File</button>
                 <form class="inline" enctype="multipart/form-data" class="hidden">
                     <input id="upload_file" name="file" type="file" onchange={ActionUploadFile.upload} />
                 </form>
@@ -355,7 +355,6 @@ var ActionUploadFile = {
         )
     },
     click: function (event) {
-        event.preventDefault();
         document.getElementById('upload_file').click()
     },
     upload: function (event) {
@@ -387,21 +386,19 @@ var ActionDownloadThisPath = {
         return (
             <span class="mr-2">
                 <IconDownload class="w-6 mr-1 align-top" />
-                <a href="" onclick={this.click}>
+                <button onclick={this.click}>
                     Export {decodeURI(PATH.data.info.path.name)}
                     {PATH.query.has('rev') ? ' @ rev=' + PATH.query.get('rev') : ''}
                     {PATH.data.info.path.kind == 'dir' ? ' (.zip)' : ''}
-                </a>
+                </button>
             </span>
         )
     },
     click: function () {
-        event.preventDefault()
         var url = (
             'http://localhost:8000/export/' + PATH.path
             + (PATH.query.has('rev') ? '?rev=' + PATH.query.get('rev') : '')
         )
-        console.log(url)
         window.open(url)
     }
 }
@@ -411,16 +408,15 @@ var ActionCopyArchiveURL = {
         const copyURL = 'http://localhost:7000/' + PATH.path
         return (
             <span class="mr-2">
-                <a href="" onclick={this.click}>
+                <button onclick={this.click}>
                     <IconCopy class="w-6 mr-1 align-text-top" />
                     Copy Archive URL
-                </a>
+                </button>
                 <input type="text" id="path-archive-url-data" value={copyURL} class="w-full opacity-0 absolute" hidden="hidden" />
             </span>
         )
     },
     click: function (event) {
-        event.preventDefault()
         var element = document.getElementById('path-archive-url-data')
         element.hidden = false
         element.select()
