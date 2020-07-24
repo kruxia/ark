@@ -2,6 +2,7 @@ aiofiles==0.5.0
 asyncpg==0.20.1
 databases==0.3.2
 httpx==0.13.3
+ipython==7.16.1  # useful for interacting with the app in deploy 
 lxml==4.5.1
 orjson==3.2.1
 pydantic==1.5.1

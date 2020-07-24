@@ -94,3 +94,10 @@ branch = master
   - [NOTE: vouch-proxy with nginx ngx_http_auth_request_module could provide this
     service, but we are instead going to use our own API server for authn/authz]
   - [ ] pytest
+
+
+## TODO: Beta Release 
+
+Do the following before creating a beta release.
+
+* Pin req/install.txt in requirements.txt and use in deploy.Dockerfile

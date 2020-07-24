@@ -17,7 +17,7 @@ RUN apt-get update \
 WORKDIR /var/api
 
 COPY req/ req/
-RUN pip install -r req/dev.txt
+RUN pip install -r req/install.txt
 
 COPY ./ ./
 RUN pip install -e .
@@ -33,4 +33,4 @@ EXPOSE 8000
 
 # for this development image, use uvicorn --reload
 ENTRYPOINT ["/var/api/docker-entrypoint.sh"]
-CMD ["uvicorn", "api.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
