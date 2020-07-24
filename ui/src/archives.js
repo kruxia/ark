@@ -5,6 +5,7 @@ const {
     IconHistory, IconHistoryOff, IconSpinningCircles
 } = require('./icons')
 const { HistoryPanel } = require('./history')
+const { Modal } = require('./modal')
 var { PATH, Breadcrumbs, PathLink } = require('./path')
 
 var ArchivePathView = {
@@ -29,27 +30,8 @@ var ArchivePathView = {
     }
 }
 
-var ErrorView = {
-    view: function () {
-        return (
-            <div class="leading-tight">
-                <div class="text-2xl font-light">
-                    <Breadcrumbs />
-                </div>
-                <h1 class="mx-2 mt-2 text-4xl font-black">{PATH.error.code}</h1>
-                <p class="mx-2 uppercase">{PATH.error.message}</p>
-                <div class="mx-2 my-2">
-                    {/* An HTTP status dog to brighten your day */}
-                    <img src={'https://httpstatusdogs.com/img/' + PATH.error.code + '.jpg'}
-                        alt={'HTTP ' + PATH.error.code + ' dog'} />
-                </div>
-            </div>
-        )
-    }
-}
-
 var ArchivesView = {
-    view: function () {
+    view: function (vnode) {
         return (
             <div class="leading-tight">
                 <div class="text-2xl font-light">
@@ -72,9 +54,83 @@ var ArchivesActions = {
     view: function () {
         return (
             <ul class="mx-2 leading-relaxed">
-                <li class="my-2"><ActionCreateArchive /></li>
+                <li class="my-2">
+                    <ActionCreateArchive modal={
+                        <Modal id="modal-create-archive" title="Create Archive" colorPrimary="gray"
+                            icon={<IconArchiveNew class="h-6 w-6" />}
+                            valuePrimary="Create Archive"
+                            onclick={() => {
+                                var errorElement = document.getElementById('modal-create-archive-error')
+                                errorElement.classList.add('hidden')
+                                var archiveName = document.getElementById('modal-create-archive-name').value
+                                ActionCreateArchive.create(archiveName)
+                            }}
+                        >
+                            <div id="modal-create-archive-error" class="hidden text-red-700">...</div>
+                            <input id="modal-create-archive-name" type="text" placeholder="Archive Name" value=""
+                                class="w-full p-2 rounded-sm shadow-sm border" />
+                            <script>
+                                var modalInput = document.getElementById('modal-create-archive-name');
+                                modalInput.focus();
+                            </script>
+                        </Modal>
+                    } />
+                </li>
             </ul>
         )
+    }
+}
+
+// Create an Archive
+var ActionCreateArchive = {
+    oninit: function (vnode) {
+    },
+    view: function (vnode) {
+        return (
+            <>
+                <span class="mr-2">
+                    <button onclick={() => {
+                        vnode.attrs.modal.state.hidden = false
+                    }} >
+                        <IconArchiveNew class="w-6 mr-1" />
+                        Create Archive
+                    </button>
+                </span>
+                {vnode.attrs.modal}
+            </>
+        )
+    },
+    create: function (archiveName) {
+        if (archiveName) {
+            // hide the modal
+            var errorElement = document.getElementById('modal-create-archive-error')
+            errorElement.classList.add('hidden')
+
+            // POST the request
+            m.request({
+                // POST the request to create a new archive
+                method: 'POST',
+                url: 'http://localhost:8000/ark',
+                withCredentials: false,
+                body: { name: archiveName },
+            }).then(function (response) {
+                // browse to the new archive
+                window.location = '/' + archiveName
+            }).catch(function (error) {
+                if (error.response) {
+                    // error -- unhide the modal
+                    var errorElement = document.getElementById('modal-create-archive-error')
+                    errorElement.classList.remove('hidden')
+
+                    // display the error message
+                    errorElement.innerText = error.response.message
+                    var archiveNameElement = document.getElementById('modal-create-archive-name')
+
+                    // re-focus on the input
+                    archiveNameElement.focus()
+                }
+            })
+        }
     }
 }
 
