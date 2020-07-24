@@ -219,12 +219,13 @@ var FileNoPreview = {
     view: function () {
         return (
             <div class="m-2 w-auto h-full">
-                <h2>
+                <h2 class="text-lg font-black">Preview Unavailable</h2>
+                <p>
                     No preview is available
                     for {PATH.path.match(/\.[^\.]*$/)} ({PATH.mimetype}) type files.
                     You can use the "Export" action to download and preview the file
                     on your system.
-                </h2>
+                </p>
             </div>
         )
     }
