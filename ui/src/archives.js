@@ -121,10 +121,18 @@ var DirectoryList = {
                 <table class="table-auto w-full">
                     <thead>
                         <tr>
-                            <th class="border-b pr-2 text-left">name</th>
-                            <th class="border-b pr-2 text-left w-24">size</th>
-                            <th class="border-b pr-2 text-left w-56">last modified</th>
-                            <th class="border-b text-right w-8">rev</th>
+                            <th class="align-bottom border-b leading-none py-2 pr-2 text-left w-64 md:w-auto">
+                                name
+                            </th>
+                            <th class="align-bottom border-b leading-none py-2 pr-2 text-left">
+                                size
+                            </th>
+                            <th class="align-bottom border-b leading-none py-2 pr-2 text-left">
+                                last modified
+                            </th>
+                            <th class="align-bottom border-b leading-none py-2 text-right w-8">
+                                rev
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
