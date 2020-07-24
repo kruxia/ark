@@ -1,4 +1,4 @@
-# development Dockerfile
+# deployment Dockerfile
 FROM python:3.8-slim-buster
 LABEL maintainer="Sean Harrison <sah@kruxia.com>"
 

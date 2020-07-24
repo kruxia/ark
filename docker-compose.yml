@@ -27,9 +27,9 @@ services:
     environment:
       ARCHIVE_FILES: /var/svn
       ARCHIVE_SERVER: http://svn
-      ARCHIVE_URL: http://localhost:7000
-      DATABASE_NAME: ark
-      DATABASE_URL: postgres://ark:ark@postgres:5432/${DATABASE_NAME}
+      ARCHIVE_URL: ${ARCHIVE_URL}
+      DATABASE_NAME: ${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     ports:
       - "8000:8000"
     volumes:
