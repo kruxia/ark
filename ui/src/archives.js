@@ -249,7 +249,7 @@ var ActionCreateArchive = {
             m.request({
                 // POST the request to create a new archive
                 method: 'POST',
-                url: 'http://localhost:8000/ark',
+                url: API_URL + '/ark',
                 withCredentials: false,
                 body: { name: archiveName },
             }).then(function (response) {
@@ -283,12 +283,12 @@ var ActionCreateFolder = {
         const folderName = window.prompt("Folder Name:", "")
         console.log(folderName)
         if (folderName) {
-            const url = 'http://localhost:8000/ark/' + PATH.path + '/' + folderName
+            const url = API_URL + '/ark/' + PATH.path + '/' + folderName
             console.log('PUT: ' + url)
             m.request({
                 // PUT the request to create a new folder
                 method: 'PUT',
-                url: 'http://localhost:8000/ark/' + PATH.path + '/' + folderName,
+                url: API_URL + '/ark/' + PATH.path + '/' + folderName,
                 withCredentials: false,
             }).then(function (response) {
                 // browse to the new folder
@@ -323,7 +323,7 @@ var ActionUploadFile = {
         var form = event.target.parentNode
         // TODO: Support multiple file upload
         for (file of event.target.files) {
-            const url = 'http://localhost:8000/ark/' + PATH.path + '/' + file.name
+            const url = API_URL + '/ark/' + PATH.path + '/' + file.name
             var body = new FormData(form)
             body["file"] = file
             m.request({
@@ -357,7 +357,7 @@ var ActionDownloadThisPath = {
     },
     click: function () {
         var url = (
-            'http://localhost:8000/export/' + PATH.path
+            API_URL + '/export/' + PATH.path
             + (PATH.query.has('rev') ? '?rev=' + PATH.query.get('rev') : '')
         )
         window.open(url)
@@ -366,7 +366,7 @@ var ActionDownloadThisPath = {
 
 var ActionCopyArchiveURL = {
     view: function () {
-        const copyURL = 'http://localhost:7000/' + PATH.path
+        const copyURL = ARCHIVE_URL + '/' + PATH.path
         return (
             <span class="mr-2">
                 <button onclick={this.click}>
@@ -410,7 +410,7 @@ var ActionDeleteThisPath = {
             m.request({
                 // DELETE the given path
                 method: 'DELETE',
-                url: 'http://localhost:8000/ark' + deleteURL,
+                url: API_URL + '/ark' + deleteURL,
                 withCredentials: false,
             }).then(function (response) {
                 // browse to the new archive

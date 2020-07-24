@@ -16,7 +16,7 @@ var HistoryPanel = {
         } else {
             var rev = 'HEAD:0'
         }
-        var url = 'http://localhost:8000/ark/' + PATH.path + "?rev=" + rev
+        var url = API_URL + '/ark/' + PATH.path + "?rev=" + rev
         console.log(url)
         m.request({
             method: 'GET',

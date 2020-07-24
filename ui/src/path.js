@@ -16,7 +16,7 @@ var PATH = {
     load: function (path, queryStr) {
         path = path || PATH.path
         queryStr = queryStr || window.location.search
-        var url = 'http://localhost:8000/ark/' + path + queryStr
+        var url = API_URL + '/ark/' + path + queryStr
         return m.request({
             method: 'GET',
             url: url,
