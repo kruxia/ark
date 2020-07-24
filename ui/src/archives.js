@@ -38,10 +38,10 @@ var ArchivesView = {
                     <Breadcrumbs />
                 </div>
                 <div class="flex flex-wrap flex-row-reverse justify-end">
-                    <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
+                    <div class="w-full sm:w-5/12 sm:px-4">
                         <ArchivesActions />
                     </div>
-                    <div class="w-full pr-2 sm:w-7/12 lg:w-8/12">
+                    <div class="w-full pr-2 sm:w-7/12">
                         <DirectoryList />
                     </div>
                 </div>
@@ -68,11 +68,11 @@ var DirectoryView = {
                     <Breadcrumbs />
                 </div>
                 <div class="flex flex-wrap flex-row-reverse justify-end">
-                    <div class="w-full sm:w-5/12 lg:w-4/12 sm:px-4">
+                    <div class="w-full sm:w-5/12 sm:px-4">
                         <DirectoryActions />
                         <HistoryPanel />
                     </div>
-                    <div class="w-full pr-2 sm:w-7/12 lg:w-8/12">
+                    <div class="w-full pr-2 sm:w-7/12">
                         <DirectoryList />
                     </div>
                 </div>
@@ -172,11 +172,11 @@ var FileView = {
                     <Breadcrumbs />
                 </div>
                 <div class="h-full flex flex-wrap flex-row-reverse justify-end">
-                    <div class="w-full sm:w-5/12 lg:w-4/12">
+                    <div class="w-full sm:w-5/12">
                         <FileActions />
                         <HistoryPanel />
                     </div>
-                    <div class="h-full w-full sm:w-7/12 lg:w-8/12">
+                    <div class="h-full w-full sm:w-7/12">
                         {
                             PATH.mimetype.match(/(?:^(?:text|image)|(?:xml|pdf)$)/) ? (
                                 <FileIFrame />
