@@ -27,14 +27,26 @@ services:
     environment:
       ARCHIVE_FILES: /var/svn
       ARCHIVE_SERVER: http://svn
-      ARCHIVE_URL: ${ARCHIVE_URL}
-      DATABASE_NAME: ${POSTGRES_DB}
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ARCHIVE_URL: http://localhost:7000
+      DATABASE_NAME: ark
+      DATABASE_URL: postgres://ark:ark@postgres:5432/ark
     ports:
       - "8000:8000"
     volumes:
       - svndata:/var/svn
       - ./api:/var/api
+
+  ui: 
+    build:
+      context: ./ui
+      dockerfile: deploy.Dockerfile
+      args:
+        API_URL: http://localhost:8000
+        ARCHIVE_URL: http://localhost:7000
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
 
 volumes:
   pgdata:
