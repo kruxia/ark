@@ -238,9 +238,9 @@ var FileNoPreview = {
         return (
             <div class="m-2 w-auto h-full">
                 <h2>
-                    No preview is available 
+                    No preview is available
                     for {PATH.path.match(/\.[^\.]*$/)} ({PATH.mimetype}) type files.
-                    You can use the "Export" action to download and preview the file 
+                    You can use the "Export" action to download and preview the file
                     on your system.
                 </h2>
             </div>
@@ -288,7 +288,7 @@ var ActionCreateArchive = {
 var ActionCreateFolder = {
     view: function () {
         return (
-            <a href="" onclick={ActionCreateFolder.create}>
+            <a href="" onclick={this.create}>
                 <span class="mr-2">
                     <IconFolderNew class="w-6 mr-1 align-top" />
                     Create Subfolder
@@ -326,7 +326,7 @@ var ActionUploadFile = {
         return (
             <span class="mr-2">
                 <IconUpload class="w-6 mr-1 align-top" />
-                <a href="" onclick={ActionUploadFile.click}>Upload File</a>
+                <a href="" onclick={this.click}>Upload File</a>
                 <form class="inline" enctype="multipart/form-data" class="hidden">
                     <input id="upload_file" name="file" type="file" onchange={ActionUploadFile.upload} />
                 </form>
@@ -366,7 +366,7 @@ var ActionDownloadThisPath = {
         return (
             <span class="mr-2">
                 <IconDownload class="w-6 mr-1 align-top" />
-                <a href="" onclick={ActionDownloadThisPath.click}>
+                <a href="" onclick={this.click}>
                     Export {decodeURI(PATH.data.info.path.name)}
                     {PATH.query.has('rev') ? ' @ rev=' + PATH.query.get('rev') : ''}
                     {PATH.data.info.path.kind == 'dir' ? ' (.zip)' : ''}
@@ -390,7 +390,7 @@ var ActionCopyArchiveURL = {
         const copyURL = 'http://localhost:7000/' + PATH.path
         return (
             <span class="mr-2">
-                <a href="" onclick={ActionCopyArchiveURL.click}>
+                <a href="" onclick={this.click}>
                     <IconCopy class="w-6 mr-1 align-text-top" />
                     Copy Archive URL
                 </a>
@@ -414,7 +414,7 @@ var ActionDeleteThisPath = {
     view: function () {
         if (PATH.path != PATH.data.info.archive.name && !PATH.query.has('rev')) {
             return (
-                <a href={'/' + PATH.path} class="mr-2" onclick={ActionDeleteThisPath.delete}>
+                <a href={'/' + PATH.path} class="mr-2" onclick={this.delete}>
                     <IconDelete class="w-6 mr-1 align-top" />
                     Delete {decodeURI(PATH.data.info.path.name)}
                 </a>
@@ -461,14 +461,14 @@ var ActionViewHistory = {
             )
         } else if (HistoryPanel.visible == false) {
             return (
-                <button class="mr-2" onclick={ActionViewHistory.viewHistory}>
+                <button class="mr-2" onclick={this.viewHistory}>
                     <IconHistory class="w-6 mr-1 align-top" />
                     View History
                 </button>
             )
         } else {
             return (
-                <button class="mr-2" onclick={ActionViewHistory.viewHistory}>
+                <button class="mr-2" onclick={this.viewHistory}>
                     <IconHistoryOff class="w-6 mr-1 align-top" />
                     Hide History
                 </button>
