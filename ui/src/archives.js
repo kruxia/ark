@@ -196,11 +196,9 @@ var FileView = {
                     </div>
                     <div class="h-full w-full sm:w-7/12 lg:w-8/12">
                         {
-                            PATH.mimetype.match(/(?:^(?:text|image)|(?:xml|pdf)$)/) ? (
-                                <FileIFrame />
-                            ) : (
-                                <FileNoPreview />
-                            )
+                            (
+                                PATH.mimetype.match(/(?:^(?:text|image)|(?:xml|pdf)$)/)
+                            ) ? <FileIFrame /> : <FileNoPreview />
                         }
                     </div>
                 </div>
@@ -237,48 +235,34 @@ var FileNoPreview = {
     view: function () {
         return (
             <div class="m-2 w-auto h-full">
-                <h2>
+                <h2 class="text-lg font-black">Preview Unavailable</h2>
+                <p>
                     No preview is available
                     for {PATH.path.match(/\.[^\.]*$/)} ({PATH.mimetype}) type files.
                     You can use the "Export" action to download and preview the file
                     on your system.
-                </h2>
+                </p>
             </div>
         )
     }
 }
 
-// Create an Archive
-var ActionCreateArchive = {
+var ErrorView = {
     view: function () {
         return (
-            <span class="mr-2">
-                <a href="" onclick={ActionCreateArchive.create}>
-                    <IconArchiveNew class="w-6 mr-1" />
-                    Create Archive
-                </a>
-            </span>
+            <div class="leading-tight">
+                <div class="text-2xl font-light">
+                    <Breadcrumbs />
+                </div>
+                <h1 class="mx-2 mt-2 text-4xl font-black">{PATH.error.code}</h1>
+                <p class="mx-2 uppercase">{PATH.error.message}</p>
+                <div class="mx-2 my-2">
+                    {/* An HTTP status dog to brighten your day */}
+                    <img src={'https://httpstatusdogs.com/img/' + PATH.error.code + '.jpg'}
+                        alt={'HTTP ' + PATH.error.code + ' dog'} />
+                </div>
+            </div>
         )
-    },
-    create: function (event) {
-        event.preventDefault();
-        const archiveName = window.prompt("Archive Name:", "")
-        if (archiveName) {
-            m.request({
-                // POST the request to create a new archive
-                method: 'POST',
-                url: 'http://localhost:8000/ark',
-                withCredentials: false,
-                body: { name: archiveName },
-            }).then(function (response) {
-                // browse to the new archive
-                window.location = '/' + archiveName
-            }).catch(function (error) {
-                if (error.response) {
-                    alert(error.response.message)
-                }
-            })
-        }
     }
 }
 
