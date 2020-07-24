@@ -167,7 +167,7 @@ var DirectoryListItem = {
 var FileView = {
     view: function () {
         return (
-            <div class="h-screen leading-tight">
+            <div class="h-screen leading-relaxed">
                 <div class="text-2xl font-light">
                     <Breadcrumbs />
                 </div>
@@ -220,9 +220,8 @@ var FileNoPreview = {
         return (
             <div class="m-2 w-auto h-full">
                 <h2 class="text-lg font-black">Preview Unavailable</h2>
-                <p>
-                    No preview is available
-                    for {PATH.path.match(/\.[^\.]*$/)} ({PATH.mimetype}) type files.
+                <p class="mb-2">
+                    No preview is available for <span class="font-semibold">{PATH.path.match(/\.[^\.]*$/)}</span> files.
                     You can use the "Export" action to download and preview the file
                     on your system.
                 </p>
