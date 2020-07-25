@@ -1,18 +1,14 @@
-import asyncio
 import os
-import tempfile
 from starlette.endpoints import HTTPEndpoint
 from starlette.exceptions import HTTPException
 from starlette.responses import FileResponse
-from api.responses import JSONResponse
-from api.models import NodeKind, Status
 from api import svn
 
 
 class ExportPath(HTTPEndpoint):
     """
-    Handle requests to /export/NAME/PATH[?REV=N], where NAME is an archive name and PATH 
-    is a file path within the archive. If PATH is empty, then it is "/". if REV is 
+    Handle requests to /export/NAME/PATH[?REV=N], where NAME is an archive name and PATH
+    is a file path within the archive. If PATH is empty, then it is "/". if REV is
     given, export at that revision.
     """
 
@@ -33,7 +29,7 @@ class ExportPath(HTTPEndpoint):
     async def get(self, request):
         """
         Export the requested archive path, at the optional requested rev
-        200 — exists, returned. 
+        200 — exists, returned.
         404 — not found at the given rev
         """
         url = self.archive_url(request)
