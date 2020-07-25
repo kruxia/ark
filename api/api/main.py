@@ -1,4 +1,4 @@
-# import databases
+import databases
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -15,15 +15,15 @@ async def app_startup():
     On app startup, open a connection pool to the database server. TODO: move the size
     of the connection pool (min_size, max_size) to environment variables.
     """
-    # app.database = databases.Database(os.getenv('DATABASE_URL'), min_size=5, max_size=5)
-    # await app.database.connect()
+    app.database = databases.Database(os.getenv('DATABASE_URL'), min_size=5, max_size=5)
+    await app.database.connect()
 
 
 async def app_shutdown():
     """
     On app shutdown, close the database connection pool.
     """
-    # await app.database.disconnect()
+    await app.database.disconnect()
 
 
 middleware = [Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'])]

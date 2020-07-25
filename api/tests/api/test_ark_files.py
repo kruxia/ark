@@ -402,8 +402,8 @@ def test_delete_ark_name_path(client):
 
 def test_deleted_folder_available_at_rev(client):
     """
-    When a folder has been deleted, the log, info, files, props, and revprops should
-    still be available at the previous rev
+    When a folder has been deleted, the log, info, files, props, and revprops should 
+    still be available at the previous rev 
     """
     name = create_archive(client, 1)
     r1 = create_folder(client, name, 'd1')  # rev=1
@@ -447,8 +447,8 @@ def test_deleted_folder_available_at_rev(client):
     assert data['log'][0]['paths'][0]['name'] == 'd1/f1.txt'
     assert data['log'][0]['paths'][0]['kind'] == 'file'
     assert data['log'][0]['paths'][0]['action'] == 'A'
-    assert data['log'][0]['paths'][0]['text_mods'] is True
-    assert data['log'][0]['paths'][0]['prop_mods'] is False
+    assert data['log'][0]['paths'][0]['text_mods'] == True
+    assert data['log'][0]['paths'][0]['prop_mods'] == False
 
     assert len(data['files']) == 1
     assert data['files'][0]['path']['name'] == 'f1.txt'

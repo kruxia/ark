@@ -10,19 +10,19 @@ services:
     volumes:
       - svndata:/var/svn
 
-  # postgres:
-  #   image: postgres:12
-  #   environment:
-  #     POSTGRES_DB: ${POSTGRES_DB}
-  #     POSTGRES_USER: ${POSTGRES_USER}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #   volumes: 
-  #     - pgdata:/var/lib/postgres/data
+  postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: 
+      - pgdata:/var/lib/postgres/data
 
   api:
     image: ark_api
     depends_on:
-      # - postgres
+      - postgres
       - svn
     environment:
       ARCHIVE_FILES: /var/svn
@@ -44,5 +44,5 @@ services:
       - "80:80"
 
 volumes:
-  # pgdata:
+  pgdata:
   svndata:
