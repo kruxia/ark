@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eux
 
 docker build \
     --build-arg API_URL="${API_URL}" \
