@@ -36,17 +36,17 @@ services:
       - svndata:/var/svn
       - ./api:/var/api
 
-  ui: 
-    build:
-      context: ./ui
-      dockerfile: deploy.Dockerfile
-      args:
-        API_URL: http://localhost:8000
-        ARCHIVE_URL: http://localhost:7000
-    depends_on:
-      - api
-    ports:
-      - "3000:80"
+  # ui: 
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - api
+  #   environment:
+  #     API_URL: http://localhost:8000
+  #     ARCHIVE_URL: http://localhost:7000
+  #   ports:
+  #     - "3000:3000"
 
 volumes:
   # pgdata:
