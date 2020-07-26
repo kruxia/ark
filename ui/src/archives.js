@@ -13,19 +13,19 @@ var ArchivePathView = {
         PATH.load(vnode.attrs.path)
     },
     view: function () {
-        if (!PATH.data.info && PATH.data.files) {
+        if (!PATH.data.info) {
             // List Archives View
             return <ArchivesView />
         } else if (PATH.data.files) {
             return <DirectoryView />
-        } else if (PATH.data.info && PATH.data.info.path.kind == 'file') {
+        } else if (PATH.data.info.path.kind == 'file') {
             // File View
             return <FileView />
         } else if (PATH.error) {
             return <ErrorView />
         } else {
             // nothing yet
-            // return <div class="mx-2">loading...</div>
+            return <div class="mx-2">loading...</div>
         }
     }
 }
@@ -119,7 +119,7 @@ var DirectoryList = {
                     </thead>
                     <tbody>
                         {
-                            PATH.data.files.map((item, index) => {
+                            (PATH.data.files || []).map((item, index) => {
                                 return <DirectoryListItem item={item} index={index} />
                             })
                         }
