@@ -14,23 +14,27 @@ var PATH = {
     mimetype: null,
     query: new URLSearchParams(),
     load: function (path, queryStr) {
-        path = path || PATH.path
-        queryStr = queryStr || window.location.search
-        var url = API_URL + '/ark/' + path + queryStr
-        return m.request({
+        PATH.path = path || PATH.path
+        PATH.query = new URLSearchParams(queryStr || window.location.search)
+        PATH.mimetype = mime.lookup(PATH.path) || 'application/octet-stream'
+
+        queryStr = PATH.query.toString().match(/\?$/, "")  // strip
+        var url = API_URL + '/ark' 
+        if (PATH.path) {
+            url += '/' + PATH.path
+        }
+        if (queryStr) {
+            url += '?' + queryStr
+        } 
+
+        m.request({
             method: 'GET',
             url: url,
             withCredentials: false,
         }).then(function (result) {
             PATH.data = result
-            PATH.path = path
-            PATH.mimetype = mime.lookup(PATH.path) || 'application/octet-stream'
-            PATH.query = new URLSearchParams(queryStr)
         }).catch((error) => {
             PATH.error = error.response
-            PATH.path = path
-            PATH.mimetype = mime.lookup(PATH.path) || 'application/octet-stream'
-            PATH.query = new URLSearchParams(queryStr)
             console.log(error.response)
         })
     },
