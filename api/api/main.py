@@ -31,8 +31,8 @@ middleware = [Middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'
 routes = [
     Route('/', endpoint=Index),
     Route('/health', endpoint=Health),
-    Route('/ark', endpoint=ArkParent),
-    Route('/ark/{name}', endpoint=ArkPath),
+    Route('/ark/?', endpoint=ArkParent),
+    Route('/ark/{name}/?', endpoint=ArkPath),
     Route('/ark/{name}/{path:path}', endpoint=ArkPath),
     Route('/export/{name}/{path:path}', endpoint=ExportPath),
 ]
