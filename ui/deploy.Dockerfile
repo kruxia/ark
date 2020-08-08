@@ -28,6 +28,6 @@ FROM nginx:alpine
 COPY --from=build /ui/dist/ /usr/share/nginx/html/
 COPY ./default.conf /etc/nginx/conf.d/
 
-EXPOSE 3000
+EXPOSE 80
 
 # Using default nginx CMD
