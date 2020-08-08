@@ -49,6 +49,8 @@ services:
       - api
     ports:
       - "80:80"
+    volumes:
+      - ./ui/.htpasswd:/etc/nginx/.htpasswd
 
 volumes:
   # pgdata:
