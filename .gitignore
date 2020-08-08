@@ -4,3 +4,4 @@ svndata
 api/reports
 .htpasswd
 ui/ssl
+.envrc
