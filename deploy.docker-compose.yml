@@ -20,7 +20,9 @@ services:
   #     - pgdata:/var/lib/postgres/data
 
   api:
-    image: ark_api
+    build: 
+      context: ./api
+      dockerfile: deploy.Dockerfile
     depends_on:
       # - postgres
       - svn
@@ -37,7 +39,12 @@ services:
       - ./api:/var/api
 
   ui: 
-    image: ark_ui
+    build: 
+      context: ./ui
+      dockerfile: deploy.Dockerfile
+      args:
+        API_URL: ${API_URL}
+        ARCHIVE_URL: ${ARCHIVE_URL}
     depends_on:
       - api
     ports:
