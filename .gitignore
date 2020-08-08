@@ -3,3 +3,4 @@ __pycache__
 svndata
 api/reports
 .htpasswd
+ui/ssl

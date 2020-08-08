@@ -3,10 +3,8 @@ services:
   svn:
     image: kruxia/svn:alpine
     environment:
-      SERVER_ADMIN: $SERVER_ADMIN
-      SERVER_NAME: http://localhost/svn
-    ports:
-      - "7000:80"
+      SERVER_ADMIN: ${SERVER_ADMIN}
+      SERVER_NAME: ${ARCHIVE_URL}
     volumes:
       - svndata:/var/svn
 
@@ -42,8 +40,10 @@ services:
       - api
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ./ui/.htpasswd:/etc/nginx/.htpasswd
+      - ./ui/nginx/.htpasswd:/etc/nginx/.htpasswd
+      - ./ui/ssl:/etc/nginx/ssl
 
 volumes:
   # pgdata:

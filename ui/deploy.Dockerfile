@@ -26,8 +26,9 @@ RUN export PATH=node_modules/.bin:$PATH \
 FROM nginx:alpine
 
 COPY --from=build /ui/dist/ /usr/share/nginx/html/
-COPY ./default.conf /etc/nginx/conf.d/
+COPY ./nginx/default.conf /etc/nginx/conf.d/
 
 EXPOSE 80
+EXPOSE 443
 
 # Using default nginx CMD
