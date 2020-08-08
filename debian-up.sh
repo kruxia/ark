@@ -3,20 +3,28 @@
 # install git, direnv, docker, htpasswd
 sudo apt-get update 
 sudo apt-get install -y \
+    # certbot for letsencrypt
+    certbot \
+    # git
     git \
+    # direnv for environment management
     direnv \
+    # apache2-utils for htpasswd
     apache2-utils \
+    # system prerequisites for docker
     apt-transport-https \
     ca-certificates \
     curl \
     gnupg-agent \
     software-properties-common
+# docker debian repository
 curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
 sudo add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/debian \
    $(lsb_release -cs) \
    stable"
 sudo apt-get update
+# install docker
 sudo apt-get install -y \
      docker-ce \
      docker-ce-cli \
@@ -39,6 +47,6 @@ openssl x509 -req -sha256 -days 365 -in ui/ssl/server.csr -signkey ui/ssl/server
 
 echo IMPORTANT: Replace this self-signed cert with one from a certificate authority A.S.A.P.
 
-echo You must initialize the docker stack with 'docker stack init [ipaddress]'
+echo You must initialize the docker stack with 'docker swarm init --advertise-addr [ipaddress]'
 echo and you must create an htpasswd file at ./ui/nginx/.htpasswd
 echo then you can 'docker stack deploy -c deploy.docker-compose.yml ark'
