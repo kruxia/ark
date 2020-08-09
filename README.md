@@ -4,10 +4,10 @@ Ark is a file storage server that provides:
 
 * versioning with unlimited file history and optional changelog messaging
 * branch–modify–merge (textual) and lock–modify–unlock (binary) collaboration workflows
-* event triggers to drive workflow automations and webhooks
+* ~~event triggers to drive workflow automations and webhooks~~ _not yet_
 * [REST API](api/README.md)
 * file interface UI
-* full-text-search on file contents and metadata, supporting NN languages
+* ~~full-text-search on file contents and metadata, supporting NN languages~~ _not yet_
 * efficient binary file revision storage [via Subversion] — large repositories with many
   binary files that have numerous revisions typically require only fractionally more
   storage space than the files themselves.
@@ -32,8 +32,8 @@ Better than Dropbox:
 Architecture:
 
 * File storage server: Apache Subversion
-* REST API and search engine: Python Starlette PostgreSQL 
+* REST API and search engine: Python Starlette ~~PostgreSQL~~ _no db yet_
 * File interface UI: 
   * XHTML — use XML syntax
-  * CSS + TailwindCSS — chosen over bootstrap and other, utility classes look to be the future.
-  * JS + mithril.js.org — chosen over VueJS and React for its small size.
+  * CSS + TailwindCSS — chosen over bootstrap and others, utility classes look to be the future.
+  * JS + mithril.js.org — chosen over VueJS and React for its small size / efficiency.
