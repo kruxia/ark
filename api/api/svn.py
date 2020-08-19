@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import tempfile
+import urllib.parse
 import zipfile
 from lxml import etree
 from pathlib import Path
@@ -24,7 +25,7 @@ async def create_archive(name):
     Create the archive with the given name, including the template files to configure
     the archive.
     """
-    path = os.getenv('ARCHIVE_FILES') + '/' + name
+    path = urllib.parse.unquote_plus(os.getenv('ARCHIVE_FILES') + '/' + name)
 
     # create the archive
     cmds = [['svnadmin', 'create', path]]
@@ -82,7 +83,7 @@ async def info(*urls, rev='HEAD'):
                         os.path.split(entry['path']['url'])[-1],
                     )
                     du_result = await process.run_command(
-                        'du', '-s', '-B', '1', archive_path,
+                        'du', '-s', '-B', '1', urllib.parse.unquote_plus(archive_path),
                     )
                     if du_result.get('output'):
                         entry['path']['size'] = int(du_result['output'].split()[0])
@@ -103,13 +104,14 @@ async def list_files(url, rev='HEAD'):
             rev_url = f'{url}@{rev}'
         else:
             rev_url = url
-        cmd = ['svn', 'list', '--xml', rev_url]
+        cmd = ['svn', 'list', '--xml', urllib.parse.unquote_plus(rev_url)]
+
         result = await process.run_command(*cmd)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = [
                 models.Info.from_list(entry, rev=rev).dict()
-                for entry in xml.xpath(f'/lists/list[@path="{url}"]/entry')
+                for entry in xml.xpath('/lists/list/entry')
             ]
 
     return result
@@ -128,9 +130,11 @@ async def export(url, rev='HEAD'):
             rev_url = url
 
         with tempfile.TemporaryDirectory() as tempdir:
-            filepath = os.path.join(tempdir, url.split('/')[-1])
+            filepath = os.path.join(
+                tempdir, urllib.parse.unquote_plus(url.split('/')[-1])
+            )
 
-            cmd = ['svn', 'export', rev_url, filepath]
+            cmd = ['svn', 'export', urllib.parse.unquote_plus(rev_url), filepath]
             result = await process.run_command(*cmd)
 
             if not result['error']:
@@ -172,7 +176,16 @@ async def log(url, rev='HEAD'):
     """
     if rev != 'HEAD':
         url += f"@{rev.split(':')[0]}"
-    cmd = ['svn', 'log', '--revision', str(rev), '--xml', '--verbose', url]
+    cmd = [
+        'svn',
+        'log',
+        '--revision',
+        str(rev),
+        '--xml',
+        '--verbose',
+        urllib.parse.unquote_plus(url),
+    ]
+
     result = await process.run_command(*cmd)
     if not result['error']:
         xml = etree.fromstring(result.pop('output').encode())
@@ -196,7 +209,14 @@ async def props(url, rev='HEAD'):
             rev_url = f"{url}@{rev}"
         else:
             rev_url = url
-        cmd = ['svn', 'proplist', '--xml', '--verbose', rev_url]
+        cmd = [
+            'svn',
+            'proplist',
+            '--xml',
+            '--verbose',
+            urllib.parse.unquote_plus(rev_url),
+        ]
+
         result = await process.run_command(*cmd)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
@@ -212,7 +232,17 @@ async def revprops(url, rev='HEAD'):
     """
     Return a dict with the revprops data on the given url and rev.
     """
-    cmd = ['svn', 'proplist', '--revprop', '--revision', rev, '--xml', '--verbose', url]
+    cmd = [
+        'svn',
+        'proplist',
+        '--revprop',
+        '--revision',
+        rev,
+        '--xml',
+        '--verbose',
+        urllib.parse.unquote_plus(url),
+    ]
+
     result = await process.run_command(*cmd)
     if not result['error']:
         xml = etree.fromstring(result.pop('output').encode())
@@ -266,14 +296,33 @@ async def propset(url, data):
             result = {'error': '', 'output': ''}
             # set revprops on existing revision
             for key, val in data.get('revprops', {}).items():
-                cmd = ['svn', 'propset', key, '--revprop', '-r', rev, str(val), url]
+                cmd = [
+                    'svn',
+                    'propset',
+                    key,
+                    '--revprop',
+                    '-r',
+                    rev,
+                    str(val),
+                    urllib.parse.unquote_plus(url),
+                ]
+
                 res = await process.run_command(*cmd)
                 result['error'] += res['error']
                 result['output'] += res['output']
 
             # del revprops on existing revision
             for key in data.get('revpropdel', []):
-                cmd = ['svn', 'propdel', key, '--revprop', '-r', rev, url]
+                cmd = [
+                    'svn',
+                    'propdel',
+                    key,
+                    '--revprop',
+                    '-r',
+                    rev,
+                    urllib.parse.unquote_plus(url),
+                ]
+
                 res = await process.run_command(*cmd)
                 result['error'] += res['error']
                 result['output'] += res['output']
@@ -297,12 +346,11 @@ async def propset(url, data):
                 cmd += ['--with-revprop', f'{key}={val}']
 
             for key, val in data.get('props', {}).items():
-                cmd += ['propset', key, str(val), url]
+                cmd += ['propset', key, str(val), urllib.parse.unquote_plus(url)]
 
             for key in data.get('propdel', []):
-                cmd += ['propdel', key, url]
+                cmd += ['propdel', key, urllib.parse.unquote_plus(url)]
 
-            print(cmd)
             result = await process.run_command(*cmd)
 
         elif data.get('revprops'):
@@ -356,7 +404,8 @@ async def put(url, body=None, message=None, revprops=None):
         for key, val in revprops.items():
             cmd += ['--with-revprop', f"{key}={val}"]
 
-        cmd += [url]
+        cmd += [urllib.parse.unquote_plus(url)]
+
         result = await process.run_command(*cmd)
 
     else:
@@ -368,7 +417,8 @@ async def put(url, body=None, message=None, revprops=None):
         with tempfile.NamedTemporaryFile() as tf:
             tf.write(body)
             tf.seek(0)
-            cmd += ['put', tf.name, url]
+            cmd += ['put', tf.name, urllib.parse.unquote_plus(url)]
+
             result = await process.run_command(*cmd)
 
     return result
@@ -381,11 +431,12 @@ async def delete_archive(name):
     (This is a hard filesystem delete of the entire archive and its history, which
     cannot be undone.)
     """
-    path = Path(os.getenv('ARCHIVE_FILES')) / name
+    path = urllib.parse.unquote_plus(str(Path(os.getenv('ARCHIVE_FILES')) / name))
+
     if not os.path.exists(path):
         result = {'error': f'Archive not found: {name}'}
     else:
-        cmd = ['rm', '-rf', str(path)]
+        cmd = ['rm', '-rf', path]
         result = await process.run_command(*cmd)
 
     return result
@@ -400,7 +451,8 @@ async def remove(url, message=None, revprops=None):
     cmd = ['svn', 'rm', '--message', message]
     for key, val in revprops.items():
         cmd += ['--with-revprop', f"{key}={val}"]
-    cmd += [url]
+    cmd += [urllib.parse.unquote_plus(url)]
+
     result = await process.run_command(*cmd)
     result['error'] = re.sub(
         f"'{os.getenv('ARCHIVE_SERVER')}",
