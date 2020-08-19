@@ -13,14 +13,12 @@ ENV NODE_ENV=production
 
 COPY public/ public/
 COPY src/ src/ 
-RUN export PATH=node_modules/.bin:$PATH \
-    && mkdir dist \
+RUN mkdir dist \
     && cp -R public/* dist/ \
-    && tailwind build src/static/main.css -o dist/static/main.css
+    && node_modules/.bin/tailwind build src/static/main.css -o dist/static/main.css
 
 COPY ./ ./
-RUN export PATH=node_modules/.bin:$PATH \
-    && webpack -p
+RUN node_modules/.bin/webpack -p
 
 # -- production stage --
 FROM nginx:alpine
