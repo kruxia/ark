@@ -1,6 +1,7 @@
 import os
 import re
 import typing
+import urllib.parse
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel
@@ -92,7 +93,7 @@ class PathInfo(BaseModel):
                     [
                         # if the entry is disconnected from its context, URL is relative
                         next(iter(entry.xpath('parent::list/@path')), '.'),
-                        entry.find('name').text,
+                        urllib.parse.quote(entry.find('name').text),
                     ]
                 )
                 # include the revision (p=peg rev) if not HEAD
