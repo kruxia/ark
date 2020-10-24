@@ -11,7 +11,7 @@ services:
 
   # NOTE: svn and api must be able to share the svndata volume R/W. On kubernetes this
   # usually requires running both containers on the same Deployment/Pod. It is important
-  # to make sure there is a enough CPU available to avoid a bottleneck
+  # to make sure there is a enough CPU available to avoid a bottleneck.
 
   svn:
     image: kruxia/svn:alpine

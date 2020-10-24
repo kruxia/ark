@@ -5,3 +5,4 @@ api/reports
 .htpasswd
 ui/ssl
 .envrc
+.metals
