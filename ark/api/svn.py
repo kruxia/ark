@@ -31,9 +31,9 @@ async def create_archive(name):
     cmds = [['svnadmin', 'create', path]]
 
     # copy the current archive template files into the new archive filesystem
-    result = await process.run_command(*['ls', '/var/api/svntemplate'])
+    result = await process.run_command(*['ls', '/var/ark/svntemplate'])
     filenames = result['output'].strip().split('\n')
-    cmds += [['cp', '-R', f'/var/api/svntemplate/{fn}', path] for fn in filenames]
+    cmds += [['cp', '-R', f'/var/ark/svntemplate/{fn}', path] for fn in filenames]
     cmds += [['chown', '-R', 'apache:apache', path]]
 
     result = {'output': '', 'error': ''}

@@ -1,8 +1,8 @@
 {
-  "name": "ark-api",
+  "name": "ark",
   "version": "0.0.1",
   "description": "",
-  "url": "https://gitlab.com/blackearth/",
+  "url": "https://github.com/kruxia/ark",
   "author": "Sean Harrison",
   "author_email": "sah@kruxia.com",
   "license": "MPL 2.0",
@@ -17,7 +17,7 @@
     "dev": [],
     "test": []
   },
-  "packages": ["api", "tests"],
+  "packages": ["api", "db", "tests"],
   "package_data": {
     "": []
   },

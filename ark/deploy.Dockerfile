@@ -14,7 +14,7 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /var/api
+WORKDIR /var/ark
 
 COPY req/ req/
 RUN pip install -r req/install.txt
@@ -32,5 +32,5 @@ RUN userdel _apt \
 EXPOSE 8000
 
 # for this development image, use uvicorn --reload
-ENTRYPOINT ["/var/api/docker-entrypoint.sh"]
+ENTRYPOINT ["/var/ark/docker-entrypoint.sh"]
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
