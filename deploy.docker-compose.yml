@@ -1,13 +1,15 @@
 version: "3.7"
 services:
-  # postgres:
-  #   image: postgres:12
-  #   environment:
-  #     POSTGRES_DB: ${POSTGRES_DB}
-  #     POSTGRES_USER: ${POSTGRES_USER}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #   volumes: 
-  #     - pgdata:/var/lib/postgres/data
+  db:
+    image: kruxia/ark-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    volumes: 
+      - pgdata:/var/lib/postgresql/data
+      - ./db:/var/db
 
   # NOTE: svn and api must be able to share the svndata volume R/W. On kubernetes this
   # usually requires running both containers on the same Deployment/Pod. It is important
@@ -22,21 +24,21 @@ services:
       - svndata:/var/svn
 
   api:
-    image: ark_api
+    image: kruxia/ark
     depends_on:
-      # - postgres
+      - db
       - svn
     environment:
       ARCHIVE_FILES: /var/svn
       ARCHIVE_SERVER: http://svn
       ARCHIVE_URL: ${ARCHIVE_URL}
-      # DATABASE_NAME: ${POSTGRES_DB}
-      # DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_NAME: ${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     ports:
       - "8000:8000"
     volumes:
       - svndata:/var/svn
-      - ./api:/var/api
+      - ./ark:/var/ark
 
   ui: 
     image: ark_ui
@@ -50,5 +52,5 @@ services:
       - ./ui/ssl:/etc/nginx/ssl
 
 volumes:
-  # pgdata:
+  pgdata:
   svndata:
