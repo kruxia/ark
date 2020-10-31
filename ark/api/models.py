@@ -4,7 +4,7 @@ import typing
 import urllib.parse
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator, validator
 from uuid import UUID
 
 
@@ -25,6 +25,37 @@ class NodeKind(Enum):
     Dir = 'dir'
 
 
+class URL(BaseModel):
+    scheme: str
+    netloc: str
+    path: str
+    params: str
+    query: str
+    fragment: str
+
+    def __str__(self):
+        urlist = [f"{self.scheme}://{self.netloc}{self.path}"]
+        if self.params:
+            urlist.append(f';{self.params}')
+        if self.query:
+            urlist.append(f'?{self.query}')
+        if self.fragment:
+            urlist.append(f'#{self.fragment}')
+        return ''.join(urlist)
+
+    @classmethod
+    def from_string(cls, url):
+        pr = urllib.parse.urlparse(url)
+        return cls(
+            scheme=pr.scheme,
+            netloc=pr.netloc,
+            path=pr.path,
+            params=pr.params,
+            query=pr.query,
+            fragment=pr.fragment,
+        )
+
+
 class ArchiveInfo(BaseModel):
     """
     Data about an archive itself, as provided by `svn info`.
@@ -33,13 +64,18 @@ class ArchiveInfo(BaseModel):
     name: str
     root: str
 
-    @root_validator
-    def root_with_slash(cls, values):
+    @validator('root')
+    def convert_root(cls, value):
         """
-        Ensure that the instance.root has a trailing slash
+        Ensure archive root path has trailing slash
         """
-        values['root'] = values['root'].rstrip('/') + '/'
-        return values
+        url = URL.from_string(str(value))
+        url.path = url.path.rstrip() + '/'
+        return str(url)
+
+    @validator('name')
+    def convert_name(cls, value):
+        return urllib.parse.unquote(value)
 
     @classmethod
     def from_info(cls, entry):
@@ -66,14 +102,19 @@ class PathInfo(BaseModel):
     size: int = None
 
     @root_validator
-    def directory_url_with_slash(cls, values):
+    def normalize_values(cls, values):
         """
-        Ensure that the instance.url has a trailing slash if it's a 'dir'
+        + Unquote instance.name
+        + Ensure that instance.url has a trailing slash if it's a 'dir'.
         """
-        if 'url' in values and values['kind'] == NodeKind.Dir:
-            values['url'] = values['url'].rstrip('/') + '/'
+        values['name'] = urllib.parse.unquote(values['name'])
+        if 'url' in values and values['url'] is not None:
+            url = URL.from_string(str(values['url']))
+            url.path = url.path.rstrip() + '/'
+            if values['kind'] == NodeKind.Dir:
+                url.path = url.path.rstrip('/') + '/'
+            values['url'] = str(url)
         return values
-
 
     @classmethod
     def from_info(cls, entry, rev='HEAD'):
@@ -81,16 +122,19 @@ class PathInfo(BaseModel):
         Given a `svn info` entry element, return PathInfo. Include the rev in the url if
         the rev is not HEAD (to make the URL an accurate link to THIS rev of target.)
         """
-        return cls(
-            name=entry.get('path'),
-            kind=entry.get('kind'),
-            url=re.sub(
+        url = (
+            re.sub(
                 f"^{os.getenv('ARCHIVE_SERVER')}",
                 os.getenv('ARCHIVE_URL'),
                 entry.find('url').text,
             )
             # include the revision (p=peg, r=rev) if not HEAD
-            + (f"?p={rev}" if rev and rev != 'HEAD' else ''),
+            + (f"?p={rev}" if rev and rev != 'HEAD' else '')
+        )
+        return cls(
+            name=entry.get('path'),
+            kind=entry.get('kind'),
+            url=url,
             size=entry.get('size'),
         )
 
@@ -100,22 +144,23 @@ class PathInfo(BaseModel):
         Given a `svn list` entry element, return PathInfo. Include the rev in the url if
         the rev is not HEAD (to make the URL an accurate link to THIS rev of target.)
         """
+        url = re.sub(
+            f"^{os.getenv('ARCHIVE_SERVER')}",
+            os.getenv('ARCHIVE_URL'),
+            '/'.join(
+                [
+                    # if the entry is disconnected from its context, URL is relative
+                    next(iter(entry.xpath('parent::list/@path')), '.'),
+                    urllib.parse.quote(entry.find('name').text),
+                ]
+            )
+            # include the revision (p=peg rev) if not HEAD
+            + (f"?p={rev}" if rev and rev != 'HEAD' else ''),
+        )
         return cls(
             name=entry.find('name').text,
             kind=entry.get('kind'),
-            url=re.sub(
-                f"^{os.getenv('ARCHIVE_SERVER')}",
-                os.getenv('ARCHIVE_URL'),
-                '/'.join(
-                    [
-                        # if the entry is disconnected from its context, URL is relative
-                        next(iter(entry.xpath('parent::list/@path')), '.'),
-                        urllib.parse.quote(entry.find('name').text),
-                    ]
-                )
-                # include the revision (p=peg rev) if not HEAD
-                + (f"?p={rev}" if rev and rev != 'HEAD' else ''),
-            ),
+            url=url,
             size=next(iter(entry.xpath('size/text()')), None),
         )
 
