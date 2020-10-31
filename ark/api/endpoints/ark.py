@@ -26,33 +26,16 @@ class ArkParent(HTTPEndpoint):
         archive_server = os.getenv('ARCHIVE_SERVER')
 
         # get a list of repositories via SVNListParentPath
-        async with httpx.AsyncClient() as client:
-            response = await client.get(archive_server)
-        if response.status_code != 200:
+        result = await svn.list_archives()
+        if result['status'] == 200:
+            return JSONResponse(result['data'])
+        else:
             return JSONResponse(
                 Status(
-                    code=response.status_code,
-                    message=http.client.responses[response.status_code],
-                ),
-                status_code=response.status_code,
+                    code=result['status'],
+                    message=http.client.responses[result['status']],
+                )
             )
-
-        # get the list of archive URLs from the response.content
-        content = response.content.decode().replace('<hr noshade>', '<hr/>').strip()
-        logger.debug(content)
-        xml = etree.fromstring(content)
-        archive_urls = [
-            f"{archive_server}/{name.rstrip('/')}"
-            for name in xml.xpath("//li//text()")
-            if not name.startswith('.')
-        ]
-        if len(archive_urls) > 0:
-            # get the svn info for all listed repositories
-            result = await svn.info(*archive_urls)
-            data = {'files': result.get('data', [])}
-        else:
-            data = {}
-        return JSONResponse(data)
 
     async def post(self, request):
         """

@@ -6,8 +6,14 @@ TODO: When api.process.run_command is updated to return the `ProcessOutput` data
 structure, in cases here where `data` is being added to the structure before return,
 instead return the data separately, or None if not created. This will change the
 functions' interface and so also require some refactoring in the consumers.
+
+TODO: Switch from svn filesystem access to svn/admin API for:
+- create_archive
+- delete_archive
 """
 
+import httpx
+import logging
 import os
 import re
 import shutil
@@ -18,6 +24,37 @@ from lxml import etree
 from pathlib import Path
 from api import models
 from api import process
+
+logger = logging.getLogger(__name__)
+
+
+async def list_archives():
+    archive_server = os.getenv('ARCHIVE_SERVER')
+
+    # get a list of repositories via SVNListParentPath
+    async with httpx.AsyncClient() as client:
+        response = await client.get(archive_server)
+
+    if response.status_code != 200:
+        data = {}
+    else:
+        # get the list of archive URLs from the response.content
+        content = response.content.decode().replace('<hr noshade>', '<hr/>').strip()
+        logger.debug(content)
+        xml = etree.fromstring(content)
+        archive_urls = [
+            f"{archive_server}/{name}"
+            for name in xml.xpath("//li//text()")
+            if not name.startswith('.')
+        ]
+        if len(archive_urls) > 0:
+            # get the svn info for all listed repositories
+            result = await info(*archive_urls)
+            data = {'files': result.get('data', [])}
+        else:
+            data = {}
+
+    return {'status': response.status_code, 'data': data}
 
 
 async def create_archive(name):
@@ -30,7 +67,8 @@ async def create_archive(name):
     # create the archive
     cmds = [['svnadmin', 'create', path]]
 
-    # copy the current archive template files into the new archive filesystem
+    # copy the current archive template files into the new archive filesystem.
+    # - TODO: Switch from svn filesystem access to svn/admin API
     result = await process.run_command(*['ls', '/var/ark/svntemplate'])
     filenames = result['output'].strip().split('\n')
     cmds += [['cp', '-R', f'/var/ark/svntemplate/{fn}', path] for fn in filenames]
@@ -69,9 +107,9 @@ async def info(*urls, rev='HEAD'):
             # NOTE: The following is a first attempt at showing archive sizes in the
             # archive list. This procedure is too slow to scale, and points to the need
             # to use the database to index such metadata about archives so it's more
-            # readily available to the API. The Apache Subversion HTTP server wasn't
-            # intended to feed a high-performance API, and that is showing. Still,
-            # having the functionality is better than not having it.
+            # readily available to the API. Also, it's an anti-pattern to have the API
+            # and SVN servers both accessing the SVN filesystem. Still, having the
+            # functionality is better than not having it.
             # --------------------------------------------------------------------------
             for entry in result['data']:
                 # for any archives as entries, get the filesystem size of the archive
@@ -82,6 +120,7 @@ async def info(*urls, rev='HEAD'):
                         os.getenv('ARCHIVE_FILES'),
                         os.path.split(entry['path']['url'])[-1],
                     )
+                    # TODO: Switch from svn filesystem access to svn/admin API
                     du_result = await process.run_command(
                         'du', '-s', '-B', '1', urllib.parse.unquote_plus(archive_path),
                     )
@@ -436,6 +475,7 @@ async def delete_archive(name):
     if not os.path.exists(path):
         result = {'error': f'Archive not found: {name}'}
     else:
+        # - TODO: Switch from svn filesystem access to svn/admin API
         cmd = ['rm', '-rf', path]
         result = await process.run_command(*cmd)
 
