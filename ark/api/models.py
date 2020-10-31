@@ -4,7 +4,7 @@ import typing
 import urllib.parse
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 from uuid import UUID
 
 
@@ -32,7 +32,14 @@ class ArchiveInfo(BaseModel):
 
     name: str
     root: str
-    uuid: UUID
+
+    @root_validator
+    def root_with_slash(cls, values):
+        """
+        Ensure that the instance.root has a trailing slash
+        """
+        values['root'] = values['root'].rstrip('/') + '/'
+        return values
 
     @classmethod
     def from_info(cls, entry):
@@ -45,7 +52,7 @@ class ArchiveInfo(BaseModel):
             entry.find('repository/root').text,
         )
         name = root.split('/')[-1]
-        return cls(name=name, root=root, uuid=entry.find('repository/uuid').text,)
+        return cls(name=name, root=root)
 
 
 class PathInfo(BaseModel):
@@ -57,6 +64,16 @@ class PathInfo(BaseModel):
     kind: NodeKind
     url: str = None
     size: int = None
+
+    @root_validator
+    def directory_url_with_slash(cls, values):
+        """
+        Ensure that the instance.url has a trailing slash if it's a 'dir'
+        """
+        if 'url' in values and values['kind'] == NodeKind.Dir:
+            values['url'] = values['url'].rstrip('/') + '/'
+        return values
+
 
     @classmethod
     def from_info(cls, entry, rev='HEAD'):

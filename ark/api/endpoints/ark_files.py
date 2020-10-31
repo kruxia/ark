@@ -23,7 +23,7 @@ class ArkPath(HTTPEndpoint):
                 request.path_params['name'],
                 request.path_params.get('path', ''),
             ]
-        ).rstrip('/')
+        )
 
     async def get(self, request):
         """
