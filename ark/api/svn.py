@@ -6,6 +6,14 @@ TODO: When api.process.run_command is updated to return the `ProcessOutput` data
 structure, in cases here where `data` is being added to the structure before return,
 instead return the data separately, or None if not created. This will change the
 functions' interface and so also require some refactoring in the consumers.
+
+TODO: There are currently three places where the API needs access to the svn filesystem:
+1. To create an archive (system `cp`) -- replace with svn admin api (mod_wsgi).
+2. To delete an archive (system `rm`) -- replace with svn admin api (mod_wsgi).
+3. To list the archives (system `ls`) -- replace with database lookup.
+
+(ssh is a good replacement for API access to the SVN filesystem. We will use ssh for
+all administrative tasks on the archives.)
 """
 
 import os
@@ -31,7 +39,7 @@ async def create_archive(name):
     cmds = [['svnadmin', 'create', path]]
 
     # copy the current archive template files into the new archive filesystem
-    result = await process.run_command(*['ls', '/var/ark/svntemplate'])
+    result = await process.run_command('ls', '/var/ark/svntemplate')
     filenames = result['output'].strip().split('\n')
     cmds += [['cp', '-R', f'/var/ark/svntemplate/{fn}', path] for fn in filenames]
     cmds += [['chown', '-R', 'apache:apache', path]]
@@ -69,9 +77,10 @@ async def info(*urls, rev='HEAD'):
             # NOTE: The following is a first attempt at showing archive sizes in the
             # archive list. This procedure is too slow to scale, and points to the need
             # to use the database to index such metadata about archives so it's more
-            # readily available to the API. The Apache Subversion HTTP server wasn't
-            # intended to feed a high-performance API, and that is showing. Still,
-            # having the functionality is better than not having it.
+            # readily available to the API. It also requires disk access to the
+            # Subversion filesystem, which means that the API and the SVN servers must
+            # run in the same pod on Kubernetes -- a very anti pattern. Still, having
+            # the functionality is better than not having it.
             # --------------------------------------------------------------------------
             for entry in result['data']:
                 # for any archives as entries, get the filesystem size of the archive
@@ -82,6 +91,7 @@ async def info(*urls, rev='HEAD'):
                         os.getenv('ARCHIVE_FILES'),
                         os.path.split(entry['path']['url'])[-1],
                     )
+                    # Here's where we call into the filesystem. A proper db is in order.
                     du_result = await process.run_command(
                         'du', '-s', '-B', '1', urllib.parse.unquote_plus(archive_path),
                     )
