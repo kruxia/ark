@@ -14,6 +14,8 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=kruxia/diesel:buster-slim /usr/local/bin/diesel /usr/local/bin/diesel
+
 WORKDIR /var/ark
 
 COPY req/ req/
@@ -26,8 +28,7 @@ RUN pip install -e .
 # use this user for all svnadmin and svnlook
 RUN userdel _apt \ 
     && groupadd -g 101 apache \
-    && useradd -m -d /var/svn -u 100 -g 101 apache \
-    && chown -R apache:apache svntemplate
+    && useradd -m -d /var/svn -u 100 -g 101 apache 
 
 EXPOSE 8000
 

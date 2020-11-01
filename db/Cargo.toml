@@ -1,9 +1,0 @@
-[package]
-name = "ark"
-version = "0.1.0"
-authors = ["Sean Harrison <sah@bookgenesis.com>"]
-edition = "2018"
-
-[dependencies]
-diesel = { version = "1.4.4", features = ["postgres"] }
-dotenv = "0.15.0"

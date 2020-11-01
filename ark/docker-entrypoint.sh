@@ -9,5 +9,6 @@ done
 >&2 echo "Postgres is up - continuing"
 
 # Add any commands that depend on the database here (such as database migrations)
+diesel migration run
 
 exec "$@"

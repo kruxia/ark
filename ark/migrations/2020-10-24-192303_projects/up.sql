@@ -1,4 +1,4 @@
--- Your SQL goes here
+-- depends: 2020-10-24-192303_projects
 
 BEGIN;
 CREATE TABLE ark.projects (
