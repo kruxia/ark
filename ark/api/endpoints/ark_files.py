@@ -70,7 +70,7 @@ class ArkPath(HTTPEndpoint):
                             )
 
         if result.get('info', {}).get('path', {}).get('kind') == NodeKind.Dir:
-            files = await svn.list_files(url, **kw)
+            files = await svn.ls(url, **kw)
             result['files'] = files['data'] if 'data' in files else []
 
         if result:

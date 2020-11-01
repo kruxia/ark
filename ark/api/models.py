@@ -110,7 +110,6 @@ class PathInfo(BaseModel):
         values['name'] = urllib.parse.unquote(values['name'])
         if 'url' in values and values['url'] is not None:
             url = URL.from_string(str(values['url']))
-            url.path = url.path.rstrip() + '/'
             if values['kind'] == NodeKind.Dir:
                 url.path = url.path.rstrip('/') + '/'
             values['url'] = str(url)

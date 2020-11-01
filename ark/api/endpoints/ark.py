@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import http.client
@@ -51,13 +52,17 @@ class ArkParent(HTTPEndpoint):
             status = Status(code=400, message='invalid input')
             return JSONResponse(status, status_code=status.code)
 
-        result = await svn.create_archive(archive_name)
-
-        if 'is an existing repository' in result['error']:
-            status = Status(code=409, message=f"'{archive_name}' already exists")
-        elif result['error']:
-            status = Status(code=409, message=result['error'])
-        else:
-            status = Status(code=201, message=f"Created: '{data['name']}'")
+        async with httpx.AsyncClient() as client:
+            url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/create-archive'
+            response = await client.post(
+                url,
+                data=json.dumps({'name': archive_name}),
+                headers={'Content-Type': 'application/json'},
+            )
+            result = response.json()
+            status = Status(
+                code=response.status_code,
+                message=result['output'] or result['error'] or '',
+            )
 
         return JSONResponse(status, status_code=status.code)

@@ -1,14 +1,16 @@
 version: "3.7"
 services:
   svn:
-    image: kruxia/svn:alpine
+    build: ./svn
     environment:
+      ARCHIVE_FILES: /var/svn
       SERVER_ADMIN: $SERVER_ADMIN
       SERVER_NAME: $SERVER_NAME
     ports:
       - "7000:80"
     volumes:
       - svndata:/var/svn
+      - ./svn:/var/ark/svn
 
   db:
     build: ./db
@@ -28,8 +30,8 @@ services:
       - svn
     environment:
       ARCHIVE_FILES: /var/svn
-      ARCHIVE_SERVER: http://svn/svn
-      ARCHIVE_URL: http://localhost:7000/svn
+      ARCHIVE_SERVER: http://svn/svn/
+      ARCHIVE_URL: http://localhost:7000/svn/
       DATABASE_NAME: ${POSTGRES_DB}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     ports:
