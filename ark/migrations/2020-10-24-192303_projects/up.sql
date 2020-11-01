@@ -7,7 +7,6 @@ CREATE TABLE ark.projects (
     created     timestamptz default now(),
     modified    timestamptz,    -- when the archive was last modified
     size        bigint,         -- the archive filesystem size
-    rev         integer,        -- the archive latest revision
-    descr       text
+    rev         integer         -- the archive latest revision
 );
 COMMIT;
