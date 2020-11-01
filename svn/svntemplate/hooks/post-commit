@@ -1,0 +1,12 @@
+#!/bin/sh
+
+REPO="$1"
+REV="$2"
+TXN="$3"
+
+# POST to the api the information about this commit 
+# curl -X POST \
+#         -H "Content-Type: application/json" \
+#         -d "{\"repo\": \"$REPO\", \"rev\": $REV, \"txn\": \"$TXN\"}" \
+#         http://api/svn/postcommit
+

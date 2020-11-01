@@ -12,10 +12,14 @@ TODO: There are currently three places where the API needs access to the svn fil
 2. To delete an archive (system `rm`) -- replace with svn admin api (mod_wsgi).
 3. To list the archives (system `ls`) -- replace with database lookup.
 
-(ssh is a good replacement for API access to the SVN filesystem. We will use ssh for
-all administrative tasks on the archives.)
+- [ ] create_archive
+- [ ] delete_archive
+- [ ] list_archives
 """
 
+import httpx
+import json
+import logging
 import os
 import re
 import shutil
@@ -27,31 +31,53 @@ from pathlib import Path
 from api import models
 from api import process
 
+logger = logging.getLogger(__name__)
+
+
+async def list_archives():
+    archive_server = os.getenv('ARCHIVE_SERVER')
+
+    # get a list of repositories via SVNListParentPath
+    async with httpx.AsyncClient() as client:
+        response = await client.get(archive_server)
+
+    if response.status_code != 200:
+        data = {}
+    else:
+        # get the list of archive URLs from the response.content
+        content = response.content.decode().replace('<hr noshade>', '<hr/>').strip()
+        logger.debug(content)
+        xml = etree.fromstring(content)
+        archive_urls = [
+            f"{archive_server}/{name}"
+            for name in xml.xpath("//li//text()")
+            if not name.startswith('.')
+        ]
+        if len(archive_urls) > 0:
+            # get the svn info for all listed repositories
+            result = await info(*archive_urls)
+            data = {'files': result.get('data', [])}
+        else:
+            data = {}
+
+    return {'status': response.status_code, 'data': data}
+
 
 async def create_archive(name):
     """
     Create the archive with the given name, including the template files to configure
     the archive.
     """
-    path = urllib.parse.unquote_plus(os.getenv('ARCHIVE_FILES') + '/' + name)
-
-    # create the archive
-    cmds = [['svnadmin', 'create', path]]
-
-    # copy the current archive template files into the new archive filesystem
-    result = await process.run_command('ls', '/var/ark/svntemplate')
-    filenames = result['output'].strip().split('\n')
-    cmds += [['cp', '-R', f'/var/ark/svntemplate/{fn}', path] for fn in filenames]
-    cmds += [['chown', '-R', 'apache:apache', path]]
-
-    result = {'output': '', 'error': ''}
-    for cmd in cmds:
-        r = await process.run_command(*cmd)
-        result['output'] += r['output']
-        result['error'] += r['error']
-        if result['error']:
-            break
-
+    async with httpx.AsyncClient() as client:
+        url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/create-archive'
+        try:
+            response = await client.post(
+                url, data={'name': name}, headers={'Content-Type': 'application/json'}
+            )
+            data = response.json()
+            result = {'status': response.status_code, **data}
+        except Exception as exc:
+            result = {'status': 500, 'output': '', 'error': str(exc)}
     return result
 
 
@@ -67,6 +93,7 @@ async def info(*urls, rev='HEAD'):
             # add `@{rev}` to each url to get the info at that rev.
             urls = [url + f'@{rev}' for url in urls]
         result = await process.run_command('svn', 'info', '--xml', *urls)
+        logger.debug(f"{result=}")
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = [
@@ -77,10 +104,9 @@ async def info(*urls, rev='HEAD'):
             # NOTE: The following is a first attempt at showing archive sizes in the
             # archive list. This procedure is too slow to scale, and points to the need
             # to use the database to index such metadata about archives so it's more
-            # readily available to the API. It also requires disk access to the
-            # Subversion filesystem, which means that the API and the SVN servers must
-            # run in the same pod on Kubernetes -- a very anti pattern. Still, having
-            # the functionality is better than not having it.
+            # readily available to the API. Also, it's an anti-pattern to have the API
+            # and SVN servers both accessing the SVN filesystem. Still, having the
+            # functionality is better than not having it.
             # --------------------------------------------------------------------------
             for entry in result['data']:
                 # for any archives as entries, get the filesystem size of the archive
@@ -89,9 +115,9 @@ async def info(*urls, rev='HEAD'):
                 ).get('url') == entry.get('archive', {}).get('root'):
                     archive_path = os.path.join(
                         os.getenv('ARCHIVE_FILES'),
-                        os.path.split(entry['path']['url'])[-1],
+                        os.path.split(entry['path']['url'].rstrip('/'))[-1],
                     )
-                    # Here's where we call into the filesystem. A proper db is in order.
+                    # TODO: Switch from svn filesystem access to svnadmin API
                     du_result = await process.run_command(
                         'du', '-s', '-B', '1', urllib.parse.unquote_plus(archive_path),
                     )
@@ -101,7 +127,7 @@ async def info(*urls, rev='HEAD'):
     return result
 
 
-async def list_files(url, rev='HEAD'):
+async def ls(*urls, rev='HEAD'):
     """
     Return a list of files at the given url and revision as Info data. The url must be a
     directory.
@@ -110,11 +136,11 @@ async def list_files(url, rev='HEAD'):
     if ':' in rev:
         result = {'error': f'Revision range not allowed: rev={rev}'}
     else:
-        if rev != 'HEAD':
-            rev_url = f'{url}@{rev}'
-        else:
-            rev_url = url
-        cmd = ['svn', 'list', '--xml', urllib.parse.unquote_plus(rev_url)]
+        cmd = ['svn', 'list', '--xml']
+        for url in urls:
+            if rev != 'HEAD':
+                url = f'{url}@{rev}'
+            cmd.append(urllib.parse.unquote_plus(url))
 
         result = await process.run_command(*cmd)
         if not result['error']:
@@ -184,6 +210,7 @@ async def log(url, rev='HEAD'):
     """
     Return a list of LogEntry data on the given url and revision (single or range).
     """
+    print(url, rev)
     if rev != 'HEAD':
         url += f"@{rev.split(':')[0]}"
     cmd = [
@@ -446,6 +473,7 @@ async def delete_archive(name):
     if not os.path.exists(path):
         result = {'error': f'Archive not found: {name}'}
     else:
+        # - TODO: Switch from svn filesystem access to svnadmin API
         cmd = ['rm', '-rf', path]
         result = await process.run_command(*cmd)
 
