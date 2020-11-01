@@ -8,6 +8,7 @@ from starlette.endpoints import HTTPEndpoint
 from api.models import Status
 from api.responses import JSONResponse
 from api import svn
+from db import models
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class ArkParent(HTTPEndpoint):
 
     async def post(self, request):
         """
-        Create a new archive with the given {"name": "..."}.
+        Create a new project with the given {"name": "..."}.
 
         201 CREATED = created the archive
         409 CONFLICT = the archive already exists
@@ -64,5 +65,23 @@ class ArkParent(HTTPEndpoint):
                 code=response.status_code,
                 message=result['output'] or result['error'] or '',
             )
+
+        if response.status_code == 201:
+            info = await svn.info(os.getenv('ARCHIVE_SERVER') + '/' + archive_name)
+            item = info['data'][0]
+            record = await request.app.db.fetch_one("""
+                INSERT INTO ark.projects 
+                (name, rev, size, created) VALUES 
+                (:name, :rev, :size, :created) RETURNING *
+                """, 
+                {
+                    'name': archive_name, 
+                    'rev': item['version']['rev'],
+                    'size': item['path']['size'],
+                    'created': item['version']['date']
+                }
+            )
+            project = models.Project(**record)
+            logger.info(f"{project.dict()=}")
 
         return JSONResponse(status, status_code=status.code)

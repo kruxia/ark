@@ -34,6 +34,8 @@ services:
       ARCHIVE_URL: http://localhost:7000/svn/
       DATABASE_NAME: ${POSTGRES_DB}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_POOL_MIN: 1
+      DATABASE_POOL_MAX: 5
     ports:
       - "8000:8000"
     volumes:
