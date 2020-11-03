@@ -24,8 +24,11 @@ def run_command(*args, **kwargs):
         stdout, stderr = process.communicate()
 
         # Return stdout, stderr (both str)
-        result = Result(output=stdout.decode(), error=stderr.decode())
-        if result.error:
+        result = Result()
+        if stdout:
+            result.output = stdout.decode()
+        if stderr:
+            result.error = stderr.decode()
             result.status = 400
 
     except Exception as err:

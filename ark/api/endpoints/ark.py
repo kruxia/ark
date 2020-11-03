@@ -74,9 +74,10 @@ class ArkParent(HTTPEndpoint):
         try:
             # 1. Create the archive
             result = await svn.create_archive(archive_name)
-
+            
             # 2. Record the archive in the database
             if result['status'] == 201:
+                archive_name = result['output']
                 info = await svn.info(os.getenv('ARCHIVE_SERVER') + '/' + archive_name)
                 item = info['data'][0]
                 await request.app.db.execute(
@@ -93,7 +94,8 @@ class ArkParent(HTTPEndpoint):
                     },
                 )
             status = Status(
-                code=result['status'], message=result['output'] or result['error'] or ''
+                code=result['status'], 
+                message=result.get('output') or result.get('error') or ''
             )
 
         except Exception as exc:

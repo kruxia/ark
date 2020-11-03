@@ -150,4 +150,4 @@ class ArkPath(HTTPEndpoint):
             # delete file or folder
             result = await svn.remove(url, message=message, revprops=revprops)
 
-        return JSONResponse(result, status_code=404 if result['error'] else 200)
+        return JSONResponse(result, status_code=404 if result.get('error') else 200)

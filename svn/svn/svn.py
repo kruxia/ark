@@ -1,28 +1,51 @@
+import logging
 import os
+import re
 import subprocess
 import traceback
 import urllib.parse
 from svn import process
 from svn.types import Result
 
+log = logging.getLogger(__name__)
+
 
 def create_archive(name):
     """
     Create the archive with the given name, including the template files to configure
     the archive.
+
+    * normalize the name as a path: normalized words separated by hyphens
+    * check for existence of this path case-insensitively
+    * create the archive at path
     """
-    path = urllib.parse.unquote(os.getenv('ARCHIVE_FILES') + '/' + name)
-    if os.path.exists(path):
-        return Result(status=409, error=f"The archive named '{name}' already exists. ")
+    # normalize - words separated by hyphens
+    pathname = re.sub(r'\W+', '-', name.strip()).strip('-')
+    log.debug(f"{pathname=}")
+
+    # check for existence (case-insensitive for the sake of our weaker brother, Windows)
+    path = urllib.parse.unquote(os.getenv('ARCHIVE_FILES'))
+    result = process.run_command('ls', path)
+    if result.status != 200:
+        return result
+    else:
+        files = result.output.strip()
+        if pathname.lower() in re.split(r'\W+', files.lower()):
+            return Result(
+                status=409, error=f"An archive matching '{name}' already exists."
+            )
 
     # create the archive
-    cmds = [['svnadmin', 'create', path]]
+    archive_path = path + '/' + pathname
+    cmds = [['svnadmin', 'create', archive_path]]
 
     # copy the current archive template files into the new archive filesystem.
     result = process.run_command('ls', '/var/ark/svn/svntemplate')
     filenames = result.output.strip().split('\n')
-    cmds += [['cp', '-R', f'/var/ark/svn/svntemplate/{fn}', path] for fn in filenames]
-    cmds += [['chown', '-R', 'apache:apache', path]]
+    cmds += [
+        ['cp', '-R', f'/var/ark/svn/svntemplate/{fn}', archive_path] for fn in filenames
+    ]
+    cmds += [['chown', '-R', 'apache:apache', archive_path]]
 
     result = Result(status=201)
     for cmd in cmds:
@@ -35,6 +58,9 @@ def create_archive(name):
         if result.error:
             result.status = 400
             break
+
+    if result.status == 201:
+        result.output = pathname
 
     return result
 

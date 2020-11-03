@@ -26,7 +26,7 @@ class CreateArchive:
                     error=str(exc), traceback=traceback.format_exc(), status=500
                 )
 
-        response.media = result.dict()
+        response.media = result.dict(exclude_none=True)
         response.status = (
             f"{result.status} {http.client.responses.get(result.status) or ''}"
         )
@@ -48,7 +48,7 @@ class DeleteArchive:
                     error=str(exc), traceback=traceback.format_exc(), status=500
                 )
 
-        response.media = result.dict()
+        response.media = result.dict(exclude_none=True)
         response.status = (
             f"{result.status} {http.client.responses.get(result.status) or ''}"
         )

@@ -8,25 +8,29 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 
-class ProcessOutput(BaseModel):
+class Result(BaseModel):
     """
-    Data structure for process output, as produced by run_command().
+    Data structure for process result, as produced by run_command().
 
     * `output` = the stdout of the process
     * `error` = the stderr of the process
-
-    TODO: Use this structure for all `run_command` output.
+    * `traceback` = the traceback, if any
     """
 
-    output: str
-    error: str
+    output: str = ''
+    error: str = ''
     traceback: str = None
+    status: int = 200
+    data: dict = None
+
+    def dict(self, exclude_none=True, **kwargs):
+        return super().dict(exclude_none=exclude_none, **kwargs)
 
 
 async def run_command(*args, **kwargs):
     """
     Run a subprocess command using asyncio, and return a dict with the stdout and stderr
-    as `{"output": stdout, "error": stderr}`. TODO: Switch to ProcessOutput instead.
+    as `{"output": stdout, "error": stderr}`.
     """
     # Create subprocess
     logger.debug('run_command: %r', args)
