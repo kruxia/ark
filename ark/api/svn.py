@@ -6,15 +6,6 @@ TODO: When api.process.run_command is updated to return the `ProcessOutput` data
 structure, in cases here where `data` is being added to the structure before return,
 instead return the data separately, or None if not created. This will change the
 functions' interface and so also require some refactoring in the consumers.
-
-TODO: There are currently three places where the API needs access to the svn filesystem:
-1. To create an archive (system `cp`) -- replace with svn admin api (mod_wsgi).
-2. To delete an archive (system `rm`) -- replace with svn admin api (mod_wsgi).
-3. To list the archives (system `ls`) -- replace with database lookup.
-
-- [ ] create_archive
-- [ ] delete_archive
-- [ ] list_archives
 """
 
 import httpx
@@ -24,6 +15,7 @@ import os
 import re
 import shutil
 import tempfile
+import traceback
 import urllib.parse
 import zipfile
 from lxml import etree
@@ -65,19 +57,48 @@ async def list_archives():
 
 async def create_archive(name):
     """
-    Create the archive with the given name, including the template files to configure
-    the archive.
+    Create the archive with the given name.
     """
-    async with httpx.AsyncClient() as client:
-        url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/create-archive'
-        try:
+    url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/create-archive'
+    try:
+        async with httpx.AsyncClient() as client:
             response = await client.post(
-                url, data={'name': name}, headers={'Content-Type': 'application/json'}
+                url,
+                data=json.dumps({'name': name}),
+                headers={'Content-Type': 'application/json'},
             )
             data = response.json()
             result = {'status': response.status_code, **data}
-        except Exception as exc:
-            result = {'status': 500, 'output': '', 'error': str(exc)}
+
+    except Exception as exc:
+        result = {'status': 500, 'output': '', 'error': str(exc)}
+        if os.getenv('DEBUG'):
+            result['traceback'] = traceback.format_exc()
+
+    return result
+
+
+async def delete_archive(name):
+    """
+    Delete the named archive from the archive filesystem. (This is a hard filesystem
+    delete of the entire archive and its history, which cannot be undone.)
+    """
+    url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/delete-archive'
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                data=json.dumps({'name': name}),
+                headers={'Content-Type': 'application/json'},
+            )
+            data = response.json()
+            result = {'status': response.status_code, **data}
+
+    except Exception as exc:
+        result = {'status': 500, 'output': '', 'error': str(exc)}
+        if os.getenv('DEBUG'):
+            result['traceback'] = traceback.format_exc()
+
     return result
 
 
@@ -457,25 +478,6 @@ async def put(url, body=None, message=None, revprops=None):
             cmd += ['put', tf.name, urllib.parse.unquote_plus(url)]
 
             result = await process.run_command(*cmd)
-
-    return result
-
-
-async def delete_archive(name):
-    """
-    Delete the named archive from the archive filesystem.
-
-    (This is a hard filesystem delete of the entire archive and its history, which
-    cannot be undone.)
-    """
-    path = urllib.parse.unquote_plus(str(Path(os.getenv('ARCHIVE_FILES')) / name))
-
-    if not os.path.exists(path):
-        result = {'error': f'Archive not found: {name}'}
-    else:
-        # - TODO: Switch from svn filesystem access to svnadmin API
-        cmd = ['rm', '-rf', path]
-        result = await process.run_command(*cmd)
 
     return result
 

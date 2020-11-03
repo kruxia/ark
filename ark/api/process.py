@@ -20,6 +20,7 @@ class ProcessOutput(BaseModel):
 
     output: str
     error: str
+    traceback: str = None
 
 
 async def run_command(*args, **kwargs):
@@ -42,8 +43,8 @@ async def run_command(*args, **kwargs):
         # Return stdout, stderr (both str)
         result = {'output': stdout.decode(), 'error': stderr.decode()}
 
-    except Exception as err:
-        result = {'output': '', 'error': str(err)}
+    except Exception as exc:
+        result = {'output': '', 'error': str(exc)}
         if os.getenv('DEBUG'):
             result['traceback'] = traceback.format_exc()
 
