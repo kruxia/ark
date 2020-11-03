@@ -3,7 +3,9 @@ import logging
 import os
 import http.client
 import httpx
+import traceback
 from lxml import etree
+from time import time
 from starlette.endpoints import HTTPEndpoint
 from api.models import Status
 from api.responses import JSONResponse
@@ -28,7 +30,17 @@ class ArkParent(HTTPEndpoint):
         archive_server = os.getenv('ARCHIVE_SERVER')
 
         # get a list of repositories via SVNListParentPath
+        s = time()
+        records = await request.app.db.fetch_all(
+            """
+            select * from ark.projects
+            """
+        )
+        logger.debug(f'records time = {time()-s} sec')
+        s = time()
         result = await svn.list_archives()
+        logger.debug(f'svn time = {time()-s} sec')
+        logger.debug(f"{result['data']=}")
         if result['status'] == 200:
             return JSONResponse(result['data'])
         else:
@@ -49,39 +61,45 @@ class ArkParent(HTTPEndpoint):
         try:
             data = await request.json()
             archive_name = data['name']
-        except Exception:
-            status = Status(code=400, message='invalid input')
+        except Exception as exc:
+            status = Status(code=400, message=f'invalid input: {str(exc)}')
             return JSONResponse(status, status_code=status.code)
 
-        async with httpx.AsyncClient() as client:
-            url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/create-archive'
-            response = await client.post(
-                url,
-                data=json.dumps({'name': archive_name}),
-                headers={'Content-Type': 'application/json'},
-            )
-            result = response.json()
+        # Creating the archive requires two steps.
+        # ------------------------------------------------------------------------------
+        # NOTE: It would be better to have both steps in a single transaction, so as to
+        # ensure that the database record and the archive are both created or neither.
+        # How would we implement that in the context of svn?
+        # ------------------------------------------------------------------------------
+        try:
+            # 1. Create the archive
+            result = await svn.create_archive(archive_name)
+
+            # 2. Record the archive in the database
+            if result['status'] == 201:
+                info = await svn.info(os.getenv('ARCHIVE_SERVER') + '/' + archive_name)
+                item = info['data'][0]
+                await request.app.db.execute(
+                    """
+                    INSERT INTO ark.projects 
+                    (name, rev, size, created) VALUES 
+                    (:name, :rev, :size, :created) RETURNING *
+                    """,
+                    {
+                        'name': archive_name,
+                        'rev': item['version']['rev'],
+                        'size': item['path']['size'],
+                        'created': item['version']['date'],
+                    },
+                )
             status = Status(
-                code=response.status_code,
-                message=result['output'] or result['error'] or '',
+                code=result['status'], message=result['output'] or result['error'] or ''
             )
 
-        if response.status_code == 201:
-            info = await svn.info(os.getenv('ARCHIVE_SERVER') + '/' + archive_name)
-            item = info['data'][0]
-            record = await request.app.db.fetch_one("""
-                INSERT INTO ark.projects 
-                (name, rev, size, created) VALUES 
-                (:name, :rev, :size, :created) RETURNING *
-                """, 
-                {
-                    'name': archive_name, 
-                    'rev': item['version']['rev'],
-                    'size': item['path']['size'],
-                    'created': item['version']['date']
-                }
-            )
-            project = models.Project(**record)
-            logger.info(f"{project.dict()=}")
+        except Exception as exc:
+            if os.getenv('DEBUG'):
+                status = Status(code=500, message=traceback.format_exc())
+            else:
+                status = Status(code=500, message=str(exc))
 
         return JSONResponse(status, status_code=status.code)
