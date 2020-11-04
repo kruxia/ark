@@ -15,7 +15,7 @@ class HealthStatus(BaseModel):
 
     files: Status
     archive: Status
-    # database: Status
+    database: Status
 
 
 class Health(HTTPEndpoint):
@@ -31,18 +31,14 @@ class Health(HTTPEndpoint):
         * Archive server
         * PostgreSQL database
         """
-        (
-            files_status,
-            archive_status,
-            # database_status
-        ) = await asyncio.gather(
+        files_status, archive_status, database_status = await asyncio.gather(
             archive_files_health(),
             archive_server_health(),
-            # database_health(request.app.database),
+            database_health(request.app.db),
         )
         return JSONResponse(
             HealthStatus(
-                files=files_status, archive=archive_status,  # database=database_status
+                files=files_status, archive=archive_status, database=database_status
             )
         )
 
@@ -72,16 +68,16 @@ async def archive_server_health():
     )
 
 
-# async def database_health(database):
-#     """
-#     Check the status of the database server. It should be reachable and able to execute
-#     a simple query. Return 200 OK if it is, 502 BAD GATEWAY if it is not.
-#     """
-#     try:
-#         await database.fetch_all("SELECT true")
-#         code = 200
-#         message = http.client.responses[code]
-#     except Exception as err:
-#         code = 502
-#         message = f"{http.client.responses[code]}: {err}"
-#     return Status(code=code, message=message)
+async def database_health(database):
+    """
+    Check the status of the database server. It should be reachable and able to execute
+    a simple query. Return 200 OK if it is, 502 BAD GATEWAY if it is not.
+    """
+    try:
+        await database.fetch_all("SELECT true")
+        code = 200
+        message = http.client.responses[code]
+    except Exception as err:
+        code = 502
+        message = f"{http.client.responses[code]}: {err}"
+    return Status(code=code, message=message)

@@ -6,7 +6,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
         # run tools
         subversion \
-        # postgresql-client \
+        postgresql-client \
         # build tools
         curl \
         # development tools
