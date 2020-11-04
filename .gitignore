@@ -5,3 +5,10 @@ api/reports
 .htpasswd
 ui/ssl
 .envrc
+.metals
+
+
+#Added by cargo
+
+/target
+.gitkeep
