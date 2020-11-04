@@ -1,6 +1,6 @@
-# Ark
+# Krux
 
-Ark is a file storage server that provides:
+Krux is a file storage server that provides:
 
 * versioning with unlimited file history and optional changelog messaging
 * branch–modify–merge (textual) and lock–modify–unlock (binary) collaboration workflows
