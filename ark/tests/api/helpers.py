@@ -1,25 +1,29 @@
+import json
 import os
 import subprocess
+import requests
+from api import svn, ARCHIVE_ADMIN_API
+from tests.api import ARK_TEST_PREFIX
 
 
 def cleanup():
     """
-    * remove any repositories that begin with ARK_TEST_PREFIX
+    * remove any existing test archives
     """
-    ark_test_archives = list_ark_test_archives()
-    if len(ark_test_archives) > 0:
-        subprocess.check_output(['rm', '-rf'] + ark_test_archives)
+    test_archives = list_test_archives()
+    for item in test_archives:
+        requests.post(
+            ARCHIVE_ADMIN_API + '/delete-archive', json={'name': item['name']}
+        )
 
 
-def list_ark_test_archives():
+def list_test_archives():
     """
     list any archives that begin with ARK_TEST_PREFIX
     """
+    result = requests.get(ARCHIVE_ADMIN_API + '/list-archives')
     return [
-        f"{os.getenv('ARCHIVE_FILES')}/{name}"
-        for name in subprocess.check_output(['ls', f"{os.getenv('ARCHIVE_FILES')}"])
-        .decode()
-        .strip()
-        .split()
-        if name.startswith(os.getenv('ARK_TEST_PREFIX'))
+        item
+        for item in result.json()['data']['archives']
+        if item['name'].startswith(ARK_TEST_PREFIX)
     ]

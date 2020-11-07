@@ -38,7 +38,6 @@ class HealthStatus(Type):
     Data structure for the /health response.
     """
 
-    files: Result
     archive: Result
     database: Result
 
@@ -96,7 +95,7 @@ class ArchiveInfo(Type):
         Ensure archive root path has trailing slash
         """
         url = URL.from_string(str(value))
-        url.path = url.path.rstrip() + '/'
+        url.path = url.path.rstrip('/') + '/'
         return str(url)
 
     @validator('name')
@@ -113,13 +112,13 @@ class ArchiveInfo(Type):
             os.getenv('ARCHIVE_URL'),
             entry.find('repository/root').text,
         )
-        name = root.split('/')[-1]
+        name = root.rstrip('/').split('/')[-1]
         return cls(name=name, root=root)
 
 
 class PathInfo(Type):
     """
-    Data about a path in an archive, as provided by either `svn info` or `svn list`.
+    Data about a path in an archive, as provided by either `svn info` or `svn ls`.
     """
 
     name: str
@@ -164,9 +163,9 @@ class PathInfo(Type):
         )
 
     @classmethod
-    def from_list(cls, entry, rev='HEAD'):
+    def from_ls(cls, entry, rev='HEAD'):
         """
-        Given a `svn list` entry element, return PathInfo. Include the rev in the url if
+        Given a `svn ls` entry element, return PathInfo. Include the rev in the url if
         the rev is not HEAD (to make the URL an accurate link to THIS rev of target.)
         """
         url = re.sub(
@@ -192,7 +191,7 @@ class PathInfo(Type):
 
 class VersionInfo(Type):
     """
-    Data about a version in an archive, as provided by either `svn info` or `svn list`.
+    Data about a version in an archive, as provided by either `svn info` or `svn ls`.
     """
 
     rev: int
@@ -210,7 +209,7 @@ class VersionInfo(Type):
             author=next(iter(entry.xpath('commit/author/text()')), None),
         )
 
-    from_list = from_info  # same structure
+    from_ls = from_info  # same structure
 
 
 class Info(Type):
@@ -221,13 +220,6 @@ class Info(Type):
     path: PathInfo
     version: VersionInfo
     archive: ArchiveInfo = None
-
-    def dict(self, *args, **kwargs):
-        data = super().dict(*args, **kwargs)
-        # 'archive' is only filled from_info(), not from_list()
-        if not data['archive']:
-            data.pop('archive')
-        return data
 
     @classmethod
     def from_info(cls, entry, rev='HEAD'):
@@ -241,13 +233,12 @@ class Info(Type):
         )
 
     @classmethod
-    def from_list(cls, entry, rev='HEAD'):
+    def from_ls(cls, entry, rev='HEAD'):
         """
-        Given a `svn list` entry element, return Info.
+        Given a `svn ls` entry element, return Info.
         """
         return cls(
-            path=PathInfo.from_list(entry, rev=rev),
-            version=VersionInfo.from_list(entry),
+            path=PathInfo.from_ls(entry, rev=rev), version=VersionInfo.from_ls(entry),
         )
 
 

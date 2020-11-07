@@ -4,7 +4,7 @@ def test_health_ok(client):
     """
     response = client.get('/health')
     assert response.status_code == 200
-    data = response.json()
-    for key in ['files', 'archive', 'database']:
-        assert data[key]['code'] == 200
-        assert data[key]['message'] == 'OK'
+    result = response.json()
+    for key in ['archive', 'database']:
+        assert result['data'][key]['status'] == 200
+        assert result['data'][key]['message'] == 'OK'

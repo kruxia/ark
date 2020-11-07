@@ -3,6 +3,7 @@ import logging
 import os
 import traceback
 import typing
+from api.types import Result
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +26,16 @@ async def run(*args, **kwargs):
         stdout, stderr = await process.communicate()
 
         # Return stdout, stderr (both str)
-        result = {'output': stdout.decode(), 'error': stderr.decode()}
+        result = Result(
+            status=kwargs.get('status') or 200,
+            output=stdout.decode(),
+            error=stderr.decode(),
+        )
 
     except Exception as exc:
-        result = {'output': '', 'error': str(exc)}
+        result = Result(status=500, error=str(exc))
         if os.getenv('DEBUG'):
-            result['traceback'] = traceback.format_exc()
+            result.traceback = traceback.format_exc()
 
     logger.debug('--> %r', result)
     return result

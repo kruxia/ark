@@ -12,3 +12,4 @@ ui/ssl
 
 /target
 .gitkeep
+ark/coverage

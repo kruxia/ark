@@ -17,26 +17,9 @@ from lxml import etree
 from pathlib import Path
 from api import types
 from api import process
+from api.types import Result
 
 logger = logging.getLogger(__name__)
-
-
-async def list_archives():
-    url = os.getenv('ARCHIVE_ADMIN_API').rstrip('/') + '/list-archives'
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url,
-                headers={'Content-Type': 'application/json'},
-            )
-            result = response.json()  # which is actually a dict...
-
-    except Exception as exc:
-        result = {'status': 500, 'output': '', 'error': str(exc)}
-        if os.getenv('DEBUG'):
-            result['traceback'] = traceback.format_exc()
-
-    return result
 
 
 async def create_archive(name):
@@ -51,13 +34,12 @@ async def create_archive(name):
                 data=json.dumps({'name': name}),
                 headers={'Content-Type': 'application/json'},
             )
-            data = response.json()
-            result = {'status': response.status_code, **data}
+            result = Result(**response.json())
 
     except Exception as exc:
-        result = {'status': 500, 'output': '', 'error': str(exc)}
+        result = Result(status=500, error=str(exc))
         if os.getenv('DEBUG'):
-            result['traceback'] = traceback.format_exc()
+            result.traceback = traceback.format_exc()
 
     return result
 
@@ -75,13 +57,29 @@ async def delete_archive(name):
                 data=json.dumps({'name': name}),
                 headers={'Content-Type': 'application/json'},
             )
-            data = response.json()
-            result = {'status': response.status_code, **data}
+            result = Result(**response.json())
 
     except Exception as exc:
-        result = {'status': 500, 'output': '', 'error': str(exc)}
+        result = Result(status=500, error=str(exc))
         if os.getenv('DEBUG'):
-            result['traceback'] = traceback.format_exc()
+            result.traceback = traceback.format_exc()
+
+    return result
+
+
+async def list_archives():
+    url = os.getenv('ARCHIVE_ADMIN_API').rstrip('/') + '/list-archives'
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url, headers={'Content-Type': 'application/json'},
+            )
+            result = Result(**response.json())
+
+    except Exception as exc:
+        result = Result(status=500, error=str(exc))
+        if os.getenv('DEBUG'):
+            result.traceback = traceback.format_exc()
 
     return result
 
@@ -92,42 +90,26 @@ async def info(*urls, rev='HEAD'):
     """
     # `svn info` cannot take a revision range
     if ':' in rev:
-        result = {'error': f"Revision range not allowed: rev={rev}"}
+        result = Result(error=f"Revision range not allowed: rev={rev}", status=400)
     else:
         if rev != 'HEAD':
             # add `@{rev}` to each url to get the info at that rev.
             urls = [url + f'@{rev}' for url in urls]
         result = await process.run('svn', 'info', '--xml', *urls)
         logger.debug(f"{result=}")
-        if not result['error']:
-            xml = etree.fromstring(result.pop('output').encode())
-            result['data'] = [
-                types.Info.from_info(entry, rev=rev).dict()
-                for entry in xml.xpath('/info/entry')
-            ]
-            # --------------------------------------------------------------------------
-            # NOTE: The following is a first attempt at showing archive sizes in the
-            # archive list. This procedure is too slow to scale, and points to the need
-            # to use the database to index such metadata about archives so it's more
-            # readily available to the API. Also, it's an anti-pattern to have the API
-            # and SVN servers both accessing the SVN filesystem. Still, having the
-            # functionality is better than not having it.
-            # --------------------------------------------------------------------------
-            for entry in result['data']:
-                # for any archives as entries, get the filesystem size of the archive
-                if entry.get('path', {}).get('url') is not None and entry.get(
-                    'path', {}
-                ).get('url') == entry.get('archive', {}).get('root'):
-                    archive_path = os.path.join(
-                        os.getenv('ARCHIVE_FILES'),
-                        os.path.split(entry['path']['url'].rstrip('/'))[-1],
-                    )
-                    # TODO: Switch from svn filesystem access to svnadmin API
-                    du_result = await process.run(
-                        'du', '-s', '-B', '1', urllib.parse.unquote_plus(archive_path),
-                    )
-                    if du_result.get('output'):
-                        entry['path']['size'] = int(du_result['output'].split()[0])
+        if not result.error:
+            xml = etree.fromstring(result.output.encode())
+            result.data = {
+                'entries': [
+                    types.Info.from_info(entry, rev=rev).dict()
+                    for entry in xml.xpath('/info/entry')
+                ]
+            }
+        elif (
+            'Could not find the requested SVN filesystem' in result.error
+            or 'No such revision' in result.error
+        ):
+            result.status = 404
 
     return result
 
@@ -137,23 +119,25 @@ async def ls(*urls, rev='HEAD'):
     Return a list of files at the given url and revision as Info data. The url must be a
     directory.
     """
-    # `svn list` cannot take a revision range
+    # `svn ls` cannot take a revision range
     if ':' in rev:
-        result = {'error': f'Revision range not allowed: rev={rev}'}
+        result = Result(error=f'Revision range not allowed: rev={rev}', status=400)
     else:
-        cmd = ['svn', 'list', '--xml']
+        cmd = ['svn', 'ls', '--xml']
         for url in urls:
             if rev != 'HEAD':
                 url = f'{url}@{rev}'
             cmd.append(urllib.parse.unquote_plus(url))
 
         result = await process.run(*cmd)
-        if not result['error']:
-            xml = etree.fromstring(result.pop('output').encode())
-            result['data'] = [
-                types.Info.from_list(entry, rev=rev).dict()
-                for entry in xml.xpath('/lists/list/entry')
-            ]
+        if not result.error:
+            xml = etree.fromstring(result.output.encode())
+            result.data = {
+                'files': [
+                    types.Info.from_ls(entry, rev=rev).dict()
+                    for entry in xml.xpath('/lists/list/entry')
+                ]
+            }
 
     return result
 
@@ -163,7 +147,7 @@ async def export(url, rev='HEAD'):
     Export the content of the given URL. If it's a folder, zip it. Return result dict.
     """
     if ':' in rev:
-        result = {'error': f'Revision range not allowed: rev={rev}'}
+        result = Result(error=f'Revision range not allowed: rev={rev}', status=400)
     else:
         if rev != 'HEAD':
             rev_url = f'{url}@{rev}'
@@ -178,7 +162,7 @@ async def export(url, rev='HEAD'):
             cmd = ['svn', 'export', urllib.parse.unquote_plus(rev_url), filepath]
             result = await process.run(*cmd)
 
-            if not result['error']:
+            if not result.error:
                 if os.path.isfile(filepath):
                     srcpath = filepath
                 else:
@@ -205,8 +189,8 @@ async def export(url, rev='HEAD'):
                     basename = os.path.basename(fp)
                     filename = f"{basename}@{rev}{ext}"
 
-                result['filepath'] = f"{outpath}/{filename}"
-                shutil.copy(srcpath, result['filepath'])
+                result.data = {'filepath': f"{outpath}/{filename}"}
+                shutil.copy(srcpath, result.data['filepath'])
 
     return result
 
@@ -215,7 +199,6 @@ async def log(url, rev='HEAD'):
     """
     Return a list of LogEntry data on the given url and revision (single or range).
     """
-    print(url, rev)
     if rev != 'HEAD':
         url += f"@{rev.split(':')[0]}"
     cmd = [
@@ -229,12 +212,14 @@ async def log(url, rev='HEAD'):
     ]
 
     result = await process.run(*cmd)
-    if not result['error']:
-        xml = etree.fromstring(result.pop('output').encode())
-        result['data'] = [
-            types.LogEntry.from_logentry(entry).dict()
-            for entry in xml.xpath('/log/logentry')
-        ]
+    if not result.error:
+        xml = etree.fromstring(result.output.encode())
+        result.data = {
+            'entries': [
+                types.LogEntry.from_logentry(entry).dict()
+                for entry in xml.xpath('/log/logentry')
+            ]
+        }
 
     return result
 
@@ -245,7 +230,7 @@ async def props(url, rev='HEAD'):
     """
     # `svn proplist` cannot take a revision range
     if ':' in rev:
-        result = {'error': f'Revision range not allowed: rev={rev}'}
+        result = Result(error=f'Revision range not allowed: rev={rev}', status=400)
     else:
         if rev != 'HEAD':
             rev_url = f"{url}@{rev}"
@@ -260,12 +245,21 @@ async def props(url, rev='HEAD'):
         ]
 
         result = await process.run(*cmd)
-        if not result['error']:
-            xml = etree.fromstring(result.pop('output').encode())
-            result['data'] = {
+        if not result.error:
+            xml = etree.fromstring(result.output.encode())
+            result.data = {
                 property.get('name'): property.text
-                for property in xml.xpath(f'/properties/target[@path="{url}"]/property')
+                # target@path is given with trailing slash stripped, so normalize to cp.
+                for property in xml.xpath(
+                    f'/properties/target[@path="{url.rstrip("/")}"]/property'
+                )
             }
+        elif (
+            'Could not find the requested SVN filesystem' in result.error
+            or 'No such revision' in result.error
+            or 'Unknown node kind' in result.error
+        ):
+            result.status = 404
 
     return result
 
@@ -286,9 +280,9 @@ async def revprops(url, rev='HEAD'):
     ]
 
     result = await process.run(*cmd)
-    if not result['error']:
-        xml = etree.fromstring(result.pop('output').encode())
-        result['data'] = {
+    if not result.error:
+        xml = etree.fromstring(result.output.encode())
+        result.data = {
             property.get('name'): property.text
             for property in xml.xpath('/properties/revprops/property')
         }
@@ -327,15 +321,18 @@ async def propset(url, data):
     message = str(data.get('message', ''))
 
     if ':' in rev:
-        result = {'error': f'Cannot set props on a revision range: rev={rev}'}
+        result = Result(
+            error=f'Cannot set props on a revision range: rev={rev}', status=400
+        )
 
     elif rev:
         if data.get('props') or data.get('propdel'):
-            result = {
-                'error': f'Cannot set or delete props on an existing revision: rev={rev}'
-            }
+            result = Result(
+                error=f'Cannot set or delete props on an existing revision: rev={rev}',
+                status=400,
+            )
         else:
-            result = {'error': '', 'output': ''}
+            result = Result(output='', error='')
             # set revprops on existing revision
             for key, val in data.get('revprops', {}).items():
                 cmd = [
@@ -350,8 +347,8 @@ async def propset(url, data):
                 ]
 
                 res = await process.run(*cmd)
-                result['error'] += res['error']
-                result['output'] += res['output']
+                result.error += res.error
+                result.output += res.output
 
             # del revprops on existing revision
             for key in data.get('revpropdel', []):
@@ -366,12 +363,14 @@ async def propset(url, data):
                 ]
 
                 res = await process.run(*cmd)
-                result['error'] += res['error']
-                result['output'] += res['output']
+                result.error += res.error
+                result.output += res.output
 
     else:
         if data.get('revpropdel'):
-            result = {'error': 'Cannot delete revprops without a revision'}
+            result = Result(
+                error='Cannot delete revprops without a revision', status=400
+            )
 
         elif data.get('props') or data.get('propdel'):
             if data.get('props'):
@@ -397,15 +396,16 @@ async def propset(url, data):
 
         elif data.get('revprops'):
             # can't set revprops in the absence of editing/deleting props in a revision
-            result = {
-                'error': (
+            result = Result(
+                error=(
                     'Cannot set revprops without an existing revision or creating '
                     + 'a revision to set/delete props'
-                )
-            }
+                ),
+                status=400,
+            )
 
         else:
-            result = {'error': '', 'output': 'No change'}
+            result = Result(output='No change')
 
     return result
 
@@ -463,6 +463,8 @@ async def put(url, body=None, message=None, revprops=None):
 
             result = await process.run(*cmd)
 
+    result.status = 409 if result.error else 201
+    print(result.dict())
     return result
 
 
@@ -478,10 +480,10 @@ async def remove(url, message=None, revprops=None):
     cmd += [urllib.parse.unquote_plus(url)]
 
     result = await process.run(*cmd)
-    result['error'] = re.sub(
-        f"'{os.getenv('ARCHIVE_SERVER')}",
-        f"'{os.getenv('ARCHIVE_URL')}",
-        result['error'],
+    result.error = re.sub(
+        f"'{os.getenv('ARCHIVE_SERVER')}", f"'{os.getenv('ARCHIVE_URL')}", result.error,
     )
+    if result.error:
+        result.status = 404
 
     return result

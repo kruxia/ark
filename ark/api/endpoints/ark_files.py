@@ -19,8 +19,8 @@ class ArkPath(HTTPEndpoint):
         """
         return '/'.join(
             [
-                os.getenv('ARCHIVE_SERVER'),
-                request.path_params['name'],
+                os.getenv('ARCHIVE_SERVER').rstrip('/'),
+                request.path_params['name'].rstrip('/'),
                 request.path_params.get('path', ''),
             ]
         )
@@ -36,50 +36,55 @@ class ArkPath(HTTPEndpoint):
         if 'rev' in request.query_params:
             kw['rev'] = request.query_params['rev']
 
-        result = {}
+        result = Result(data={})
 
         info, props = await asyncio.gather(svn.info(url, **kw), svn.props(url, **kw))
-
-        if 'data' in info and len(info['data']) > 0:
-            result['info'] = info['data'][0]
-        if 'data' in props:
-            result['props'] = props['data']
-
-        if 'rev' in kw and 'No such revision' not in info['error']:
-            revprops, log = await asyncio.gather(
-                svn.revprops(url, **kw), svn.log(url, **kw)
+        if info.status == 404 or props.status == 404:
+            result = Result(
+                error='\n'.join(
+                    set([info.error.strip() or '', props.error.strip() or ''])
+                ),
+                status=404,
             )
-            if 'data' in revprops:
-                result['revprops'] = revprops['data']
-            result['log'] = log['data'] if 'data' in log else []
-            # filter the log messages to those that are under this path, relative to this path
-            for entry in result['log']:
-                if entry.get('paths'):
-                    entry['paths'] = list(
-                        filter(
-                            lambda path: path['name'].startswith(request_path),
-                            entry['paths'],
-                        )
-                    )
-                    for path in entry['paths']:
-                        if path['name'] == request_path:
-                            path['relpath'] = os.path.split(path['name'])[-1]
-                        else:
-                            path['relpath'] = os.path.relpath(
-                                path['name'], os.path.dirname(request_path)
-                            )
-
-        if result.get('info', {}).get('path', {}).get('kind') == NodeKind.Dir:
-            files = await svn.ls(url, **kw)
-            result['files'] = files['data'] if 'data' in files else []
-
-        if result:
-            response = JSONResponse(result)
         else:
-            result = Result(status=404, message='NOT FOUND')
-            response = JSONResponse(result, status_code=404)
+            if props.data is not None:
+                result.data['props'] = props.data or {}
+            if info.data and info.data.get('entries'):
+                result.data['info'] = info.data['entries'][0]
 
-        return response
+            if 'rev' in kw and 'No such revision' not in info.error:
+                revprops, log = await asyncio.gather(
+                    svn.revprops(url, **kw), svn.log(url, **kw)
+                )
+                result.data['log'] = log.data or {'entries': []}
+                if revprops.data:
+                    result.data['revprops'] = revprops.data
+
+                # filter the log messages to those that are under this path
+                for entry in result.data['log']['entries']:
+                    if entry.get('paths'):
+                        entry['paths'] = list(
+                            filter(
+                                lambda path: path['name'].startswith(request_path),
+                                entry['paths'],
+                            )
+                        )
+                        for path in entry['paths']:
+                            if path['name'] == request_path:
+                                path['relpath'] = os.path.split(path['name'])[-1]
+                            else:
+                                path['relpath'] = os.path.relpath(
+                                    path['name'], os.path.dirname(request_path)
+                                )
+
+            if result.data.get('info', {}).get('path', {}).get('kind') == NodeKind.Dir:
+                files = await svn.ls(url, **kw)
+                result.data['files'] = files.data['files'] if files.data else []
+
+        if not result:
+            result = Result(status=404, error='NOT FOUND')
+
+        return JSONResponse(result, status_code=result.status)
 
     async def post(self, request):
         """
@@ -89,14 +94,14 @@ class ArkPath(HTTPEndpoint):
             data = await request.json()
             assert isinstance(data, dict)
         except Exception:
-            result = Result(status=400, message="Invalid JSON body").dict()
+            result = Result(status=400, message="Invalid JSON body")
 
         url = self.archive_url(request)
         result = await svn.propset(url, data)
-        if result.get('error'):
-            result = Result(status=400, message=result['error']).dict()
+        if result.error:
+            result = Result(status=400, message=result.error)
 
-        return JSONResponse(result, status_code=result.get('code', 200))
+        return JSONResponse(result, status_code=result.status)
 
     async def put(self, request):
         """
@@ -118,10 +123,7 @@ class ArkPath(HTTPEndpoint):
             body = await file.read()
             result = await svn.put(url, body=body, message=message, revprops=revprops)
 
-        return JSONResponse(
-            result,
-            status_code=result.get('code') or (409 if result.get('error') else 201),
-        )
+        return JSONResponse(result, status_code=result.status,)
 
     async def delete(self, request):
         """
@@ -138,7 +140,7 @@ class ArkPath(HTTPEndpoint):
         if not path:
             # delete archive
             result = await svn.delete_archive(name)
-            if result['status'] == 200:
+            if result.status == 200:
                 await request.app.db.execute(
                     """
                     DELETE FROM ark.projects 
@@ -150,4 +152,4 @@ class ArkPath(HTTPEndpoint):
             # delete file or folder
             result = await svn.remove(url, message=message, revprops=revprops)
 
-        return JSONResponse(result, status_code=404 if result.get('error') else 200)
+        return JSONResponse(result, status_code=result.status)

@@ -32,9 +32,7 @@ def create_archive(name):
 
     files = result.output.strip()
     if pathname.lower() in re.split(r'\W+', files.lower()):
-        return Result(
-            status=409, error=f"An archive matching '{name}' already exists."
-        )
+        return Result(status=409, error=f"An archive matching '{name}' already exists.")
 
     # create the archive
     archive_path = path + '/' + pathname
@@ -62,7 +60,11 @@ def create_archive(name):
             break
 
     if result.status == 201:
-        result.output = pathname
+        result.data = {'name': pathname}
+        du_result = process.run('du', '-sk', archive_path)
+        if du_result.status == 200:
+            size, name = du_result.output.strip().split('\t')
+            result.data['size'] = int(size) * 1024
 
     return result
 
@@ -86,7 +88,7 @@ def list_archives():
         return result
 
     du_results = [
-        process.run('du', '-sk', f'{ARCHIVE_FILES}/{name}') 
+        process.run('du', '-sk', f'{ARCHIVE_FILES}/{name}')
         for name in result.output.strip().split('\n')
     ]
     if max([r.status for r in du_results]) > 200:
@@ -94,7 +96,7 @@ def list_archives():
 
     data = {
         'archives': [
-            {'name': Path(path).name, 'size': int(size)*1024}
+            {'name': Path(path).name, 'size': int(size) * 1024}
             for size, path in [r.output.strip().split('\t') for r in du_results]
         ]
     }

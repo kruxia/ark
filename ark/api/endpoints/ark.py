@@ -36,7 +36,7 @@ class ArkParent(HTTPEndpoint):
             select * from ark.projects
             """
         )
-        logger.debug(f'records time = {time()-s} sec')
+        logger.debug(f'time = {time()-s} sec')
         s = time()
         result = await svn.list_archives()
         logger.debug(f'time = {time()-s} sec')
@@ -65,29 +65,29 @@ class ArkParent(HTTPEndpoint):
         try:
             # 1. Create the archive
             result = await svn.create_archive(archive_name)
-            
-            # 2. Record the archive in the database
-            if result['status'] == 201:
-                archive_name = result['output']
-                info = await svn.info(os.getenv('ARCHIVE_SERVER') + '/' + archive_name)
-                item = info['data'][0]
-                await request.app.db.execute(
-                    """
-                    INSERT INTO ark.projects 
-                    (name, rev, size, created) VALUES 
-                    (:name, :rev, :size, :created) RETURNING *
-                    """,
-                    {
-                        'name': archive_name,
-                        'rev': item['version']['rev'],
-                        'size': item['path']['size'],
-                        'created': item['version']['date'],
-                    },
-                )
-            result = Result(
-                status=result['status'], 
-                message=result.get('output') or result.get('error') or ''
-            )
+
+            # # 2. Record the archive in the database
+            # if result.status == 201:
+            #     archive_name = result.data['name']
+            #     info = await svn.info(os.getenv('ARCHIVE_SERVER') + '/' + archive_name)
+            #     entry = info.data['entries'][0]
+            #     await request.app.db.execute(
+            #         """
+            #         INSERT INTO ark.projects
+            #         (name, rev, size, created) VALUES
+            #         (:name, :rev, :size, :created) RETURNING *
+            #         """,
+            #         {
+            #             'name': archive_name,
+            #             'size': result.data['size'],
+            #             'rev': entry['version']['rev'],
+            #             'created': entry['version']['date'],
+            #         },
+            #     )
+            # result = Result(
+            #     status=result.status,
+            #     message=result.output or result.error or '',
+            # )
 
         except Exception as exc:
             if os.getenv('DEBUG'):

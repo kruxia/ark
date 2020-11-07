@@ -20,17 +20,11 @@ class Health(HTTPEndpoint):
         * Archive server
         * PostgreSQL database
         """
-        files_status, archive_status, database_status = await asyncio.gather(
-            archive_files_health(),
-            archive_server_health(),
-            database_health(request.app.db),
+        archive_status, database_status = await asyncio.gather(
+            archive_server_health(), database_health(request.app.db),
         )
         return JSONResponse(
-            Result(
-                data=HealthStatus(
-                    files=files_status, archive=archive_status, database=database_status
-                )
-            )
+            Result(data=HealthStatus(archive=archive_status, database=database_status))
         )
 
 
