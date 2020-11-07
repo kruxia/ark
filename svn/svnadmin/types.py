@@ -1,9 +1,20 @@
 from pydantic import BaseModel
 
 
-class Result(BaseModel):
+class Type(BaseModel):
+    def dict(self, exclude_none=True, **kwargs):
+        """
+        By default, exclude None values.
+        """
+        return super().dict(exclude_none=exclude_none, **kwargs)
+
+    def json(self, exclude_none=True, **kwargs):
+        return super().json(exclude_none=exclude_none, **kwargs)
+
+
+class Result(Type):
     """
-    Data structure for results, as produced by process.run_command().
+    Data structure for results, as produced by process.run().
 
     * `output` = the stdout of the process
     * `error` = the stderr of the process
@@ -11,7 +22,8 @@ class Result(BaseModel):
     * `traceback` = the traceback of an exception
     """
 
-    output: str = ''
-    error: str = ''
+    output: str = None
+    error: str = None
     status: int = 200
+    data: dict = None
     traceback: str = None

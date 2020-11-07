@@ -9,13 +9,13 @@ from svnadmin.types import Result
 logger = logging.getLogger(__name__)
 
 
-def run_command(*args, **kwargs):
+def run(*args, **kwargs):
     """
     Run a subprocess command using asyncio, and return a Result with the stdout and
     stderr as Result.output and Result.error. 
     """
     # Create subprocess
-    logger.debug('run_command: %r', args)
+    logger.debug('run: %r', args)
     try:
         process = subprocess.Popen(
             args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
@@ -42,7 +42,7 @@ def run_command(*args, **kwargs):
 
 def as_user(uid: int, gid: int) -> typing.Callable:
     """
-    Used with `run_command` as the `preexec_fn` key-word argument, in order to run the
+    Used with `run` as the `preexec_fn` key-word argument, in order to run the
     command with the given uid (user id) and gid (group id).
     """
 
