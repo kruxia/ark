@@ -8,6 +8,7 @@ RUN apk update \
         apache2 \
         apache2-webdav \
         apache2-mod-wsgi \
+        apache2-proxy \
         curl \
         mod_dav_svn \
         python3 \
@@ -16,22 +17,20 @@ RUN apk update \
     && apk upgrade \
     && rm -rf /var/cache/apk/*
 
-WORKDIR /var/ark/svn
+RUN mkdir -p /var/svndata \
+    && chown apache:apache -R /var/svndata
+
+WORKDIR /var/svn
 
 COPY ./req/ ./req/
 RUN pip install -r ./req/install.txt 
 
-RUN mkdir -p /var/svn \
-    && chown apache:apache -R /var/svn
-
-# COPY ./conf/httpd.conf /etc/apache2/httpd.conf
-# COPY ./conf/dav_svn.conf /etc/apache2/conf.d/dav_svn.conf
-# COPY ./conf/default-svn.conf /etc/apache2/conf.d/default.conf
-COPY ./ /var/ark/svn
+COPY ./ /var/svn
 RUN rm /etc/apache2/httpd.conf /etc/apache2/conf.d/default.conf \
-    && ln -s /var/ark/svn/conf/httpd.conf /etc/apache2/httpd.conf \
-    && ln -s /var/ark/svn/conf/dav_svn.conf /etc/apache2/conf.d/dav_svn.conf \
-    && ln -s /var/ark/svn/conf/default-svn.conf /etc/apache2/conf.d/default.conf
+    # symlinks into the share-mounted package make development so much easier.
+    && ln -s /var/svn/conf/httpd.conf /etc/apache2/httpd.conf \
+    && ln -s /var/svn/conf/dav_svn.conf /etc/apache2/conf.d/dav_svn.conf \
+    && ln -s /var/svn/conf/default-svn.conf /etc/apache2/conf.d/default.conf
 
 RUN pip install -e .
 

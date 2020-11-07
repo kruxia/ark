@@ -4,8 +4,8 @@ import re
 import subprocess
 import traceback
 import urllib.parse
-from svn import process
-from svn.types import Result
+from svnadmin import PACKAGE_PATH, process
+from svnadmin.types import Result
 
 log = logging.getLogger(__name__)
 
@@ -40,10 +40,11 @@ def create_archive(name):
     cmds = [['svnadmin', 'create', archive_path]]
 
     # copy the current archive template files into the new archive filesystem.
-    result = process.run_command('ls', '/var/ark/svn/svntemplate')
+    result = process.run_command('ls', f'{PACKAGE_PATH}/svntemplate')
     filenames = result.output.strip().split('\n')
     cmds += [
-        ['cp', '-R', f'/var/ark/svn/svntemplate/{fn}', archive_path] for fn in filenames
+        ['cp', '-R', f'{PACKAGE_PATH}/svntemplate/{fn}', archive_path]
+        for fn in filenames
     ]
     cmds += [['chown', '-R', 'apache:apache', archive_path]]
 

@@ -1,9 +1,12 @@
+import logging
 import subprocess
 import traceback
 import falcon
-from svn import svn
-from svn.types import Result
+from svnadmin import svn
+from svnadmin.types import Result
 import http.client
+
+log = logging.getLogger(__name__)
 
 
 class Welcome:
@@ -22,6 +25,7 @@ class CreateArchive:
             try:
                 result = svn.create_archive(data['name'])
             except Exception as exc:
+                log.error(traceback.format_exc())
                 result = Result(
                     error=str(exc), traceback=traceback.format_exc(), status=500
                 )

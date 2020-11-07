@@ -4,7 +4,7 @@ import subprocess
 import traceback
 import typing
 
-from svn.types import Result
+from svnadmin.types import Result
 
 logger = logging.getLogger(__name__)
 

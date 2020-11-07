@@ -17,10 +17,11 @@
     "dev": [],
     "test": []
   },
-  "packages": ["svn", "tests"],
+  "packages": ["svnadmin"],
   "package_data": {
     "": []
   },
+  "include_package_data": true,
   "data_files": [],
   "scripts": []
 }

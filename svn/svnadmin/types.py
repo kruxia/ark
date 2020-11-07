@@ -11,7 +11,7 @@ class Result(BaseModel):
     * `traceback` = the traceback of an exception
     """
 
-    output: str = None
-    error: str = None
+    output: str = ''
+    error: str = ''
     status: int = 200
     traceback: str = None

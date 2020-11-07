@@ -3,14 +3,14 @@ services:
   svn:
     build: ./svn
     environment:
-      ARCHIVE_FILES: /var/svn
+      ARCHIVE_FILES: /var/svndata
       SERVER_ADMIN: $SERVER_ADMIN
       SERVER_NAME: $SERVER_NAME
     ports:
-      - "7000:80"
+      - "8000:80"
     volumes:
-      - svndata:/var/svn
-      - ./svn:/var/ark/svn
+      - svndata:/var/svndata
+      - ./svn:/var/svn
 
   db:
     build: ./db
@@ -29,17 +29,16 @@ services:
       - db
       - svn
     environment:
-      ARCHIVE_FILES: /var/svn
+      ARCHIVE_FILES: /var/svndata
       ARCHIVE_SERVER: http://svn/svn/
-      ARCHIVE_URL: http://localhost:7000/svn/
+      ARCHIVE_URL: http://localhost:8000/svn/
+      ARCHIVE_ADMIN_API: http://localhost:8000/svnadmin/api
       DATABASE_NAME: ${POSTGRES_DB}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       DATABASE_POOL_MIN: 1
       DATABASE_POOL_MAX: 5
-    ports:
-      - "8000:8000"
     volumes:
-      - svndata:/var/svn
+      - svndata:/var/svndata
       - ./ark:/var/ark
 
 volumes:

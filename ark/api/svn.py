@@ -54,7 +54,7 @@ async def create_archive(name):
     """
     Create the archive with the given name.
     """
-    url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/create-archive'
+    url = os.getenv('ARCHIVE_ADMIN_API').rstrip('/') + '/create-archive'
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -78,7 +78,7 @@ async def delete_archive(name):
     Delete the named archive from the archive filesystem. (This is a hard filesystem
     delete of the entire archive and its history, which cannot be undone.)
     """
-    url = os.getenv('ARCHIVE_SERVER').rstrip('/') + 'admin/delete-archive'
+    url = os.getenv('ARCHIVE_ADMIN_API').rstrip('/') + '/delete-archive'
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
