@@ -8,13 +8,39 @@ from pydantic import BaseModel, root_validator, validator
 from uuid import UUID
 
 
-class Status(BaseModel):
+class Type(BaseModel):
+    def dict(self, exclude_none=True, **kwargs):
+        """
+        by default, exclude None values.
+        """
+        return super().dict(exclude_none=exclude_none, **kwargs)
+
+    def json(self, exclude_none=True, **kwargs):
+        return super().json(exclude_none=exclude_none, **kwargs)
+
+
+class Result(Type):
     """
-    The base HTTP status response object for our API.
+    The base result object for our API. Used for both HTTP response data and for process
+    results.
     """
 
-    code: int
-    message: str
+    status: int = 200
+    message: str = None
+    output: str = None
+    error: str = None
+    data: dict = None
+    traceback: str = None
+
+
+class HealthStatus(Type):
+    """
+    Data structure for the /health response.
+    """
+
+    files: Result
+    archive: Result
+    database: Result
 
 
 # == SVN Info ==
@@ -25,7 +51,7 @@ class NodeKind(Enum):
     Dir = 'dir'
 
 
-class URL(BaseModel):
+class URL(Type):
     scheme: str
     netloc: str
     path: str
@@ -56,7 +82,7 @@ class URL(BaseModel):
         )
 
 
-class ArchiveInfo(BaseModel):
+class ArchiveInfo(Type):
     """
     Data about an archive itself, as provided by `svn info`.
     """
@@ -91,7 +117,7 @@ class ArchiveInfo(BaseModel):
         return cls(name=name, root=root)
 
 
-class PathInfo(BaseModel):
+class PathInfo(Type):
     """
     Data about a path in an archive, as provided by either `svn info` or `svn list`.
     """
@@ -164,7 +190,7 @@ class PathInfo(BaseModel):
         )
 
 
-class VersionInfo(BaseModel):
+class VersionInfo(Type):
     """
     Data about a version in an archive, as provided by either `svn info` or `svn list`.
     """
@@ -187,7 +213,7 @@ class VersionInfo(BaseModel):
     from_list = from_info  # same structure
 
 
-class Info(BaseModel):
+class Info(Type):
     """
     An item created from a `svn info --xml` entry
     """
@@ -235,7 +261,7 @@ class LogPathAction(Enum):
     Replaced = 'R'
 
 
-class LogPath(BaseModel):
+class LogPath(Type):
     """
     Data structure for an archive file path, as returned by `svn log`.
     """
@@ -260,7 +286,7 @@ class LogPath(BaseModel):
         )
 
 
-class LogEntry(BaseModel):
+class LogEntry(Type):
     """
     Data structure for an archive log entry, as returned by `svn log`.
     """

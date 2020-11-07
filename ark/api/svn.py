@@ -15,39 +15,28 @@ import urllib.parse
 import zipfile
 from lxml import etree
 from pathlib import Path
-from api import models
+from api import types
 from api import process
 
 logger = logging.getLogger(__name__)
 
 
 async def list_archives():
-    archive_server = os.getenv('ARCHIVE_SERVER')
+    url = os.getenv('ARCHIVE_ADMIN_API').rstrip('/') + '/list-archives'
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url,
+                headers={'Content-Type': 'application/json'},
+            )
+            result = response.json()  # which is actually a dict...
 
-    # get a list of repositories via SVNListParentPath
-    async with httpx.AsyncClient() as client:
-        response = await client.get(archive_server)
+    except Exception as exc:
+        result = {'status': 500, 'output': '', 'error': str(exc)}
+        if os.getenv('DEBUG'):
+            result['traceback'] = traceback.format_exc()
 
-    if response.status_code != 200:
-        data = {}
-    else:
-        # get the list of archive URLs from the response.content
-        content = response.content.decode().replace('<hr noshade>', '<hr/>').strip()
-        logger.debug(content)
-        xml = etree.fromstring(content)
-        archive_urls = [
-            f"{archive_server}/{name}"
-            for name in xml.xpath("//li//text()")
-            if not name.startswith('.')
-        ]
-        if len(archive_urls) > 0:
-            # get the svn info for all listed repositories
-            result = await info(*archive_urls)
-            data = {'files': result.get('data', [])}
-        else:
-            data = {}
-
-    return {'status': response.status_code, 'data': data}
+    return result
 
 
 async def create_archive(name):
@@ -108,12 +97,12 @@ async def info(*urls, rev='HEAD'):
         if rev != 'HEAD':
             # add `@{rev}` to each url to get the info at that rev.
             urls = [url + f'@{rev}' for url in urls]
-        result = await process.run_command('svn', 'info', '--xml', *urls)
+        result = await process.run('svn', 'info', '--xml', *urls)
         logger.debug(f"{result=}")
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = [
-                models.Info.from_info(entry, rev=rev).dict()
+                types.Info.from_info(entry, rev=rev).dict()
                 for entry in xml.xpath('/info/entry')
             ]
             # --------------------------------------------------------------------------
@@ -134,7 +123,7 @@ async def info(*urls, rev='HEAD'):
                         os.path.split(entry['path']['url'].rstrip('/'))[-1],
                     )
                     # TODO: Switch from svn filesystem access to svnadmin API
-                    du_result = await process.run_command(
+                    du_result = await process.run(
                         'du', '-s', '-B', '1', urllib.parse.unquote_plus(archive_path),
                     )
                     if du_result.get('output'):
@@ -158,11 +147,11 @@ async def ls(*urls, rev='HEAD'):
                 url = f'{url}@{rev}'
             cmd.append(urllib.parse.unquote_plus(url))
 
-        result = await process.run_command(*cmd)
+        result = await process.run(*cmd)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = [
-                models.Info.from_list(entry, rev=rev).dict()
+                types.Info.from_list(entry, rev=rev).dict()
                 for entry in xml.xpath('/lists/list/entry')
             ]
 
@@ -187,7 +176,7 @@ async def export(url, rev='HEAD'):
             )
 
             cmd = ['svn', 'export', urllib.parse.unquote_plus(rev_url), filepath]
-            result = await process.run_command(*cmd)
+            result = await process.run(*cmd)
 
             if not result['error']:
                 if os.path.isfile(filepath):
@@ -239,11 +228,11 @@ async def log(url, rev='HEAD'):
         urllib.parse.unquote_plus(url),
     ]
 
-    result = await process.run_command(*cmd)
+    result = await process.run(*cmd)
     if not result['error']:
         xml = etree.fromstring(result.pop('output').encode())
         result['data'] = [
-            models.LogEntry.from_logentry(entry).dict()
+            types.LogEntry.from_logentry(entry).dict()
             for entry in xml.xpath('/log/logentry')
         ]
 
@@ -270,7 +259,7 @@ async def props(url, rev='HEAD'):
             urllib.parse.unquote_plus(rev_url),
         ]
 
-        result = await process.run_command(*cmd)
+        result = await process.run(*cmd)
         if not result['error']:
             xml = etree.fromstring(result.pop('output').encode())
             result['data'] = {
@@ -296,7 +285,7 @@ async def revprops(url, rev='HEAD'):
         urllib.parse.unquote_plus(url),
     ]
 
-    result = await process.run_command(*cmd)
+    result = await process.run(*cmd)
     if not result['error']:
         xml = etree.fromstring(result.pop('output').encode())
         result['data'] = {
@@ -360,7 +349,7 @@ async def propset(url, data):
                     urllib.parse.unquote_plus(url),
                 ]
 
-                res = await process.run_command(*cmd)
+                res = await process.run(*cmd)
                 result['error'] += res['error']
                 result['output'] += res['output']
 
@@ -376,7 +365,7 @@ async def propset(url, data):
                     urllib.parse.unquote_plus(url),
                 ]
 
-                res = await process.run_command(*cmd)
+                res = await process.run(*cmd)
                 result['error'] += res['error']
                 result['output'] += res['output']
 
@@ -404,7 +393,7 @@ async def propset(url, data):
             for key in data.get('propdel', []):
                 cmd += ['propdel', key, urllib.parse.unquote_plus(url)]
 
-            result = await process.run_command(*cmd)
+            result = await process.run(*cmd)
 
         elif data.get('revprops'):
             # can't set revprops in the absence of editing/deleting props in a revision
@@ -459,7 +448,7 @@ async def put(url, body=None, message=None, revprops=None):
 
         cmd += [urllib.parse.unquote_plus(url)]
 
-        result = await process.run_command(*cmd)
+        result = await process.run(*cmd)
 
     else:
         # file from body
@@ -472,7 +461,7 @@ async def put(url, body=None, message=None, revprops=None):
             tf.seek(0)
             cmd += ['put', tf.name, urllib.parse.unquote_plus(url)]
 
-            result = await process.run_command(*cmd)
+            result = await process.run(*cmd)
 
     return result
 
@@ -488,7 +477,7 @@ async def remove(url, message=None, revprops=None):
         cmd += ['--with-revprop', f"{key}={val}"]
     cmd += [urllib.parse.unquote_plus(url)]
 
-    result = await process.run_command(*cmd)
+    result = await process.run(*cmd)
     result['error'] = re.sub(
         f"'{os.getenv('ARCHIVE_SERVER')}",
         f"'{os.getenv('ARCHIVE_URL')}",

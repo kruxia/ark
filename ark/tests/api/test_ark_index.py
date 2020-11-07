@@ -2,7 +2,7 @@ import os
 import subprocess
 from uuid import UUID
 from datetime import datetime
-from api.models import Info
+from api.types import Info
 from .helpers import cleanup, list_ark_test_archives
 
 

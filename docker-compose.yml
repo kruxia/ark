@@ -38,7 +38,6 @@ services:
       DATABASE_POOL_MIN: 1
       DATABASE_POOL_MAX: 5
     volumes:
-      - svndata:/var/svndata
       - ./ark:/var/ark
 
 volumes:

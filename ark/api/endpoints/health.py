@@ -2,20 +2,9 @@ import os
 import asyncio
 import http.client
 import httpx
-from api.models import Status
+from api.types import Result, HealthStatus
 from api.responses import JSONResponse
-from pydantic import BaseModel
 from starlette.endpoints import HTTPEndpoint
-
-
-class HealthStatus(BaseModel):
-    """
-    Data structure for the /health response.
-    """
-
-    files: Status
-    archive: Status
-    database: Status
 
 
 class Health(HTTPEndpoint):
@@ -37,23 +26,12 @@ class Health(HTTPEndpoint):
             database_health(request.app.db),
         )
         return JSONResponse(
-            HealthStatus(
-                files=files_status, archive=archive_status, database=database_status
+            Result(
+                data=HealthStatus(
+                    files=files_status, archive=archive_status, database=database_status
+                )
             )
         )
-
-
-async def archive_files_health():
-    """
-    Check the status of the archive filesystem. It should exist and TODO: be both
-    readable and writable by the apache user (uid=100, gid=101). Return 200 OK if it is,
-    502 BAD GATEWAY if it is not.
-    """
-    archive_files = os.getenv('ARCHIVE_FILES')
-    if os.path.isdir(archive_files):
-        return Status(code=200, message="OK")
-    else:
-        return Status(code=502, message=f"ARCHIVE_FILES not found: {archive_files}")
 
 
 async def archive_server_health():
@@ -63,8 +41,8 @@ async def archive_server_health():
     """
     async with httpx.AsyncClient() as client:
         response = await client.get(os.getenv('ARCHIVE_SERVER'))
-    return Status(
-        code=response.status_code, message=http.client.responses[response.status_code]
+    return Result(
+        status=response.status_code, message=http.client.responses[response.status_code]
     )
 
 
@@ -80,4 +58,4 @@ async def database_health(database):
     except Exception as err:
         code = 502
         message = f"{http.client.responses[code]}: {err}"
-    return Status(code=code, message=message)
+    return Result(status=code, message=message)

@@ -2,7 +2,7 @@ import asyncio
 import os
 from starlette.endpoints import HTTPEndpoint
 from api.responses import JSONResponse
-from api.models import NodeKind, Status
+from api.types import NodeKind, Result
 from api import svn
 
 
@@ -76,7 +76,7 @@ class ArkPath(HTTPEndpoint):
         if result:
             response = JSONResponse(result)
         else:
-            result = Status(code=404, message='NOT FOUND')
+            result = Result(status=404, message='NOT FOUND')
             response = JSONResponse(result, status_code=404)
 
         return response
@@ -89,12 +89,12 @@ class ArkPath(HTTPEndpoint):
             data = await request.json()
             assert isinstance(data, dict)
         except Exception:
-            result = Status(code=400, message="Invalid JSON body").dict()
+            result = Result(status=400, message="Invalid JSON body").dict()
 
         url = self.archive_url(request)
         result = await svn.propset(url, data)
         if result.get('error'):
-            result = Status(code=400, message=result['error']).dict()
+            result = Result(status=400, message=result['error']).dict()
 
         return JSONResponse(result, status_code=result.get('code', 200))
 

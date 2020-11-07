@@ -1,7 +1,7 @@
 import os
 import json
 from io import BytesIO
-from api.models import Info
+from api.types import Info
 from .helpers import cleanup
 
 

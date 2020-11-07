@@ -1,5 +1,5 @@
 from api.responses import JSONResponse
-from api.models import Status
+from api.types import Result
 from starlette.endpoints import HTTPEndpoint
 
 
@@ -12,4 +12,4 @@ class Index(HTTPEndpoint):
         """
         Return 200 OK with a welcome message.
         """
-        return JSONResponse(Status(code=200, message='Welcome to the Ark API'))
+        return JSONResponse(Result(status=200, message='Welcome to the Ark API'))

@@ -7,7 +7,7 @@ import traceback
 from lxml import etree
 from time import time
 from starlette.endpoints import HTTPEndpoint
-from api.models import Status
+from api.types import Result
 from api.responses import JSONResponse
 from api import svn
 from db import models
@@ -39,17 +39,8 @@ class ArkParent(HTTPEndpoint):
         logger.debug(f'records time = {time()-s} sec')
         s = time()
         result = await svn.list_archives()
-        logger.debug(f'svn time = {time()-s} sec')
-        logger.debug(f"{result['data']=}")
-        if result['status'] == 200:
-            return JSONResponse(result['data'])
-        else:
-            return JSONResponse(
-                Status(
-                    code=result['status'],
-                    message=http.client.responses[result['status']],
-                )
-            )
+        logger.debug(f'time = {time()-s} sec')
+        return JSONResponse(result)
 
     async def post(self, request):
         """
@@ -62,8 +53,8 @@ class ArkParent(HTTPEndpoint):
             data = await request.json()
             archive_name = data['name']
         except Exception as exc:
-            status = Status(code=400, message=f'invalid input: {str(exc)}')
-            return JSONResponse(status, status_code=status.code)
+            result = Result(status=400, message=f'invalid input: {str(exc)}')
+            return JSONResponse(result, status_code=result.status)
 
         # Creating the archive requires two steps.
         # ------------------------------------------------------------------------------
@@ -93,15 +84,15 @@ class ArkParent(HTTPEndpoint):
                         'created': item['version']['date'],
                     },
                 )
-            status = Status(
-                code=result['status'], 
+            result = Result(
+                status=result['status'], 
                 message=result.get('output') or result.get('error') or ''
             )
 
         except Exception as exc:
             if os.getenv('DEBUG'):
-                status = Status(code=500, message=traceback.format_exc())
+                result = Result(status=500, message=traceback.format_exc())
             else:
-                status = Status(code=500, message=str(exc))
+                result = Result(status=500, message=str(exc))
 
-        return JSONResponse(status, status_code=status.code)
+        return JSONResponse(result, status_code=result.status)
