@@ -13,6 +13,7 @@ RUN apk update \
         mod_dav_svn \
         python3 \
         py3-pip \
+        py3-psycopg2 \
         subversion \
     && apk upgrade \
     && rm -rf /var/cache/apk/*

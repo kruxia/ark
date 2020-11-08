@@ -56,39 +56,8 @@ class ArkParent(HTTPEndpoint):
             result = Result(status=400, message=f'invalid input: {str(exc)}')
             return JSONResponse(result, status_code=result.status)
 
-        # Creating the archive requires two steps.
-        # ------------------------------------------------------------------------------
-        # NOTE: It would be better to have both steps in a single transaction, so as to
-        # ensure that the database record and the archive are both created or neither.
-        # How would we implement that in the context of svn?
-        # ------------------------------------------------------------------------------
         try:
-            # 1. Create the archive
             result = await svn.create_archive(archive_name)
-
-            # # 2. Record the archive in the database
-            # if result.status == 201:
-            #     archive_name = result.data['name']
-            #     info = await svn.info(os.getenv('ARCHIVE_SERVER') + '/' + archive_name)
-            #     entry = info.data['entries'][0]
-            #     await request.app.db.execute(
-            #         """
-            #         INSERT INTO ark.projects
-            #         (name, rev, size, created) VALUES
-            #         (:name, :rev, :size, :created) RETURNING *
-            #         """,
-            #         {
-            #             'name': archive_name,
-            #             'size': result.data['size'],
-            #             'rev': entry['version']['rev'],
-            #             'created': entry['version']['date'],
-            #         },
-            #     )
-            # result = Result(
-            #     status=result.status,
-            #     message=result.output or result.error or '',
-            # )
-
         except Exception as exc:
             if os.getenv('DEBUG'):
                 result = Result(status=500, message=traceback.format_exc())

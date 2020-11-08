@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import typing
@@ -8,15 +9,26 @@ from pydantic import BaseModel, root_validator, validator
 from uuid import UUID
 
 
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (UUID, datetime)):
+            return str(obj)
+        return super().default(obj)
+
+
 class Type(BaseModel):
     def dict(self, exclude_none=True, **kwargs):
         """
-        by default, exclude None values.
+        By default, exclude None values.
         """
         return super().dict(exclude_none=exclude_none, **kwargs)
 
-    def json(self, exclude_none=True, **kwargs):
-        return super().json(exclude_none=exclude_none, **kwargs)
+    def json(self, exclude_none=True, indent=None, **kwargs):
+        return json.dumps(
+            self.dict(exclude_none=exclude_none, **kwargs),
+            indent=indent,
+            cls=JSONEncoder,
+        )
 
 
 class Result(Type):

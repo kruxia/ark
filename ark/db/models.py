@@ -15,5 +15,8 @@ class Project(BaseModel):
     size: int = None
     rev: int = None
 
+    class Config:
+        orm_mode = True
+
     def __repr__(self):
         return f"Project(id={self.id!r}, name={self.name!r})"

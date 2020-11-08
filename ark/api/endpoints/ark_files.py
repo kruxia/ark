@@ -140,14 +140,6 @@ class ArkPath(HTTPEndpoint):
         if not path:
             # delete archive
             result = await svn.delete_archive(name)
-            if result.status == 200:
-                await request.app.db.execute(
-                    """
-                    DELETE FROM ark.projects 
-                    WHERE name=:name
-                    """,
-                    {'name': name},
-                )
         else:
             # delete file or folder
             result = await svn.remove(url, message=message, revprops=revprops)

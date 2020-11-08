@@ -24,29 +24,30 @@ def create_archive(name):
     pathname = re.sub(r'\W+', '-', name.strip()).strip('-')
     log.debug(f"{pathname=}")
 
-    # check for existence (case-insensitive for the sake of our weaker brother, Windows)
+    # check for existence (case-insensitive for the sake of Windows, our weaker brother)
     path = urllib.parse.unquote(ARCHIVE_FILES)
     result = process.run('ls', path)
     if result.status != 200:
         return result
 
-    files = result.output.strip()
+    files = (result.output or '').strip()
     if pathname.lower() in re.split(r'\W+', files.lower()):
         return Result(status=409, error=f"An archive matching '{name}' already exists.")
 
-    # create the archive
+    # create the archive and copy the current archive template files into the new
+    # archive filesystem. (The template includes conf and hooks, not core repo db files)
     archive_path = path + '/' + pathname
-    cmds = [['svnadmin', 'create', archive_path]]
-
-    # copy the current archive template files into the new archive filesystem.
-    result = process.run('ls', f'{PACKAGE_PATH}/svntemplate')
-    filenames = result.output.strip().split('\n')
-    cmds += [
-        ['cp', '-R', f'{PACKAGE_PATH}/svntemplate/{fn}', archive_path]
-        for fn in filenames
-    ]
-    cmds += [['chown', '-R', 'apache:apache', archive_path]]
-
+    filenames = (
+        process.run('ls', f'{PACKAGE_PATH}/svntemplate').output.strip().split('\n')
+    )
+    cmds = (
+        [['svnadmin', 'create', archive_path]]
+        + [
+            ['cp', '-R', f'{PACKAGE_PATH}/svntemplate/{fn}', archive_path]
+            for fn in filenames
+        ]
+        + [['chown', '-R', 'apache:apache', archive_path]]
+    )
     result = Result(status=201)
     for cmd in cmds:
         cmd_res = process.run(*cmd)
@@ -56,7 +57,7 @@ def create_archive(name):
             result.error = (result.error or '') + cmd_res.error
 
         if result.error:
-            result.status = 400
+            result.status = 409
             break
 
     if result.status == 201:
@@ -84,14 +85,17 @@ def delete_archive(name):
 def list_archives():
     # get a list of repositories via ls + du
     result = process.run('ls', ARCHIVE_FILES)
+    print(f"ls {ARCHIVE_FILES}: {result=}")
     if result.status != 200:
         return result
 
     du_results = [
+        # -sk returns summary in KB (which we will convert to bytes)
         process.run('du', '-sk', f'{ARCHIVE_FILES}/{name}')
-        for name in result.output.strip().split('\n')
+        for name in (result.output or '').strip().split('\n')
+        if name
     ]
-    if max([r.status for r in du_results]) > 200:
+    if du_results and max([r.status for r in du_results]) > 200:
         return du_results
 
     data = {
