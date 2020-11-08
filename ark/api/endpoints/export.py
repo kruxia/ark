@@ -38,9 +38,10 @@ class ExportPath(HTTPEndpoint):
             kw['rev'] = request.query_params['rev']
 
         result = await svn.export(url, **kw)
-        if result.get('filepath'):
+        if result.data and result.data.get('filepath'):
             return FileResponse(
-                path=result['filepath'], filename=os.path.split(result['filepath'])[-1],
+                path=result.data['filepath'],
+                filename=os.path.split(result['filepath'])[-1],
             )
         else:
             raise HTTPException(404)

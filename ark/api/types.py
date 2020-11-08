@@ -8,13 +8,38 @@ from pydantic import BaseModel, root_validator, validator
 from uuid import UUID
 
 
-class Status(BaseModel):
+class Type(BaseModel):
+    def dict(self, exclude_none=True, **kwargs):
+        """
+        by default, exclude None values.
+        """
+        return super().dict(exclude_none=exclude_none, **kwargs)
+
+    def json(self, exclude_none=True, **kwargs):
+        return super().json(exclude_none=exclude_none, **kwargs)
+
+
+class Result(Type):
     """
-    The base HTTP status response object for our API.
+    The base result object for our API. Used for both HTTP response data and for process
+    results.
     """
 
-    code: int
-    message: str
+    status: int = 200
+    message: str = None
+    output: str = None
+    error: str = None
+    data: dict = None
+    traceback: str = None
+
+
+class HealthStatus(Type):
+    """
+    Data structure for the /health response.
+    """
+
+    archive: Result
+    database: Result
 
 
 # == SVN Info ==
@@ -25,7 +50,7 @@ class NodeKind(Enum):
     Dir = 'dir'
 
 
-class URL(BaseModel):
+class URL(Type):
     scheme: str
     netloc: str
     path: str
@@ -56,7 +81,7 @@ class URL(BaseModel):
         )
 
 
-class ArchiveInfo(BaseModel):
+class ArchiveInfo(Type):
     """
     Data about an archive itself, as provided by `svn info`.
     """
@@ -70,7 +95,7 @@ class ArchiveInfo(BaseModel):
         Ensure archive root path has trailing slash
         """
         url = URL.from_string(str(value))
-        url.path = url.path.rstrip() + '/'
+        url.path = url.path.rstrip('/') + '/'
         return str(url)
 
     @validator('name')
@@ -87,13 +112,13 @@ class ArchiveInfo(BaseModel):
             os.getenv('ARCHIVE_URL'),
             entry.find('repository/root').text,
         )
-        name = root.split('/')[-1]
+        name = root.rstrip('/').split('/')[-1]
         return cls(name=name, root=root)
 
 
-class PathInfo(BaseModel):
+class PathInfo(Type):
     """
-    Data about a path in an archive, as provided by either `svn info` or `svn list`.
+    Data about a path in an archive, as provided by either `svn info` or `svn ls`.
     """
 
     name: str
@@ -138,9 +163,9 @@ class PathInfo(BaseModel):
         )
 
     @classmethod
-    def from_list(cls, entry, rev='HEAD'):
+    def from_ls(cls, entry, rev='HEAD'):
         """
-        Given a `svn list` entry element, return PathInfo. Include the rev in the url if
+        Given a `svn ls` entry element, return PathInfo. Include the rev in the url if
         the rev is not HEAD (to make the URL an accurate link to THIS rev of target.)
         """
         url = re.sub(
@@ -164,9 +189,9 @@ class PathInfo(BaseModel):
         )
 
 
-class VersionInfo(BaseModel):
+class VersionInfo(Type):
     """
-    Data about a version in an archive, as provided by either `svn info` or `svn list`.
+    Data about a version in an archive, as provided by either `svn info` or `svn ls`.
     """
 
     rev: int
@@ -184,10 +209,10 @@ class VersionInfo(BaseModel):
             author=next(iter(entry.xpath('commit/author/text()')), None),
         )
 
-    from_list = from_info  # same structure
+    from_ls = from_info  # same structure
 
 
-class Info(BaseModel):
+class Info(Type):
     """
     An item created from a `svn info --xml` entry
     """
@@ -195,13 +220,6 @@ class Info(BaseModel):
     path: PathInfo
     version: VersionInfo
     archive: ArchiveInfo = None
-
-    def dict(self, *args, **kwargs):
-        data = super().dict(*args, **kwargs)
-        # 'archive' is only filled from_info(), not from_list()
-        if not data['archive']:
-            data.pop('archive')
-        return data
 
     @classmethod
     def from_info(cls, entry, rev='HEAD'):
@@ -215,13 +233,12 @@ class Info(BaseModel):
         )
 
     @classmethod
-    def from_list(cls, entry, rev='HEAD'):
+    def from_ls(cls, entry, rev='HEAD'):
         """
-        Given a `svn list` entry element, return Info.
+        Given a `svn ls` entry element, return Info.
         """
         return cls(
-            path=PathInfo.from_list(entry, rev=rev),
-            version=VersionInfo.from_list(entry),
+            path=PathInfo.from_ls(entry, rev=rev), version=VersionInfo.from_ls(entry),
         )
 
 
@@ -235,7 +252,7 @@ class LogPathAction(Enum):
     Replaced = 'R'
 
 
-class LogPath(BaseModel):
+class LogPath(Type):
     """
     Data structure for an archive file path, as returned by `svn log`.
     """
@@ -260,7 +277,7 @@ class LogPath(BaseModel):
         )
 
 
-class LogEntry(BaseModel):
+class LogEntry(Type):
     """
     Data structure for an archive log entry, as returned by `svn log`.
     """

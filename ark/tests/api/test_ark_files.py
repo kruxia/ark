@@ -1,15 +1,22 @@
 import os
 import json
 from io import BytesIO
-from api.models import Info
+from api.types import Info
 from .helpers import cleanup
+from tests.api import ARK_TEST_PREFIX
 
 
 def setup():
+    """
+    pytest runs before each test case
+    """
     cleanup()
 
 
 def teardown():
+    """
+    pytest runs after each test case
+    """
     cleanup()
 
 
@@ -17,8 +24,9 @@ def create_archive(client, n):
     """
     Create a new archive. (Use the API to ensure the standard procedure is employed.)
     """
-    name = f"{os.getenv('ARK_TEST_PREFIX')}{n:02d}"
+    name = f"{ARK_TEST_PREFIX}{n:02d}"
     response = client.post('/ark', json={'name': name})
+    print(response.content.decode())
     assert response.status_code == 201
     return name
 
@@ -42,26 +50,33 @@ def create_file(client, name, path, body=b'hello'):
 
 def test_get_ark_name_ok(client):
     """
-    GET /ark/NAME returns Info, properties, and a list of folders and files.
+    GET /ark/NAME (archive root) returns Info + properties and lists folders + files.
     """
     name = create_archive(client, 1)
 
     # with no rev
     response = client.get(f'/ark/{name}')
-    data = response.json()
-    info = Info(**data['info'])
-
     assert response.status_code == 200
+
+    result = response.json()
+    info = Info(**result['data']['info'])
+
     assert info.path.name == name
     assert info.path.kind.value == 'dir'
-    assert info.path.url == f"{os.getenv('ARCHIVE_URL')}/{name}"
-    assert info.path.size > 0
+    assert info.path.url == f"{os.getenv('ARCHIVE_URL')}{name}/"
     assert info.version.rev == 0
     assert info.archive.root == info.path.url
-    assert data['files'] == []
-    assert data['props'] == {}
-    assert 'logs' not in data
-    assert 'revprops' not in data
+    assert result['data']['files'] == []
+    assert result['data']['props'] == {}
+    assert 'logs' not in result['data']
+    assert 'revprops' not in result['data']
+
+
+def test_get_ark_file_ok(client):
+    """
+    GET /ark/{path} with no rev, just the path, for a single file
+    """
+    name = create_archive(client, 1)
 
     # create a file and rev=1
     create_file(client, name, 'hello.txt')  # rev=1
@@ -75,58 +90,86 @@ def test_get_ark_name_ok(client):
 
     # with no rev
     response = client.get(f'/ark/{name}')
-    data = response.json()
-    info = Info(**data['info'])
+    result = response.json()
+    info = Info(**result['data']['info'])
 
     assert response.status_code == 200
     assert info.version.rev == 1
-    assert len(data['files']) == 1
-    assert data['props'] == {}
-    assert 'logs' not in data
-    assert 'revprops' not in data
+    assert len(result['data']['files']) == 1
+    assert result['data']['props'] == {}
+    assert 'logs' not in result['data']
+    assert 'revprops' not in result['data']
 
-    # with a single rev
+
+def test_get_ark_file_rev_1_ok(client):
+    """
+    GET /ark/{name} with a single rev
+    """
+    name = create_archive(client, 1)
+
+    # create a file and rev=1
+    create_file(client, name, 'hello.txt')  # rev=1
+    logentry = {
+        'name': 'hello.txt',
+        'kind': 'file',
+        'action': 'A',
+        'prop_mods': False,
+        'text_mods': True,
+    }
     response = client.get(f'/ark/{name}?rev=1')
-    data = response.json()
-    info = Info(**data['info'])
+    result = response.json()
+    info = Info(**result['data']['info'])
 
     assert response.status_code == 200
     assert '?p=1' in info.path.url  # include the rev in the URL for accurate addressing
-    assert len(data['files']) == 1
-    assert data['props'] == {}
-    assert 'svn:date' in data['revprops']
-    assert data['log'][0]['rev'] == 1
+    assert len(result['data']['files']) == 1
+    assert result['data']['props'] == {}
+    assert 'svn:date' in result['data']['revprops']
+    assert result['data']['log']['entries'][0]['rev'] == 1
 
     for key, val in logentry.items():
-        assert data['log'][0]['paths'][0][key] == val
+        assert result['data']['log']['entries'][0]['paths'][0][key] == val
 
-    # with a rev range
 
+def test_get_ark_file_rev_range_ok(client):
+    """
+    GET /ark/{name} with a rev range
+    """
+    name = create_archive(client, 1)
+
+    # create a file and rev=1
+    create_file(client, name, 'hello.txt')  # rev=1
+    logentry = {
+        'name': 'hello.txt',
+        'kind': 'file',
+        'action': 'A',
+        'prop_mods': False,
+        'text_mods': True,
+    }
     response = client.get(f'/ark/{name}?rev=HEAD:0')
-    data = response.json()
-
     assert response.status_code == 200
 
+    result = response.json()
+
     # the only key in the data is 'log'
-    assert 'info' not in data
-    assert 'props' not in data
-    assert 'revprops' not in data
-    assert 'files' not in data
-    assert data['log'][0]['rev'] == 1
+    assert 'info' not in result['data']
+    assert 'props' not in result['data']
+    assert 'revprops' not in result['data']
+    assert 'files' not in result['data']
+    assert result['data']['log']['entries'][0]['rev'] == 1
     for key, val in logentry.items():
         if type(val) in [bool, None]:
-            assert data['log'][0]['paths'][0][key] is val
+            assert result['data']['log']['entries'][0]['paths'][0][key] is val
         else:
-            assert data['log'][0]['paths'][0][key] == val
+            assert result['data']['log']['entries'][0]['paths'][0][key] == val
 
 
 def test_get_ark_name_404(client):
     """
-    GET /ark/NAME on a non-existent archive returns 404
-    GET /ark/NAME?rev=N on a non-existent revision N returns 404
+    * GET /ark/NAME on a non-existent archive returns 404
+    * GET /ark/NAME?rev=N on a non-existent revision N returns 404
     """
-    name = create_archive(client, 1)  # hello, {name}
-    cleanup()  # goodbye, {name}. it was too short a time to know ya
+    name = f"{ARK_TEST_PREFIX}01"
     response = client.get(f'/ark/{name}')
 
     assert response.status_code == 404
@@ -142,57 +185,65 @@ def test_post_ark_name_no_rev_ok(client):
     POST edit [rev]props on archive creates a new rev with those [rev]props
     """
     name = create_archive(client, 1)
-    url = f'/ark/{name}'
-    data = {'props': {'A': 1}, 'revprops': {'B': 2}}
-    response = client.post(url, data=json.dumps(data))
-    assert response.status_code == 200
 
     # Add a property in a new rev=1, and include a revprop with it
+    url = f'/ark/{name}'
+    data = {'props': {'A': 1}, 'revprops': {'B': 2}}
+    response = client.post(url, json=data)
+    assert response.status_code == 200
+
+    # The response should include props and revprops
     response = client.get(f'{url}?rev=1')
-    data = response.json()
+    assert response.status_code == 200
+
+    result = response.json()
+    print(f'{url}?rev=1', result)
+    data = result['data']
     info = Info(**data['info'])
 
-    assert response.status_code == 200
     assert 'p=1' in info.path.url
     assert info.version.rev == 1
     assert data['props']['A'] == '1'  # cast to string
     assert data['revprops']['B'] == '2'
-    assert data['log'][0]['paths'][0]['name'] == ''  # root path
-    assert data['log'][0]['paths'][0]['kind'] == 'dir'
-    assert data['log'][0]['paths'][0]['action'] == 'M'
-    assert data['log'][0]['paths'][0]['prop_mods'] is True
-    assert data['log'][0]['paths'][0]['text_mods'] is False
+    assert data['log']['entries'][0]['paths'][0]['name'] == ''  # root path
+    assert data['log']['entries'][0]['paths'][0]['kind'] == 'dir'
+    assert data['log']['entries'][0]['paths'][0]['action'] == 'M'
+    assert data['log']['entries'][0]['paths'][0]['prop_mods'] is True
+    assert data['log']['entries'][0]['paths'][0]['text_mods'] is False
     assert data['files'] == []
 
     # Delete the revprop from rev=1
     data = {"revpropdel": ['B'], "rev": 1}
-    response = client.post(url, data=json.dumps(data))
+    response = client.post(url, json=data)
 
     assert response.status_code == 200
 
     response = client.get(f"{url}?rev=1")
-    data = response.json()
-    info = Info(**data['info'])
-
     assert response.status_code == 200
+
+    result = response.json()
+    data = result['data']
+    info = Info(**data['info'])
     assert info.version.rev == 1
     assert data['props']['A'] == '1'
     assert 'B' not in data['revprops']
 
     # Deleting a non-existent revprop doesn't cause an error
     data = {"revpropdel": ['B'], "rev": 1}
-    response = client.post(url, data=json.dumps(data))
+    response = client.post(url, json=data)
 
     assert response.status_code == 200
 
     # Delete the property that was set in rev=1 (which creates rev=2)
     data = {"propdel": ['A']}
-    response = client.post(url, data=json.dumps(data))
+    response = client.post(url, json=data)
 
     assert response.status_code == 200
 
     response = client.get(f"{url}?rev=HEAD")
-    data = response.json()
+    result = response.json()
+    data = result['data']
+    print(f"{url}?rev=HEAD : {result=}")
     info = Info(**data['info'])
 
     assert response.status_code == 200
@@ -201,15 +252,16 @@ def test_post_ark_name_no_rev_ok(client):
 
     # Deleting a non-existent property results in a new revision (even if no change)
     data = {"propdel": ['A']}
-    response = client.post(url, data=json.dumps(data))
-
+    response = client.post(url, json=data)
     assert response.status_code == 200
 
     response = client.get(f"{url}?rev=HEAD")
-    data = response.json()
-    info = Info(**data['info'])
-
     assert response.status_code == 200
+
+    result = response.json()
+    data = result['data']
+    print(f"{url}?rev=HEAD : {result=}")
+    info = Info(**data['info'])
     assert info.version.rev == 3
 
 
@@ -228,12 +280,13 @@ def test_post_ark_name_no_rev_invalid(client):
         {'props': {'A': 1}, 'revpropdel': ['B']},  # 'revpropdel' not allowed w/o 'rev'
         {'revprops': {'B': 2}},  # 'revprops' not allowed without 'props'
     ]:
-        response = client.post(url, data=json.dumps(data))
+        response = client.post(url, json=data)
         assert response.status_code == 400
 
         response = client.get(url)
-        data = response.json()
         assert response.status_code == 200
+        result = response.json()
+        data = result['data']
         assert data['info']['version']['rev'] == 0  # no revisions have been committed
 
 
@@ -265,13 +318,14 @@ def test_post_ark_name_rev_ok(client):
     ]
 
     for data in posts:
-        response = client.post(url + '?rev=1', data=json.dumps(data))
+        response = client.post(url + '?rev=1', json=data)
         assert response.status_code == 200
 
     # at the end, there should be a single revprop {'A': "1"} on rev 1
     response = client.get(url + '?rev=1')
-    data = response.json()
     assert response.status_code == 200
+    result = response.json()
+    data = result['data']
     assert data['revprops']['A'] == '2'  # the last value in the fixtures runs
     assert data['props']['A'] == '1'  # path props maintained separately from revprops
 
@@ -312,8 +366,10 @@ def test_post_ark_name_rev_invalid(client):
 
     # confirm that there are no changes to props or revprops at rev=1
     response = client.get(url + '?rev=1')
-    data = response.json()
     assert response.status_code == 200
+
+    result = response.json()
+    data = result['data']
     assert 'B' not in data['revprops'] and 'C' not in data['revprops']
     assert data['props']['A'] == '1'  # unchanged despite all attempts to do so
 
@@ -343,7 +399,7 @@ def test_put_ark_name_path(client):
     ]
 
     for fixture in fixtures:
-        print(fixture)
+        print(f"{fixture=}")
         response = client.put(
             f"{url}/{fixture['path']}",
             files={'file': fixture['body']} if fixture['body'] is not None else None,
@@ -351,11 +407,12 @@ def test_put_ark_name_path(client):
         assert response.status_code == fixture['status']
 
         response = client.get(f"{url}/{fixture['path']}")
-        data = response.json()
-        print(' ', data)
+        result = response.json()
+        print(f" {result=}")
         if fixture['kind'] is None:
             assert response.status_code == 404  # create failed, thing doesn't exist
         else:
+            data = result['data']
             info = Info(**data['info'])
             assert info.path.kind.value == fixture['kind']
 
@@ -424,9 +481,10 @@ def test_deleted_folder_available_at_rev(client):
 
     # d1 exists @ rev=2, so the following request should return all data
     r5 = client.get(f'/ark/{name}/d1?rev=2')
-    data = r5.json()
-    print(r5.status_code, data)
     assert r5.status_code == 200
+    result = r5.json()
+    data = result['data']
+    print(r5.status_code, data)
     for key in ['info', 'files', 'log', 'revprops']:
         assert key in data.keys()
 
@@ -442,13 +500,13 @@ def test_deleted_folder_available_at_rev(client):
 
     # There should be one log entry with one path
     assert len(data['log']) == 1
-    assert data['log'][0]['rev'] == 2
-    assert len(data['log'][0]['paths']) == 1
-    assert data['log'][0]['paths'][0]['name'] == 'd1/f1.txt'
-    assert data['log'][0]['paths'][0]['kind'] == 'file'
-    assert data['log'][0]['paths'][0]['action'] == 'A'
-    assert data['log'][0]['paths'][0]['text_mods'] is True
-    assert data['log'][0]['paths'][0]['prop_mods'] is False
+    assert data['log']['entries'][0]['rev'] == 2
+    assert len(data['log']['entries'][0]['paths']) == 1
+    assert data['log']['entries'][0]['paths'][0]['name'] == 'd1/f1.txt'
+    assert data['log']['entries'][0]['paths'][0]['kind'] == 'file'
+    assert data['log']['entries'][0]['paths'][0]['action'] == 'A'
+    assert data['log']['entries'][0]['paths'][0]['text_mods'] is True
+    assert data['log']['entries'][0]['paths'][0]['prop_mods'] is False
 
     assert len(data['files']) == 1
     assert data['files'][0]['path']['name'] == 'f1.txt'
