@@ -7,7 +7,7 @@ from starlette.routing import Route
 from api.endpoints.index import Index
 from api.endpoints.health import Health
 from api.endpoints.ark import ArkParent
-from api.endpoints.ark_files import ArkPath
+from api.endpoints.ark_path import ArkPath
 from api.endpoints.export import ExportPath
 
 
