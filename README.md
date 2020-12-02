@@ -1,5 +1,7 @@
 # Ark
 
+## Overview
+
 Ark is a file storage server that provides:
 
 * versioning with unlimited file history and optional changelog messaging
@@ -12,7 +14,7 @@ Ark is a file storage server that provides:
   binary files that have numerous revisions typically require only fractionally more
   storage space than the files themselves.
 
-Better than Dropbox:
+## Better than Dropbox
 
 * Unlimited version history — no time limit, no limit to the number of revisions.
   [Dropbox limits 30, 180, 365 days. OneDrive, Box store a fixed number of versions.]
@@ -29,7 +31,7 @@ Better than Dropbox:
 * Self-hostable, portable, open-source — no vendor lock-in. [Other cloud file storage
   systems are completely proprietary.]
 
-Architecture:
+## Architecture
 
 * File storage server: Apache Subversion
 * REST API and search engine: Python Starlette ~~PostgreSQL~~ _no db yet_
@@ -37,3 +39,4 @@ Architecture:
   * XHTML — use XML syntax
   * CSS + TailwindCSS — chosen over bootstrap and others, utility classes look to be the future.
   * JS + mithril.js.org — chosen over VueJS and React for its small size / efficiency.
+
