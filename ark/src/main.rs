@@ -1,4 +1,5 @@
 use axum::{http::StatusCode, routing::get, Json, Router};
+use chrono::{DateTime, Utc};
 // use diesel::sql_types::{Jsonb, Uuid};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -25,6 +26,15 @@ async fn home() -> &'static str {
     "Hello, World!"
 }
 
+// the input to our `account` handler
+#[derive(Deserialize, Serialize)]
+struct Account {
+    id: Uuid,
+    ts: DateTime<Utc>,
+    title: Option<String>,
+    meta: Option<Map<String, Value>>,
+}
+
 async fn search_accounts(// this argument tells axum to parse the request body
     // as JSON into a `SearchAccount` type
     // Json(payload): Json<SearchAccount>,
@@ -36,19 +46,12 @@ async fn search_accounts(// this argument tells axum to parse the request body
     meta.insert("user_id".to_string(), Uuid::new_v4().to_string().into());
     let account: Account = Account {
         id: Uuid::new_v4(), // random id
-        title: "Foo Bar".to_string(),
+        ts: chrono::offset::Utc::now(),
+        title: Some("Foo Bar".to_string()),
         meta: Some(meta),
     };
 
     // this will be converted into a JSON response
-    // with a status code of `201 Created`
+    // with a status code of `200 OK`
     (StatusCode::OK, Json(account))
-}
-
-// the input to our `account` handler
-#[derive(Deserialize, Serialize)]
-struct Account {
-    id: Uuid,
-    title: String,
-    meta: Option<Map<String, Value>>,
 }
