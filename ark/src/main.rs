@@ -1,6 +1,7 @@
 use axum::{http::StatusCode, routing::get, Json, Router};
 // use diesel::sql_types::{Jsonb, Uuid};
 use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use tokio::net::TcpListener;
 use uuid::Uuid;
 
@@ -29,9 +30,14 @@ async fn search_accounts(// this argument tells axum to parse the request body
     // Json(payload): Json<SearchAccount>,
 ) -> (StatusCode, Json<Account>) {
     // insert your application logic here
+    let mut meta: Map<String, Value> = Map::new();
+    meta.insert("foo".to_string(), 3.into());
+    meta.insert("βαρ".to_string(), "τηιρτυ".into());
+    meta.insert("user_id".to_string(), Uuid::new_v4().to_string().into());
     let account: Account = Account {
         id: Uuid::new_v4(), // random id
         title: "Foo Bar".to_string(),
+        meta: Some(meta),
     };
 
     // this will be converted into a JSON response
@@ -44,5 +50,5 @@ async fn search_accounts(// this argument tells axum to parse the request body
 struct Account {
     id: Uuid,
     title: String,
-    // meta: Option<Json<Jsonb>>,
+    meta: Option<Map<String, Value>>,
 }
