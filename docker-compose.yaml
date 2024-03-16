@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ark
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-03-15T01-07-19Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment: {}
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - miniodata:/data
+
+volumes:
+  miniodata:
+  pgdata:
