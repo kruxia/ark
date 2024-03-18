@@ -3,7 +3,7 @@
 diesel::table! {
     account (id) {
         id -> Uuid,
-        ts -> Nullable<Timestamptz>,
+        created -> Timestamptz,
         title -> Nullable<Text>,
         meta -> Nullable<Jsonb>,
     }
@@ -38,7 +38,7 @@ diesel::table! {
 diesel::table! {
     project (id) {
         id -> Uuid,
-        ts -> Timestamptz,
+        created -> Timestamptz,
         title -> Nullable<Text>,
         account_id -> Uuid,
         meta -> Nullable<Jsonb>,
@@ -48,7 +48,7 @@ diesel::table! {
 diesel::table! {
     version (id) {
         id -> Uuid,
-        ts -> Timestamptz,
+        created -> Timestamptz,
         meta -> Nullable<Jsonb>,
     }
 }
