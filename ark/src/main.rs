@@ -67,12 +67,6 @@ async fn home() -> (StatusCode, Json<Home>) {
     (StatusCode::OK, Json(data))
 }
 
-// #[derive(Serialize, FromSqlRow, AsExpression, Queryable, Debug)]
-// #[sql_type = "Jsonb"]
-// struct AccountMeta {
-//     user: String,
-// }
-
 // the input to our `account` handler
 #[derive(Serialize, Selectable, Queryable)]
 #[diesel(table_name = ark::schema::account)]
@@ -81,7 +75,7 @@ struct Account {
     id: Uuid,
     created: DateTime<Utc>,
     title: Option<String>,
-    // meta: AccountMeta,
+    meta: Option<serde_json::Value>,
 }
 
 async fn search_accounts(
