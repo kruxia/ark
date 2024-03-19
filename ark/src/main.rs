@@ -3,20 +3,17 @@ use axum::{
     extract::{FromRef, FromRequestParts},
     http::{request, StatusCode},
     response::Json,
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use chrono::{DateTime, Utc};
-// use diesel::pg::sql_types::Jsonb;
 use diesel::prelude::*;
-// use diesel::{AsExpression, FromSqlRow};
 use diesel_async::{
     pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection, RunQueryDsl,
 };
-// use diesel::sql_types::{Jsonb, Uuid};
-use serde::Serialize;
-// use serde_json::{Map, Value};
+use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
+use tower_http::trace::TraceLayer;
 use uuid::Uuid;
 
 type Pool = bb8::Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
@@ -27,7 +24,11 @@ struct DatabaseConnection(
 #[tokio::main]
 async fn main() {
     // tracing
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    tracing::debug!("Initialized tracing");
 
     // database
     let db_url: String = env!("DATABASE_URL").to_string();
@@ -44,16 +45,18 @@ async fn main() {
     let app: Router = Router::new()
         .route("/", get(home))
         .route("/accounts", get(search_accounts))
+        .route("/accounts", post(create_account))
+        .layer(TraceLayer::new_for_http())
         .with_state(pool);
 
     // run our app with hyper, listening globally on port 8000
     let addr: &str = "0.0.0.0:8000";
     let listener: TcpListener = TcpListener::bind(addr).await.unwrap();
-    tracing::debug!("Listening on {addr}");
+    tracing::info!("Listening on {addr}");
     axum::serve(listener, app).await.unwrap();
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct Home {
     message: String,
     version: String,
@@ -64,11 +67,12 @@ async fn home() -> (StatusCode, Json<Home>) {
         message: "Welcome to Ark".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
     };
+    tracing::debug!("{data:?}");
     (StatusCode::OK, Json(data))
 }
 
 // the input to our `account` handler
-#[derive(Serialize, Selectable, Queryable)]
+#[derive(Serialize, Selectable, Queryable, Debug)]
 #[diesel(table_name = ark::schema::account)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 struct Account {
@@ -76,6 +80,30 @@ struct Account {
     created: DateTime<Utc>,
     title: Option<String>,
     meta: Option<serde_json::Value>,
+}
+
+#[derive(Deserialize, Insertable, Debug)]
+#[diesel(table_name = ark::schema::account)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct NewAccount {
+    id: Option<Uuid>,
+    created: Option<DateTime<Utc>>,
+    title: Option<String>,
+    meta: Option<serde_json::Value>,
+}
+
+async fn create_account(
+    DatabaseConnection(mut conn): DatabaseConnection,
+    Json(new_account): Json<NewAccount>,
+) -> Result<Json<Account>, (StatusCode, Json<ErrorResponse>)> {
+    let record = diesel::insert_into(ark::schema::account::table)
+        .values(new_account)
+        .returning(Account::as_returning())
+        .get_result(&mut conn)
+        .await
+        .map_err(internal_error)?;
+    tracing::debug!("{record:?}");
+    Ok(Json(record))
 }
 
 async fn search_accounts(
@@ -91,6 +119,7 @@ async fn search_accounts(
 
     // this will be converted into a JSON response
     // with a status code of `200 OK`
+    tracing::debug!("{data:?}");
     Ok(Json(data))
 }
 
