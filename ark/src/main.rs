@@ -1,50 +1,61 @@
-use axum::{ routing::{ get, post }, http::StatusCode, Json, Router };
-use rand::RngCore;
-use serde::{ Deserialize, Serialize };
+use axum::{http::StatusCode, response::Json, routing::get, Router};
+use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
+use routes::accounts;
+use serde::Serialize;
+use tokio::net::TcpListener;
+use tower_http::trace::TraceLayer;
+
+mod db;
+mod errors;
+mod models;
+mod routes;
+mod schema;
 
 #[tokio::main]
 async fn main() {
-    // initialize tracing
-    tracing_subscriber::fmt::init();
+    // tracing
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    tracing::debug!("Initialized tracing");
+
+    // database
+    let db_url: String = env!("DATABASE_URL").to_string();
+    let db_config: AsyncDieselConnectionManager<AsyncPgConnection> =
+        AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
+    let pool: db::Pool = db::Pool::builder()
+        // .max_size(4)
+        // .min_idle(1)
+        .build(db_config)
+        .await
+        .unwrap();
 
     // build our application with a route
-    let app = Router::new().route("/", get(root)).route("/users", post(create_user));
+    let app: Router = Router::new()
+        .route("/", get(home))
+        .route("/accounts", get(accounts::search).post(accounts::create))
+        .layer(TraceLayer::new_for_http())
+        .with_state(pool);
 
     // run our app with hyper, listening globally on port 8000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    let addr: &str = "0.0.0.0:8000";
+    let listener: TcpListener = TcpListener::bind(addr).await.unwrap();
+    tracing::info!("Listening on {addr}");
     axum::serve(listener, app).await.unwrap();
 }
 
-// basic handler that responds with a static string
-async fn root() -> &'static str {
-    "Hello, World!"
+#[derive(Serialize, Debug)]
+struct Home {
+    message: String,
+    version: String,
 }
 
-async fn create_user(
-    // this argument tells axum to parse the request body
-    // as JSON into a `CreateUser` type
-    Json(payload): Json<CreateUser>
-) -> (StatusCode, Json<User>) {
-    // insert your application logic here
-    let user = User {
-        id: rand::thread_rng().next_u64(), // random id
-        username: payload.username,
+async fn home() -> (StatusCode, Json<Home>) {
+    let data: Home = Home {
+        message: "Welcome to Ark".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
     };
-
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
-}
-
-// the input to our `create_user` handler
-#[derive(Deserialize)]
-struct CreateUser {
-    username: String,
-}
-
-// the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    username: String,
+    tracing::debug!("{data:?}");
+    (StatusCode::OK, Json(data))
 }
