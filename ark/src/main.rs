@@ -1,25 +1,15 @@
-use axum::{
-    async_trait,
-    extract::{FromRef, FromRequestParts},
-    http::{request, StatusCode},
-    response::Json,
-    routing::{get, post},
-    Router,
-};
-use chrono::{DateTime, Utc};
-use diesel::prelude::*;
-use diesel_async::{
-    pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection, RunQueryDsl,
-};
-use serde::{Deserialize, Serialize};
+use axum::{http::StatusCode, response::Json, routing::get, Router};
+use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
+use routes::accounts;
+use serde::Serialize;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
-use uuid::Uuid;
 
-type Pool = bb8::Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
-struct DatabaseConnection(
-    bb8::PooledConnection<'static, AsyncDieselConnectionManager<AsyncPgConnection>>,
-);
+mod db;
+mod errors;
+mod models;
+mod routes;
+mod schema;
 
 #[tokio::main]
 async fn main() {
@@ -34,7 +24,7 @@ async fn main() {
     let db_url: String = env!("DATABASE_URL").to_string();
     let db_config: AsyncDieselConnectionManager<AsyncPgConnection> =
         AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
-    let pool: Pool = Pool::builder()
+    let pool: db::Pool = db::Pool::builder()
         // .max_size(4)
         // .min_idle(1)
         .build(db_config)
@@ -44,8 +34,7 @@ async fn main() {
     // build our application with a route
     let app: Router = Router::new()
         .route("/", get(home))
-        .route("/accounts", get(search_accounts))
-        .route("/accounts", post(create_account))
+        .route("/accounts", get(accounts::search).post(accounts::create))
         .layer(TraceLayer::new_for_http())
         .with_state(pool);
 
@@ -69,99 +58,4 @@ async fn home() -> (StatusCode, Json<Home>) {
     };
     tracing::debug!("{data:?}");
     (StatusCode::OK, Json(data))
-}
-
-// the input to our `account` handler
-#[derive(Serialize, Selectable, Queryable, Debug)]
-#[diesel(table_name = ark::schema::account)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-struct Account {
-    id: Uuid,
-    created: DateTime<Utc>,
-    title: Option<String>,
-    meta: Option<serde_json::Value>,
-}
-
-#[derive(Deserialize, Insertable, Debug)]
-#[diesel(table_name = ark::schema::account)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-struct NewAccount {
-    id: Option<Uuid>,
-    created: Option<DateTime<Utc>>,
-    title: Option<String>,
-    meta: Option<serde_json::Value>,
-}
-
-async fn create_account(
-    DatabaseConnection(mut conn): DatabaseConnection,
-    Json(new_account): Json<NewAccount>,
-) -> Result<Json<Account>, (StatusCode, Json<ErrorResponse>)> {
-    let record = diesel::insert_into(ark::schema::account::table)
-        .values(new_account)
-        .returning(Account::as_returning())
-        .get_result(&mut conn)
-        .await
-        .map_err(internal_error)?;
-    tracing::debug!("{record:?}");
-    Ok(Json(record))
-}
-
-async fn search_accounts(
-    // Parse the request body as JSON into a `SearchAccount` type Json(payload):
-    // Json<SearchAccount>,
-    DatabaseConnection(mut conn): DatabaseConnection,
-) -> Result<Json<Vec<Account>>, (StatusCode, Json<ErrorResponse>)> {
-    let data: Vec<Account> = ark::schema::account::table
-        .select(Account::as_select())
-        .load(&mut conn)
-        .await
-        .map_err(internal_error)?;
-
-    // this will be converted into a JSON response
-    // with a status code of `200 OK`
-    tracing::debug!("{data:?}");
-    Ok(Json(data))
-}
-
-/// Extract DatabaseConnection from Request
-#[async_trait]
-impl<S> FromRequestParts<S> for DatabaseConnection
-where
-    S: Send + Sync,
-    Pool: FromRef<S>,
-{
-    type Rejection = (StatusCode, Json<ErrorResponse>);
-
-    async fn from_request_parts(
-        _parts: &mut request::Parts,
-        state: &S,
-    ) -> Result<Self, Self::Rejection> {
-        let pool: Pool = Pool::from_ref(state);
-
-        let conn: bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>> =
-            pool.get_owned().await.map_err(internal_error)?;
-
-        Ok(Self(conn))
-    }
-}
-
-// -- Errors --
-
-/// Return ErrorResponse struct with details of any error that occurs
-#[derive(Serialize)]
-struct ErrorResponse {
-    detail: String,
-}
-
-/// Any internal_error maps to a `500 Internal Server Error` response.
-fn internal_error<E>(err: E) -> (StatusCode, Json<ErrorResponse>)
-where
-    E: std::error::Error,
-{
-    (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(ErrorResponse {
-            detail: err.to_string(),
-        }),
-    )
 }
