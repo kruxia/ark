@@ -20,6 +20,9 @@ pub async fn create(
     tracing::debug!("{record:?}");
 
     // create a bucket for the account (TODO: inside a block wrapping the db tx)
+    let _ = ark_s3::create_bucket(&ark_s3::new_client(), record.id.to_string())
+        .await
+        .map_err(errors::internal_error)?;
 
     Ok(Json(record))
 }

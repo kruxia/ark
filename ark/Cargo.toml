@@ -6,6 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ark-s3 = { path = "../ark-s3" }
+aws-config = { version = "1.1.8" }
+aws-sdk-s3 = { version = "1.19.1" }
 axum = { version = "0.7.4", features = ["macros"] }
 chrono = { version = "0.4.35", features = ["clock", "serde"] }
 rand = "0.8.5"

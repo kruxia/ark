@@ -64,6 +64,9 @@ dependencies = [
 name = "ark"
 version = "0.1.0"
 dependencies = [
+ "ark-s3",
+ "aws-config",
+ "aws-sdk-s3",
  "axum",
  "bb8",
  "chrono",
