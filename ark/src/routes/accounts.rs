@@ -19,7 +19,9 @@ pub async fn create(
         .map_err(errors::internal_error)?;
     tracing::debug!("{record:?}");
 
-    // create a bucket for the account (TODO: inside a block wrapping the db tx)
+    // create a bucket for the account
+    // - (TODO: inside a block wrapping the db tx)
+    // - (TODO: with a static client for greater efficiency)
     let _ = ark_s3::create_bucket(&ark_s3::new_client(), record.id.to_string())
         .await
         .map_err(errors::internal_error)?;
