@@ -1,0 +1,6 @@
+[workspace]
+members = ["ark", "ark-s3"]
+resolver = "2"
+
+[profile.dev]
+opt-level = 1

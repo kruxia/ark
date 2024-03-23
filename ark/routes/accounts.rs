@@ -18,6 +18,9 @@ pub async fn create(
         .await
         .map_err(errors::internal_error)?;
     tracing::debug!("{record:?}");
+
+    // create a bucket for the account (TODO: inside a block wrapping the db tx)
+
     Ok(Json(record))
 }
 
