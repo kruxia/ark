@@ -4,7 +4,7 @@ use serde::Serialize;
 /// Return ErrorResponse struct with details of any error that occurs
 #[derive(Serialize)]
 pub struct ErrorResponse {
-    pub detail: String,
+    error: String,
 }
 
 /// Any internal_error maps to a `500 Internal Server Error` response.
@@ -15,7 +15,7 @@ where
     (
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(ErrorResponse {
-            detail: err.to_string(),
+            error: err.to_string(),
         }),
     )
 }
