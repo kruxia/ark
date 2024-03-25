@@ -14,8 +14,19 @@ mod schema;
 #[tokio::main]
 async fn main() {
     // tracing
+    let tracing_level = match std::env::var("TRACING_LEVEL")
+        .unwrap_or(String::from("INFO"))
+        .as_str()
+    {
+        "TRACE" => tracing::Level::TRACE,
+        "DEBUG" => tracing::Level::DEBUG,
+        "INFO" => tracing::Level::INFO,
+        "WARN" => tracing::Level::WARN,
+        "ERROR" => tracing::Level::ERROR,
+        _ => tracing::Level::INFO,
+    };
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_max_level(tracing_level)
         .init();
 
     tracing::debug!("Initialized tracing");

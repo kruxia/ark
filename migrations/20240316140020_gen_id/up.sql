@@ -6,7 +6,7 @@ SELECT (
     lpad(to_hex((extract(epoch from clock_timestamp()) * 1000)::bigint), 12, '0')
     -- seq ($1) is smallint sequence (2 bytes = 4 hex)
     || lpad(to_hex(nextval($1)), 4, '0')
-    -- 8 bytes (16 hex) of randomness
+    -- 8 bytes (16 hex) of randomness -- each int is 4 bytes between 0 and max int
     || lpad(to_hex((random()*2147483647)::int), 8, '0')
     || lpad(to_hex((random()*2147483647)::int), 8, '0')
 )::uuid;
