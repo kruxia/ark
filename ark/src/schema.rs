@@ -10,14 +10,22 @@ diesel::table! {
 }
 
 diesel::table! {
-    content (id, version_id) {
+    content (id) {
         id -> Uuid,
+        account_id -> Uuid,
+        filepath -> Text,
+        created -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    content_version (content_id, version_id) {
+        content_id -> Uuid,
         version_id -> Uuid,
-        project_id -> Uuid,
+        account_id -> Uuid,
+        created -> Timestamptz,
         mimetype -> Text,
-        size -> Int8,
-        path -> Text,
-        title -> Nullable<Text>,
+        filesize -> Int8,
         meta -> Nullable<Jsonb>,
     }
 }
@@ -36,34 +44,27 @@ diesel::table! {
 }
 
 diesel::table! {
-    project (id) {
-        id -> Uuid,
-        created -> Timestamptz,
-        title -> Nullable<Text>,
-        account_id -> Uuid,
-        meta -> Nullable<Jsonb>,
-    }
-}
-
-diesel::table! {
     version (id) {
         id -> Uuid,
+        account_id -> Uuid,
         created -> Timestamptz,
         meta -> Nullable<Jsonb>,
     }
 }
 
-diesel::joinable!(content -> mimetype (mimetype));
-diesel::joinable!(content -> project (project_id));
-diesel::joinable!(content -> version (version_id));
+diesel::joinable!(content -> account (account_id));
+diesel::joinable!(content_version -> account (account_id));
+diesel::joinable!(content_version -> content (content_id));
+diesel::joinable!(content_version -> mimetype (mimetype));
+diesel::joinable!(content_version -> version (version_id));
 diesel::joinable!(ext_mimetype -> mimetype (name));
-diesel::joinable!(project -> account (account_id));
+diesel::joinable!(version -> account (account_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     account,
     content,
+    content_version,
     ext_mimetype,
     mimetype,
-    project,
     version,
 );

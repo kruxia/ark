@@ -3,7 +3,7 @@ use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConne
 use routes::accounts;
 use serde::Serialize;
 use tokio::net::TcpListener;
-// use tower_http::trace::TraceLayer;
+use tower_http::trace::TraceLayer;
 
 mod db;
 mod errors;
@@ -65,7 +65,7 @@ async fn main() {
     let app: Router = Router::new()
         .route("/", get(home))
         .route("/accounts", get(accounts::search).post(accounts::create))
-        // .layer(TraceLayer::new_for_http())
+        .layer(TraceLayer::new_for_http())
         .with_state(state);
 
     // run our app with hyper, listening globally on port 8000

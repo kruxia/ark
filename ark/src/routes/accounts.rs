@@ -25,7 +25,10 @@ pub async fn create(
                     .values(new_account)
                     .returning(Account::as_returning())
                     .get_result(&mut conn)
-                    .await?;
+                    .await
+                    // TODO: Some errors will be 4xx level
+                    // - "id" is given and already exists => 409
+                    .map_err(errors::ark_error)?;
 
                 // create the bucket for the account
                 let _ = ark_s3::create_bucket(&state.s3, record.id.to_string())
@@ -43,9 +46,9 @@ pub async fn create(
 }
 
 pub async fn search(
+    db::Connection(mut conn): db::Connection,
     // Parse the request body as JSON into a `SearchAccount` type Json(payload):
     // Json<SearchAccount>,
-    db::Connection(mut conn): db::Connection,
 ) -> Result<Json<Vec<Account>>, (StatusCode, Json<errors::ErrorResponse>)> {
     let data: Vec<Account> = crate::schema::account::table
         .select(Account::as_select())

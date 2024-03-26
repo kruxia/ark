@@ -28,7 +28,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   minio:
-    image: quay.io/minio/minio:RELEASE.2024-03-15T01-07-19Z
+    image: quay.io/minio/minio:RELEASE.2024-03-26T22-10-45Z
     command: ["server", "/data", "--console-address", ":9001"]
     environment: {}
     ports:
