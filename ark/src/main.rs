@@ -11,6 +11,12 @@ mod models;
 mod routes;
 mod schema;
 
+#[derive(Clone)]
+struct AppState {
+    pool: db::Pool,
+    s3: aws_sdk_s3::Client,
+}
+
 #[tokio::main]
 async fn main() {
     // tracing
@@ -50,12 +56,17 @@ async fn main() {
         .await
         .unwrap();
 
+    let state = AppState {
+        pool,
+        s3: ark_s3::new_client(),
+    };
+
     // build our application with a route
     let app: Router = Router::new()
         .route("/", get(home))
         .route("/accounts", get(accounts::search).post(accounts::create))
         // .layer(TraceLayer::new_for_http())
-        .with_state(pool);
+        .with_state(state);
 
     // run our app with hyper, listening globally on port 8000
     let addr: &str = "0.0.0.0:8000";

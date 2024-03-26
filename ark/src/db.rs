@@ -1,4 +1,7 @@
-use crate::errors::{error_response, ErrorResponse};
+use crate::{
+    errors::{error_response, ErrorResponse},
+    AppState,
+};
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts},
@@ -20,7 +23,7 @@ pub struct Connection(
 impl<S> FromRequestParts<S> for Connection
 where
     S: Send + Sync,
-    Pool: FromRef<S>,
+    AppState: FromRef<S>,
 {
     type Rejection = (StatusCode, Json<ErrorResponse>);
 
@@ -28,10 +31,10 @@ where
         _parts: &mut request::Parts,
         state: &S,
     ) -> Result<Self, Self::Rejection> {
-        let pool: Pool = Pool::from_ref(state);
+        let app_state: AppState = AppState::from_ref(state);
 
         let conn: bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>> =
-            pool.get_owned().await.map_err(error_response)?;
+            app_state.pool.get_owned().await.map_err(error_response)?;
 
         Ok(Self(conn))
     }

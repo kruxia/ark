@@ -1,7 +1,7 @@
 use crate::{
     db, errors,
     models::account::{Account, NewAccount},
-    schema,
+    schema, AppState,
 };
 use axum::{extract::State, http::StatusCode, response::Json};
 use diesel::prelude::*;
@@ -10,11 +10,11 @@ use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
 
 pub async fn create(
-    State(pool): State<db::Pool>,
+    State(state): State<AppState>,
     Json(new_account): Json<NewAccount>,
 ) -> Result<Json<Account>, (StatusCode, Json<errors::ErrorResponse>)> {
     // get a connection to the pool
-    let mut conn = pool.get().await.map_err(errors::error_response)?;
+    let mut conn = state.pool.get().await.map_err(errors::error_response)?;
 
     let record = conn
         .transaction::<Account, errors::ArkError, _>(|mut conn| {
@@ -26,8 +26,7 @@ pub async fn create(
                     .await?;
 
                 // create a bucket for the account
-                // - (TODO: with a static client for greater efficiency)
-                let _ = ark_s3::create_bucket(&ark_s3::new_client(), record.id.to_string())
+                let _ = ark_s3::create_bucket(&state.s3, record.id.to_string())
                     .await
                     .map_err(errors::ark_error)?;
 
