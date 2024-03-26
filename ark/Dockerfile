@@ -5,8 +5,8 @@ RUN apt-get update \
 COPY Cargo.lock Cargo.toml ./
 COPY ./ark ./ark
 COPY ./ark-s3 ./ark-s3
-RUN cargo build --release --bin ark \
-    && upx target/release/ark
+RUN cargo build --release --bin ark 
+RUN upx target/release/ark
 
 FROM debian:bullseye-slim
 # RUN apt-get update && apt-get install -y extra-runtime-dependencies && rm -rf /var/lib/apt/lists/*

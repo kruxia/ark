@@ -12,20 +12,22 @@ use diesel_async::RunQueryDsl;
 pub async fn create(
     State(state): State<AppState>,
     Json(new_account): Json<NewAccount>,
-) -> Result<Json<Account>, (StatusCode, Json<errors::ErrorResponse>)> {
+) -> Result<(StatusCode, Json<Account>), (StatusCode, Json<errors::ErrorResponse>)> {
     // get a connection to the pool
     let mut conn = state.pool.get().await.map_err(errors::error_response)?;
 
+    // Create the account database record and S3 bucket in a single database transaction
     let record = conn
         .transaction::<Account, errors::ArkError, _>(|mut conn| {
             async move {
+                // create the database record
                 let record = diesel::insert_into(schema::account::table)
                     .values(new_account)
                     .returning(Account::as_returning())
                     .get_result(&mut conn)
                     .await?;
 
-                // create a bucket for the account
+                // create the bucket for the account
                 let _ = ark_s3::create_bucket(&state.s3, record.id.to_string())
                     .await
                     .map_err(errors::ark_error)?;
@@ -37,7 +39,7 @@ pub async fn create(
         .await
         .map_err(errors::error_response)?;
 
-    Ok(Json(record))
+    Ok((StatusCode::CREATED, Json(record)))
 }
 
 pub async fn search(
