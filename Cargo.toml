@@ -3,4 +3,7 @@ members = ["ark", "ark-s3"]
 resolver = "2"
 
 [profile.dev]
-opt-level = 1
+opt-level = 0
+
+[profile.release]
+opt-level = 3

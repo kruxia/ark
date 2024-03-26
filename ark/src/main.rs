@@ -31,13 +31,21 @@ async fn main() {
 
     tracing::debug!("Initialized tracing");
 
-    // database
+    // database pool
     let db_url: String = std::env::var("DATABASE_URL").unwrap();
     let db_config: AsyncDieselConnectionManager<AsyncPgConnection> =
         AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
+    let pool_max_size: u32 = std::env::var("POOL_MAX_SIZE")
+        .unwrap_or(String::from("4"))
+        .parse()
+        .unwrap();
+    let pool_min_idle: u32 = std::env::var("POOL_MIN_IDLE")
+        .unwrap_or(String::from("1"))
+        .parse()
+        .unwrap();
     let pool: db::Pool = db::Pool::builder()
-        // .max_size(4)
-        // .min_idle(1)
+        .max_size(pool_max_size)
+        .min_idle(pool_min_idle)
         .build(db_config)
         .await
         .unwrap();

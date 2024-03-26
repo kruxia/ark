@@ -1,4 +1,4 @@
-use crate::errors::{internal_error, ErrorResponse};
+use crate::errors::{error_response, ErrorResponse};
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts},
@@ -31,7 +31,7 @@ where
         let pool: Pool = Pool::from_ref(state);
 
         let conn: bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>> =
-            pool.get_owned().await.map_err(internal_error)?;
+            pool.get_owned().await.map_err(error_response)?;
 
         Ok(Self(conn))
     }
