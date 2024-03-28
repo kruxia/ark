@@ -6,21 +6,15 @@ use std::fmt::Display;
 #[derive(Serialize)]
 pub struct ErrorResponse {
     error: String,
-    // message: String
 }
 
-// pub enum InternalError {
-//     DieselResultError(diesel::result::Error),
-//     S3CreateBucketError(aws_sdk_s3::operation::create_bucket::CreateBucketError),
-//     S3ListBucketsError(aws_sdk_s3::operation::list_buckets::ListBucketsError),
-// }
-
 /// Any error_response maps to a `500 Internal Server Error` response.
-pub fn error_response<E>(err: E) -> (StatusCode, Json<ErrorResponse>)
-where
-    E: std::error::Error,
-{
-    let status_code = StatusCode::INTERNAL_SERVER_ERROR;
+pub fn error_response(err: ArkError) -> (StatusCode, Json<ErrorResponse>) {
+    let status_code = match err.kind {
+        ArkErrorKind::KeyError => StatusCode::NOT_FOUND,
+        ArkErrorKind::ValueError => StatusCode::CONFLICT,
+        ArkErrorKind::SystemError => StatusCode::INTERNAL_SERVER_ERROR,
+    };
     (
         status_code,
         Json(ErrorResponse {
@@ -29,28 +23,28 @@ where
     )
 }
 
-// pub enum ErrorLevel {
-//     Notice,
-//     Warn,
-//     Error,
-//     Critical,
-// }
-
-// pub fn ark_error<E>(err: E, message: &str) -> ArkError
+/// Generalized system error
 pub fn ark_error<E>(err: E) -> ArkError
 where
     E: std::error::Error,
 {
     ArkError {
-        error: err.to_string(),
-        // message: message.to_string(),
+        kind: ArkErrorKind::SystemError,
+        error: format!("{:?}", err),
     }
 }
 
 #[derive(Debug)]
 pub struct ArkError {
-    error: String,
-    // message: String,
+    pub kind: ArkErrorKind,
+    pub error: String,
+}
+
+#[derive(Debug)]
+pub enum ArkErrorKind {
+    ValueError,
+    KeyError,
+    SystemError,
 }
 
 impl Display for ArkError {
@@ -63,14 +57,5 @@ impl Display for ArkError {
 impl std::error::Error for ArkError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         None
-    }
-}
-
-impl core::convert::From<diesel::result::Error> for ArkError {
-    fn from(err: diesel::result::Error) -> ArkError {
-        let message = err.to_string();
-        ArkError {
-            error: format!("Diesel result error: {message}"),
-        }
     }
 }

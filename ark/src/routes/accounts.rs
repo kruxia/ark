@@ -14,7 +14,7 @@ pub async fn create(
     Json(new_account): Json<NewAccount>,
 ) -> Result<(StatusCode, Json<Account>), (StatusCode, Json<errors::ErrorResponse>)> {
     // get a connection to the pool
-    let mut conn = state.pool.get().await.map_err(errors::error_response)?;
+    let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
 
     // Create the account database record and S3 bucket in a single database transaction
     let record = conn
@@ -26,9 +26,7 @@ pub async fn create(
                     .returning(Account::as_returning())
                     .get_result(&mut conn)
                     .await
-                    // TODO: Some errors will be 4xx level
-                    // - "id" is given and already exists => 409
-                    .map_err(errors::ark_error)?;
+                    .map_err(db::diesel_result_error)?;
 
                 // create the bucket for the account
                 let _ = ark_s3::create_bucket(&state.s3, record.id.to_string())
@@ -54,7 +52,7 @@ pub async fn search(
         .select(Account::as_select())
         .load(&mut conn)
         .await
-        .map_err(errors::error_response)?;
+        .map_err(db::diesel_result_error_response)?;
 
     // this will be converted into a JSON response
     // with a status code of `200 OK`
