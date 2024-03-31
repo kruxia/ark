@@ -2,13 +2,13 @@
 ## file_version
 
 A file_version is an identifiable set of changes at a particular point in time. Every
-file version has zero or more objects; every object has one or more versions. Any set of
-changes is made as a new version.
+file_version has zero or more objects; every object has one or more file_versions. Any set of
+changes is made as a new file_version.
 
-TODO: file versions are currently linear: The latest version is implicitly the most
+TODO: file_versions are currently linear: The latest file_version is implicitly the most
 recent one, and it is implicitly based on the previous one in time. Adding a "base_id"
-would enable a tree of versions; also adding a "merge_base_id" would enable 2-way merges
-and versions to be a DAG.
+would enable a tree of file_versions; also adding a "merge_base_id" would enable 2-way merges
+and file_versions to be a DAG.
 */
 
 CREATE SEQUENCE file_version_id AS smallint CYCLE;
