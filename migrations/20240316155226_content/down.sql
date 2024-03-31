@@ -1,3 +1,3 @@
 
-DROP TABLE content_version;
 DROP TABLE content;
+DROP SEQUENCE content_id;
