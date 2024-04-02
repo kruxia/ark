@@ -20,7 +20,7 @@ pub async fn create(
     let record = conn
         .transaction::<Account, errors::ArkError, _>(|mut conn| {
             async move {
-                // create the database record
+                // create the database records
                 let record = diesel::insert_into(schema::account::table)
                     .values(new_account)
                     .returning(Account::as_returning())
@@ -54,7 +54,7 @@ pub async fn search(
         .await
         .map_err(db::diesel_result_error_response)?;
 
-    // this will be converted into a JSON response
+    // this will be converted into a JSON responses
     // with a status code of `200 OK`
     tracing::debug!("{data:?}");
     Ok(Json(data))

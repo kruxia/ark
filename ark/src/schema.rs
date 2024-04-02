@@ -10,16 +10,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    content (id) {
-        id -> Uuid,
-        account_id -> Uuid,
-        created -> Timestamptz,
-        filesize -> Int8,
-        meta -> Nullable<Jsonb>,
-    }
-}
-
-diesel::table! {
     ext_mimetype (ext) {
         ext -> Varchar,
         name -> Varchar,
@@ -29,11 +19,11 @@ diesel::table! {
 diesel::table! {
     file_item (account_id, filepath, version_id) {
         account_id -> Uuid,
-        filepath -> Text,
         version_id -> Uuid,
-        content_id -> Uuid,
+        filepath -> Text,
         created -> Timestamptz,
         mimetype -> Text,
+        filesize -> Int8,
         meta -> Nullable<Jsonb>,
     }
 }
@@ -53,17 +43,14 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(content -> account (account_id));
 diesel::joinable!(ext_mimetype -> mimetype (name));
 diesel::joinable!(file_item -> account (account_id));
-diesel::joinable!(file_item -> content (content_id));
 diesel::joinable!(file_item -> file_version (version_id));
 diesel::joinable!(file_item -> mimetype (mimetype));
 diesel::joinable!(file_version -> account (account_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     account,
-    content,
     ext_mimetype,
     file_item,
     file_version,

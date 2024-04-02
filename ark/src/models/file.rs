@@ -30,8 +30,8 @@ pub struct NewFileVersion {
 pub struct FileItem {
     pub account_id: Uuid,
     pub version_id: Uuid,
-    pub content_id: Uuid,
     pub filepath: String,
+
     pub created: DateTime<Utc>,
     pub mimetype: String,
     pub meta: Option<serde_json::Value>,
@@ -43,8 +43,8 @@ pub struct FileItem {
 pub struct NewFileItem {
     pub account_id: Uuid,
     pub version_id: Uuid,
-    pub content_id: Uuid,
     pub filepath: String,
+
     pub created: Option<DateTime<Utc>>,
     pub mimetype: String,
     pub meta: Option<serde_json::Value>,
