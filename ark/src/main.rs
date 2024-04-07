@@ -1,6 +1,11 @@
-use axum::{http::StatusCode, response::Json, routing::get, Router};
+use axum::{
+    http::StatusCode,
+    response::Json,
+    routing::{get, post, put},
+    Router,
+};
 use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
-use routes::accounts;
+use routes::{accounts, files};
 use serde::Serialize;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
@@ -34,7 +39,6 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_max_level(tracing_level)
         .init();
-
     tracing::debug!("Initialized tracing");
 
     // database pool
@@ -58,13 +62,15 @@ async fn main() {
 
     let state = AppState {
         pool,
-        s3: ark_s3::new_client(),
+        s3: ark_s3::client::new_client(),
     };
 
     // build our application with a route
     let app: Router = Router::new()
         .route("/", get(home))
         .route("/accounts", get(accounts::search).post(accounts::create))
+        .route("/versions", post(files::create_version))
+        .route("/files/:account_id/*filepath", put(files::upload_file))
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 

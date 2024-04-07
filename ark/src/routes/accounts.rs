@@ -29,7 +29,7 @@ pub async fn create(
                     .map_err(db::diesel_result_error)?;
 
                 // create the bucket for the account
-                let _ = ark_s3::create_bucket(&state.s3, record.id.to_string())
+                let _ = ark_s3::bucket::create_bucket(&state.s3, record.id.to_string())
                     .await
                     .map_err(errors::ark_error)?;
 

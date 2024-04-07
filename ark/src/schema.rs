@@ -17,7 +17,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    file_item (account_id, filepath, version_id) {
+    file_version (account_id, filepath, version_id) {
         account_id -> Uuid,
         version_id -> Uuid,
         filepath -> Text,
@@ -29,7 +29,13 @@ diesel::table! {
 }
 
 diesel::table! {
-    file_version (id) {
+    mimetype (name) {
+        name -> Varchar,
+    }
+}
+
+diesel::table! {
+    version (id) {
         id -> Uuid,
         account_id -> Uuid,
         created -> Timestamptz,
@@ -37,22 +43,16 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    mimetype (name) {
-        name -> Varchar,
-    }
-}
-
 diesel::joinable!(ext_mimetype -> mimetype (name));
-diesel::joinable!(file_item -> account (account_id));
-diesel::joinable!(file_item -> file_version (version_id));
-diesel::joinable!(file_item -> mimetype (mimetype));
 diesel::joinable!(file_version -> account (account_id));
+diesel::joinable!(file_version -> mimetype (mimetype));
+diesel::joinable!(file_version -> version (version_id));
+diesel::joinable!(version -> account (account_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     account,
     ext_mimetype,
-    file_item,
     file_version,
     mimetype,
+    version,
 );
