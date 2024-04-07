@@ -9,10 +9,9 @@ pub fn new_client() -> Client {
     let secret_access_key = std::env::var("AWS_SECRET_ACCESS_KEY").unwrap();
     let region_name = std::env::var("AWS_REGION").unwrap();
 
-    println!("endpoint_url = {}", endpoint_url);
-    println!("access_key_id = {}", access_key_id);
-    println!("secret_access_key = {}", secret_access_key);
-    println!("region_name = {}", region_name);
+    tracing::debug!("endpoint_url = {}", endpoint_url);
+    tracing::debug!("access_key_id = {}", access_key_id);
+    tracing::debug!("region_name = {}", region_name);
 
     let config: Config = Builder::new()
         .behavior_version_latest()
