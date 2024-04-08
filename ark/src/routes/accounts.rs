@@ -9,6 +9,7 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
 
+/// Create a new account.
 pub async fn create(
     State(state): State<AppState>,
     Json(new_account): Json<NewAccount>,
@@ -43,6 +44,10 @@ pub async fn create(
     Ok((StatusCode::CREATED, Json(record)))
 }
 
+// ## TODO ##
+// Update an account {title, meta}
+
+/// Search for accounts (**TODO**: with the given parameters).
 pub async fn search(
     db::Connection(mut conn): db::Connection,
     // Parse the request body as JSON into a `SearchAccount` type Json(payload):

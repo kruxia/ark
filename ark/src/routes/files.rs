@@ -10,7 +10,8 @@ Each file is identified by its filepath and has one or more versions.
 use crate::{
     db,
     errors::{ark_error, error_response, ArkError, ErrorResponse},
-    models::file::{self, FileVersion, NewFileVersion, NewVersion, NewVersionRequest, Version},
+    models::file::{ExtMimetype, FileVersion, NewFileVersion},
+    models::version::{NewVersion, Version},
     schema, AppState,
 };
 use axum::{
@@ -18,7 +19,6 @@ use axum::{
     http::StatusCode,
     response::Json,
 };
-use chrono::DateTime;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::AsyncConnection;
@@ -28,36 +28,7 @@ use uuid::Uuid;
 
 const MAX_FILE_SIZE: usize = 100_000_000;
 
-pub async fn create_version(
-    State(state): State<AppState>,
-    Json(new_version_request): Json<NewVersionRequest>,
-) -> Result<(StatusCode, Json<Version>), (StatusCode, Json<ErrorResponse>)> {
-    let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
-
-    let version = conn
-        .transaction::<Version, ArkError, _>(|mut conn| {
-            async move {
-                let new_version = NewVersion {
-                    account_id: new_version_request.account_id,
-                    meta: new_version_request.meta,
-                };
-                let version = diesel::insert_into(schema::version::table)
-                    .values(new_version)
-                    .returning(Version::as_returning())
-                    .get_result(&mut conn)
-                    .await
-                    .map_err(db::diesel_result_error)?;
-
-                Ok(version)
-            }
-            .scope_boxed()
-        })
-        .await
-        .map_err(error_response)?;
-
-    Ok((StatusCode::CREATED, Json(version)))
-}
-
+/// Upload a single file with a new version.
 pub async fn upload_file(
     State(state): State<AppState>,
     Path((account_id, filepath)): Path<(Uuid, String)>,
@@ -70,6 +41,7 @@ pub async fn upload_file(
             async move {
                 // create a version for this file
                 let new_version = NewVersion {
+                    id: Some(Uuid::now_v7()),
                     account_id: account_id,
                     meta: None,
                 };
@@ -87,7 +59,7 @@ pub async fn upload_file(
                     .map_or_else(|| String::from(""), |cap| String::from(&cap["ext"]));
                 let ext_mimetype = schema::ext_mimetype::table
                     .filter(schema::ext_mimetype::ext.eq(ext))
-                    .select(file::ExtMimetype::as_select())
+                    .select(ExtMimetype::as_select())
                     .first(&mut conn)
                     .await;
                 let mimetype = match ext_mimetype {
@@ -109,11 +81,13 @@ pub async fn upload_file(
                 // get the files attributes: filesize
                 let filesize = body.len() as i64;
 
+                // TODO: What if this file content has been prevously uploaded?
+
                 ark_s3::upload::upload_object_stream(
                     &state.s3,
                     &account_id.to_string(),
                     body.into(),
-                    &filepath,
+                    format!("{}/{}", &filepath, version.id).as_str(),
                     Some(&mimetype),
                 )
                 .await
@@ -144,6 +118,18 @@ pub async fn upload_file(
 
     Ok((StatusCode::OK, Json(file_version)))
 }
+
+// ## TODO ##
+// Upload one or more files in a new version.
+
+// ## TODO ##
+// Search for and list files with the given parameters.
+
+// ## TODO ##
+// Get the content of the given file, optionally at the given version (default=latest).
+
+// ## TODO ##
+// Delete the given file (= mark it as deleted).
 
 /* --------------------------------------------------------------------
 /// Upload one or more files (multipart form with streaming upload)

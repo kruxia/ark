@@ -5,7 +5,7 @@ use axum::{
     Router,
 };
 use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
-use routes::{accounts, files};
+use routes::{accounts, files, versions};
 use serde::Serialize;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
@@ -69,8 +69,8 @@ async fn main() {
     let app: Router = Router::new()
         .route("/", get(home))
         .route("/accounts", get(accounts::search).post(accounts::create))
-        .route("/versions", post(files::create_version))
         .route("/files/:account_id/*filepath", put(files::upload_file))
+        .route("/versions", post(versions::create_version))
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
