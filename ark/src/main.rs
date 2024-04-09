@@ -70,7 +70,12 @@ async fn main() {
         .route("/", get(home))
         .route("/accounts", get(accounts::search).post(accounts::create))
         .route("/files/:account_id/*filepath", put(files::upload_file))
+        .route(
+            "/files/history/:account_id/*filepath",
+            get(files::get_file_history),
+        )
         .route("/versions", post(versions::create_version))
+        .route("/versions/:version_id", get(versions::get_version_files))
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 

@@ -1,3 +1,4 @@
+use crate::models::file::FileVersion;
 use crate::schema;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
@@ -21,4 +22,13 @@ pub struct Version {
     pub account_id: Uuid,
     pub created: DateTime<Utc>,
     pub meta: Option<serde_json::Value>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct VersionData {
+    pub id: Uuid,
+    pub account_id: Uuid,
+    pub created: DateTime<Utc>,
+    pub meta: Option<serde_json::Value>,
+    pub files: Vec<FileVersion>,
 }

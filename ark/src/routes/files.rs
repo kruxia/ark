@@ -10,7 +10,7 @@ Each file is identified by its filepath and has one or more versions.
 use crate::{
     db,
     errors::{ark_error, error_response, ArkError, ErrorResponse},
-    models::file::{ExtMimetype, FileVersion, NewFileVersion},
+    models::file::{ExtMimetype, FileHistory, FileVersion, NewFileVersion},
     models::version::{NewVersion, Version},
     schema, AppState,
 };
@@ -123,10 +123,46 @@ pub async fn upload_file(
 // Upload one or more files in a new version.
 
 // ## TODO ##
-// Search for and list files with the given parameters.
+// Get the history of the given file.
+pub async fn get_file_history(
+    db::Connection(mut conn): db::Connection,
+    Path((account_id, filepath)): Path<(Uuid, String)>,
+) -> Result<(StatusCode, Json<FileHistory>), (StatusCode, Json<ErrorResponse>)> {
+    let file_versions: Vec<FileVersion> = schema::file_version::table
+        .filter(schema::file_version::account_id.eq(account_id))
+        .filter(schema::file_version::filepath.eq(&filepath))
+        .select(FileVersion::as_select())
+        .load(&mut conn)
+        .await
+        .map_err(db::diesel_result_error_response)?;
+
+    if file_versions.len() == 0 {
+        Err((
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: format!(
+                    "No file versions found: account_id={}, filepath={}",
+                    account_id, filepath
+                ),
+            }),
+        ))
+    } else {
+        Ok((
+            StatusCode::OK,
+            Json(FileHistory {
+                account_id: account_id,
+                filepath: filepath,
+                versions: file_versions,
+            }),
+        ))
+    }
+}
 
 // ## TODO ##
 // Get the content of the given file, optionally at the given version (default=latest).
+
+// ## TODO ##
+// Search for and list files with the given parameters.
 
 // ## TODO ##
 // Delete the given file (= mark it as deleted).

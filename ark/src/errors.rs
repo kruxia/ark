@@ -5,7 +5,7 @@ use std::fmt::Display;
 /// Return ErrorResponse struct with details of any error that occurs
 #[derive(Serialize)]
 pub struct ErrorResponse {
-    error: String,
+    pub error: String,
 }
 
 /// Any error_response maps to a `500 Internal Server Error` response.

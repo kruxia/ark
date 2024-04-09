@@ -38,3 +38,10 @@ pub struct NewFileVersion {
     pub mimetype: String,
     pub meta: Option<serde_json::Value>,
 }
+
+#[derive(Serialize, Debug)]
+pub struct FileHistory {
+    pub account_id: Uuid,
+    pub filepath: String,
+    pub versions: Vec<FileVersion>,
+}
