@@ -9,6 +9,7 @@ use uuid::Uuid;
 #[diesel(table_name = schema::account)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Account {
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub id: Uuid,
     pub created: DateTime<Utc>,
     pub title: Option<String>,

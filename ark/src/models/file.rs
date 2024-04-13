@@ -16,7 +16,9 @@ pub struct ExtMimetype {
 #[diesel(table_name = schema::file_version)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct FileVersion {
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub account_id: Uuid,
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub version_id: Uuid,
     pub filepath: String,
     pub filesize: i64,
@@ -41,6 +43,7 @@ pub struct NewFileVersion {
 
 #[derive(Serialize, Debug)]
 pub struct FileHistory {
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub account_id: Uuid,
     pub filepath: String,
     pub versions: Vec<FileVersion>,

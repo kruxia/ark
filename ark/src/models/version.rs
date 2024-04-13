@@ -18,7 +18,9 @@ pub struct NewVersion {
 #[diesel(table_name = schema::version)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Version {
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub id: Uuid,
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub account_id: Uuid,
     pub created: DateTime<Utc>,
     pub meta: Option<serde_json::Value>,
@@ -26,7 +28,9 @@ pub struct Version {
 
 #[derive(Serialize, Debug)]
 pub struct VersionData {
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub id: Uuid,
+    #[serde(serialize_with = "uuid::serde::simple::serialize")]
     pub account_id: Uuid,
     pub created: DateTime<Utc>,
     pub meta: Option<serde_json::Value>,
