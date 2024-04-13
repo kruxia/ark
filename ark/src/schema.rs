@@ -25,7 +25,6 @@ diesel::table! {
         mimetype -> Text,
         filesize -> Int8,
         meta -> Nullable<Jsonb>,
-        notes -> Nullable<Text>,
     }
 }
 
