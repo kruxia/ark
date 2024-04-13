@@ -34,6 +34,13 @@ where
     }
 }
 
+pub fn ark_error_response<E>(err: E) -> (StatusCode, Json<ErrorResponse>)
+where
+    E: std::error::Error,
+{
+    error_response(ark_error(err))
+}
+
 #[derive(Debug)]
 pub struct ArkError {
     pub kind: ArkErrorKind,

@@ -9,21 +9,26 @@ Each file is identified by its filepath and has one or more versions.
 */
 use crate::{
     db,
-    errors::{ark_error, error_response, ArkError, ErrorResponse},
-    models::file::{ExtMimetype, FileHistory, FileVersion, NewFileVersion},
-    models::version::{NewVersion, Version},
+    errors::{ark_error, ark_error_response, error_response, ArkError, ErrorResponse},
+    models::{
+        file::{ExtMimetype, FileHistory, FileVersion, NewFileVersion},
+        version::{NewVersion, Version},
+    },
     schema, AppState,
 };
 use axum::{
+    body::Body,
     extract::{Path, Query, Request, State},
-    http::StatusCode,
-    response::Json,
+    http::{header, StatusCode},
+    response::{IntoResponse, Json},
 };
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
 use regex::Regex;
+use schema::file_version;
+use serde::Deserialize;
 use uuid::Uuid;
 
 const MAX_FILE_SIZE: usize = 100_000_000;
@@ -32,7 +37,7 @@ const MAX_FILE_SIZE: usize = 100_000_000;
 pub async fn upload_file(
     State(state): State<AppState>,
     Path((account_id, filepath)): Path<(Uuid, String)>,
-    Query(query): Query<serde_json::Value>,
+    Query(meta): Query<serde_json::Value>,
     request: Request,
 ) -> Result<(StatusCode, Json<FileVersion>), (StatusCode, Json<ErrorResponse>)> {
     let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
@@ -95,14 +100,14 @@ pub async fn upload_file(
 
                 // create a file_version for this file
                 let new_file_version = NewFileVersion {
-                    account_id: account_id,
+                    account_id,
                     version_id: version.id,
-                    filepath: filepath,
-                    filesize: filesize,
-                    mimetype: mimetype,
-                    meta: Some(query),
+                    filepath,
+                    filesize,
+                    mimetype,
+                    meta: Some(meta),
                 };
-                let file_version = diesel::insert_into(schema::file_version::table)
+                let file_version = diesel::insert_into(file_version::table)
                     .values(new_file_version)
                     .returning(FileVersion::as_returning())
                     .get_result(&mut conn)
@@ -122,14 +127,72 @@ pub async fn upload_file(
 // ## TODO ##
 // Upload one or more files in a new version.
 
+#[derive(Deserialize, Debug)]
+pub struct FileQuery {
+    pub _version: Option<Uuid>,
+}
+
+// Get the content of the given file, optionally at the given version (default=latest).
+pub async fn get_file_data(
+    State(state): State<AppState>,
+    Path((account_id, filepath)): Path<(Uuid, String)>,
+    Query(file_query): Query<FileQuery>,
+    _request: Request,
+) -> Result<impl IntoResponse, (StatusCode, Json<ErrorResponse>)> {
+    let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
+
+    // get the given or latest file_version
+    let file_version = match file_query._version {
+        Some(version_id) => {
+            file_version::table
+                .filter(file_version::account_id.eq(account_id))
+                .filter(file_version::filepath.eq(&filepath))
+                .filter(file_version::version_id.eq(&version_id))
+                .select(FileVersion::as_select())
+                .first(&mut conn)
+                .await
+        }
+        _ => {
+            file_version::table
+                .filter(file_version::account_id.eq(account_id))
+                .filter(file_version::filepath.eq(&filepath))
+                .select(FileVersion::as_select())
+                .order_by(file_version::version_id.desc())
+                .first(&mut conn)
+                .await
+        }
+    }
+    .map_err(db::diesel_result_error_response)?;
+
+    let file_key = format!("{}/{}/{}", &account_id, &filepath, &file_version.version_id);
+
+    let object_result =
+        ark_s3::object::get_object(&state.s3, &state.settings.s3_bucket_name, &file_key)
+            .await
+            .map_err(ark_error_response)?;
+
+    // TODO: Stream the ByteStream to the client directly without reading into bytes
+    let body_data = object_result
+        .body
+        .collect()
+        .await
+        .map_err(ark_error_response)?;
+
+    let body = Body::from(body_data.into_bytes());
+
+    let headers = [(header::CONTENT_TYPE, file_version.mimetype)];
+
+    Ok((headers, body))
+}
+
 // Get the history of the given file.
 pub async fn get_history(
     db::Connection(mut conn): db::Connection,
     Path((account_id, filepath)): Path<(Uuid, String)>,
 ) -> Result<(StatusCode, Json<FileHistory>), (StatusCode, Json<ErrorResponse>)> {
-    let versions: Vec<FileVersion> = schema::file_version::table
-        .filter(schema::file_version::account_id.eq(account_id))
-        .filter(schema::file_version::filepath.eq(&filepath))
+    let versions: Vec<FileVersion> = file_version::table
+        .filter(file_version::account_id.eq(account_id))
+        .filter(file_version::filepath.eq(&filepath))
         .select(FileVersion::as_select())
         .load(&mut conn)
         .await
@@ -156,9 +219,6 @@ pub async fn get_history(
         ))
     }
 }
-
-// ## TODO ##
-// Get the content of the given file, optionally at the given version (default=latest).
 
 // ## TODO ##
 // Search for and list files with the given parameters.

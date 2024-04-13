@@ -90,8 +90,11 @@ async fn main() {
     // build our application with a route
     let app: Router = Router::new()
         .route("/", get(home))
-        .route("/accounts", get(accounts::search).post(accounts::upsert))
-        .route("/files/:account_id/*filepath", put(files::upload_file))
+        .route("/accounts", post(accounts::upsert).get(accounts::search))
+        .route(
+            "/files/:account_id/*filepath",
+            put(files::upload_file).get(files::get_file_data),
+        )
         .route("/history/:account_id/*filepath", get(files::get_history))
         .route("/versions", post(versions::create_version))
         .route("/versions/:version_id", get(versions::get_version))
