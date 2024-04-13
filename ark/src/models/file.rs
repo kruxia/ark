@@ -45,3 +45,8 @@ pub struct FileHistory {
     pub filepath: String,
     pub versions: Vec<FileVersion>,
 }
+
+#[derive(Deserialize, Debug)]
+pub struct FileQuery {
+    pub _version: Option<Uuid>,
+}

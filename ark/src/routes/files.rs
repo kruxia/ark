@@ -11,7 +11,7 @@ use crate::{
     db,
     errors::{ark_error, ark_error_response, error_response, ArkError, ErrorResponse},
     models::{
-        file::{ExtMimetype, FileHistory, FileVersion, NewFileVersion},
+        file::{ExtMimetype, FileHistory, FileQuery, FileVersion, NewFileVersion},
         version::{NewVersion, Version},
     },
     schema, AppState,
@@ -28,7 +28,6 @@ use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
 use regex::Regex;
 use schema::file_version;
-use serde::Deserialize;
 use uuid::Uuid;
 
 const MAX_FILE_SIZE: usize = 100_000_000;
@@ -127,12 +126,7 @@ pub async fn upload_file(
 // ## TODO ##
 // Upload one or more files in a new version.
 
-#[derive(Deserialize, Debug)]
-pub struct FileQuery {
-    pub _version: Option<Uuid>,
-}
-
-// Get the content of the given file, optionally at the given version (default=latest).
+/// Get the content of the given file, optionally at the given version (default=latest).
 pub async fn get_file_data(
     State(state): State<AppState>,
     Path((account_id, filepath)): Path<(Uuid, String)>,
@@ -185,7 +179,7 @@ pub async fn get_file_data(
     Ok((headers, body))
 }
 
-// Get the history of the given file.
+/// Get the history of the given file.
 pub async fn get_history(
     db::Connection(mut conn): db::Connection,
     Path((account_id, filepath)): Path<(Uuid, String)>,

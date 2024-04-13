@@ -46,8 +46,6 @@ pub async fn upsert(
 /// Search for accounts (**TODO**: with the given parameters).
 pub async fn search(
     db::Connection(mut conn): db::Connection,
-    // Parse the request body as JSON into a `SearchAccount` type Json(payload):
-    // Json<SearchAccount>,
 ) -> Result<Json<Vec<Account>>, (StatusCode, Json<errors::ErrorResponse>)> {
     let data: Vec<Account> = account::table
         .select(Account::as_select())
@@ -55,8 +53,6 @@ pub async fn search(
         .await
         .map_err(db::diesel_result_error_response)?;
 
-    // this will be converted into a JSON responses
-    // with a status code of `200 OK`
     tracing::debug!("{data:?}");
     Ok(Json(data))
 }
