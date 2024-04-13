@@ -15,7 +15,7 @@ pub struct Account {
     pub meta: Option<serde_json::Value>,
 }
 
-#[derive(Deserialize, Insertable, Debug)]
+#[derive(Deserialize, Insertable, Debug, AsChangeset)]
 #[diesel(table_name = schema::account)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NewAccount {
