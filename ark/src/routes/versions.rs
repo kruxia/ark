@@ -47,9 +47,8 @@ pub async fn create_version(
     Ok((StatusCode::CREATED, Json(version)))
 }
 
-// ## TODO ##
-// Get the metadata and files that were modified in the given version.
-pub async fn get_version_files(
+/// Get the metadata and files that were modified in the given version.
+pub async fn get_version(
     db::Connection(mut conn): db::Connection,
     Path(version_id): Path<Uuid>,
 ) -> Result<(StatusCode, Json<VersionData>), (StatusCode, Json<ErrorResponse>)> {
