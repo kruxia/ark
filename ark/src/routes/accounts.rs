@@ -33,11 +33,6 @@ pub async fn upsert(
                     .await
                     .map_err(db::diesel_result_error)?;
 
-                // create the bucket for the account
-                let _ = ark_s3::bucket::create_bucket(&state.s3, record.id.to_string())
-                    .await
-                    .map_err(errors::ark_error)?;
-
                 Ok(record)
             }
             .scope_boxed()

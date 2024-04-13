@@ -7,7 +7,7 @@ use std::path::Path;
 async fn main() {
     let client = client::new_client();
     let bucket_name = String::from("test-bucket");
-    let create_bucket_result = bucket::create_bucket(&client, bucket_name).await;
+    let create_bucket_result = bucket::create(&client, &bucket_name).await;
     println!("{:?}", create_bucket_result);
     let list_buckets_result = bucket::list_buckets(&client).await;
     match list_buckets_result {

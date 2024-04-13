@@ -8,9 +8,17 @@ use aws_sdk_s3::{
     Client,
 };
 
-pub async fn create_bucket(
+pub async fn exists(client: &Client, name: &str) -> bool {
+    let result = client.head_bucket().bucket(name).send().await;
+    match result {
+        Ok(_) => true,
+        _ => false,
+    }
+}
+
+pub async fn create(
     client: &Client,
-    name: String,
+    name: &str,
 ) -> Result<CreateBucketOutput, SdkError<CreateBucketError>> {
     let constraint = BucketLocationConstraint::from("");
     let cfg = CreateBucketConfiguration::builder()

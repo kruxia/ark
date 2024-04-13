@@ -85,9 +85,9 @@ pub async fn upload_file(
 
                 ark_s3::upload::upload_object_stream(
                     &state.s3,
-                    &account_id.to_string(),
+                    &state.settings.s3_bucket_name,
                     body.into(),
-                    format!("{}/{}", &filepath, version.id).as_str(),
+                    format!("{}/{}/{}", &account_id, &filepath, version.id).as_str(),
                     Some(&mimetype),
                 )
                 .await
