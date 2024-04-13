@@ -91,6 +91,7 @@ async fn main() {
     let app: Router = Router::new()
         .route("/", get(home))
         .route("/accounts", post(accounts::upsert).get(accounts::search))
+        .route("/files/:account_id", get(files::search))
         .route(
             "/files/:account_id/*filepath",
             put(files::upload_file).get(files::get_file_data),

@@ -214,8 +214,20 @@ pub async fn get_history(
     }
 }
 
-// ## TODO ##
-// Search for and list files with the given parameters.
+/// Search for and list files with the given parameters.
+pub async fn search(
+    db::Connection(mut conn): db::Connection,
+    Path(account_id): Path<Uuid>,
+) -> Result<Json<Vec<FileVersion>>, (StatusCode, Json<ErrorResponse>)> {
+    let file_versions: Vec<FileVersion> = file_version::table
+        .select(FileVersion::as_select())
+        .filter(file_version::account_id.eq(account_id))
+        .load(&mut conn)
+        .await
+        .map_err(db::diesel_result_error_response)?;
+
+    Ok(Json(file_versions))
+}
 
 // ## TODO ##
 // Delete the given file (= mark it as deleted).
