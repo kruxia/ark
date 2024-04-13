@@ -23,7 +23,7 @@ use uuid::Uuid;
 pub async fn create_version(
     State(state): State<AppState>,
     Json(mut new_version): Json<NewVersion>,
-) -> Result<(StatusCode, Json<Version>), (StatusCode, Json<ErrorResponse>)> {
+) -> Result<(StatusCode, Json<VersionData>), (StatusCode, Json<ErrorResponse>)> {
     let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
 
     let version = conn
@@ -44,7 +44,16 @@ pub async fn create_version(
         .await
         .map_err(error_response)?;
 
-    Ok((StatusCode::CREATED, Json(version)))
+    Ok((
+        StatusCode::CREATED,
+        Json(VersionData {
+            id: version.id,
+            account_id: version.account_id,
+            created: version.created,
+            meta: version.meta,
+            files: Vec::new(),
+        }),
+    ))
 }
 
 /// Get the metadata and files that were modified in the given version.
