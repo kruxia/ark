@@ -24,6 +24,7 @@ pub struct FileVersion {
     pub created: DateTime<Utc>,
     pub mimetype: String,
     pub meta: Option<serde_json::Value>,
+    pub notes: Option<String>,
 }
 
 #[derive(Deserialize, Insertable, Debug)]
@@ -37,6 +38,7 @@ pub struct NewFileVersion {
 
     pub mimetype: String,
     pub meta: Option<serde_json::Value>,
+    pub notes: Option<String>,
 }
 
 #[derive(Serialize, Debug)]

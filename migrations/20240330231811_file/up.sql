@@ -39,5 +39,6 @@ CREATE TABLE file_version (
     mimetype    text        NOT NULL REFERENCES mimetype(name)
                                 DEFAULT 'application/octet-stream',
     filesize    bigint      NOT NULL DEFAULT 0,
-    meta        jsonb
+    meta        jsonb,
+    notes       text
 );
