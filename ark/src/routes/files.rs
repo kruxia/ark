@@ -222,7 +222,7 @@ pub async fn search(
     let file_versions: Vec<FileVersion> = sql_query(
         // Diesel query dsl is very limited -- just basic CRUD and JOIN operations.
         // TODO: Add filtering based on file / path attributes (query / body params).
-        // TODO: Enable selecting the files as of a particular version.
+        // TODO: Enable selecting the files as of a particular version, or in a range.
         r#"
         with latest as (
             select distinct(filepath), max(version_id) version_id
@@ -231,7 +231,9 @@ pub async fn search(
         )
         select *
         from file_version fv
-        join latest l on fv.filepath = l.filepath and fv.version_id = l.version_id
+        join latest l 
+            on fv.filepath = l.filepath 
+            and fv.version_id = l.version_id
         where fv.account_id = $1
         order by fv.filepath
         "#,
