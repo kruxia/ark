@@ -13,7 +13,7 @@ pub struct NewVersion {
     pub meta: Option<serde_json::Value>,
 }
 
-#[derive(Serialize, Selectable, Queryable, Debug)]
+#[derive(Serialize, Selectable, Queryable, QueryableByName, Debug)]
 #[diesel(table_name = schema::version)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Version {

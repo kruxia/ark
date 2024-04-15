@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 // the input to our `account` handler
-#[derive(Serialize, Selectable, Queryable, Debug)]
+#[derive(Serialize, Selectable, Queryable, QueryableByName, Debug)]
 #[diesel(table_name = schema::account)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Account {

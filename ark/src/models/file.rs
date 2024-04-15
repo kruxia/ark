@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Selectable, Queryable, Debug)]
+#[derive(Serialize, Selectable, Queryable, QueryableByName, Debug)]
 #[diesel(table_name = schema::ext_mimetype)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ExtMimetype {
@@ -11,7 +11,7 @@ pub struct ExtMimetype {
     pub name: String,
 }
 
-#[derive(Serialize, Selectable, Queryable, Debug)]
+#[derive(Serialize, Selectable, Queryable, QueryableByName, Debug)]
 #[diesel(table_name = schema::file_version)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct FileVersion {

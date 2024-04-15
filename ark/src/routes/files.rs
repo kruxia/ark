@@ -22,7 +22,8 @@ use axum::{
     http::{header, StatusCode},
     response::{IntoResponse, Json},
 };
-use diesel::prelude::*;
+use diesel::sql_query;
+use diesel::{prelude::*, sql_types::BigInt};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
@@ -218,12 +219,27 @@ pub async fn search(
     db::Connection(mut conn): db::Connection,
     Path(account_id): Path<i64>,
 ) -> Result<Json<Vec<FileVersion>>, (StatusCode, Json<ErrorResponse>)> {
-    let file_versions: Vec<FileVersion> = file_version::table
-        .select(FileVersion::as_select())
-        .filter(file_version::account_id.eq(account_id))
-        .load(&mut conn)
-        .await
-        .map_err(db::diesel_result_error_response)?;
+    let file_versions: Vec<FileVersion> = sql_query(
+        // Diesel query dsl is very limited -- just basic CRUD and JOIN operations.
+        // TODO: Add filtering based on file / path attributes (query / body params).
+        // TODO: Enable selecting the files as of a particular version.
+        r#"
+        with latest as (
+            select distinct(filepath), max(version_id) version_id
+            from file_version
+            group by filepath
+        )
+        select *
+        from file_version fv
+        join latest l on fv.filepath = l.filepath and fv.version_id = l.version_id
+        where fv.account_id = $1
+        order by fv.filepath
+        "#,
+    )
+    .bind::<BigInt, _>(account_id)
+    .load::<FileVersion>(&mut conn)
+    .await
+    .map_err(db::diesel_result_error_response)?;
 
     Ok(Json(file_versions))
 }
