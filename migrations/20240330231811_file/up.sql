@@ -11,10 +11,10 @@ most recent one, and it is implicitly based on the previous one in time. Adding 
 enable 2-way merges and versions to be a DAG.)
 */
 
-CREATE SEQUENCE version_id AS smallint CYCLE;
+CREATE SEQUENCE version_id_seq AS bigint;
 CREATE TABLE version (
-    id          uuid        PRIMARY KEY DEFAULT gen_id('version_id'),
-    account_id  uuid        NOT NULL REFERENCES account(id),
+    id          bigint      PRIMARY KEY DEFAULT big_id('version_id_seq'),
+    account_id  bigint      NOT NULL REFERENCES account(id),
     created     timestamptz NOT NULL DEFAULT current_timestamp,
     meta        jsonb
 );
@@ -28,9 +28,9 @@ representing the content of the file. Content items can be referenced by many fi
 */
 
 CREATE TABLE file_version (
-    account_id  uuid        NOT NULL REFERENCES account(id),
-    version_id  uuid        NOT NULL REFERENCES version(id),
+    account_id  bigint      NOT NULL REFERENCES account(id),
     filepath    text        NOT NULL, -- relative path in the account
+    version_id  bigint      NOT NULL REFERENCES version(id),
 
     -- In a given account and version, a given filepath must be unique
     PRIMARY KEY (account_id, filepath, version_id),

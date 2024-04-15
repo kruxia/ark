@@ -3,14 +3,13 @@ use crate::schema;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(Deserialize, Insertable, Debug)]
 #[diesel(table_name = schema::version)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NewVersion {
-    pub id: Option<Uuid>,
-    pub account_id: Uuid,
+    pub id: Option<i64>,
+    pub account_id: i64,
     pub meta: Option<serde_json::Value>,
 }
 
@@ -18,20 +17,16 @@ pub struct NewVersion {
 #[diesel(table_name = schema::version)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Version {
-    #[serde(serialize_with = "uuid::serde::simple::serialize")]
-    pub id: Uuid,
-    #[serde(serialize_with = "uuid::serde::simple::serialize")]
-    pub account_id: Uuid,
+    pub id: i64,
+    pub account_id: i64,
     pub created: DateTime<Utc>,
     pub meta: Option<serde_json::Value>,
 }
 
 #[derive(Serialize, Debug)]
 pub struct VersionData {
-    #[serde(serialize_with = "uuid::serde::simple::serialize")]
-    pub id: Uuid,
-    #[serde(serialize_with = "uuid::serde::simple::serialize")]
-    pub account_id: Uuid,
+    pub id: i64,
+    pub account_id: i64,
     pub created: DateTime<Utc>,
     pub meta: Option<serde_json::Value>,
     pub files: Vec<FileVersion>,

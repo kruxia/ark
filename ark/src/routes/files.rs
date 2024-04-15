@@ -28,14 +28,13 @@ use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
 use regex::Regex;
 use schema::file_version;
-use uuid::Uuid;
 
 const MAX_FILE_SIZE: usize = 100_000_000;
 
 /// Upload a single file with a new version.
 pub async fn upload_file(
     State(state): State<AppState>,
-    Path((account_id, filepath)): Path<(Uuid, String)>,
+    Path((account_id, filepath)): Path<(i64, String)>,
     Query(meta): Query<serde_json::Value>,
     request: Request,
 ) -> Result<(StatusCode, Json<FileVersion>), (StatusCode, Json<ErrorResponse>)> {
@@ -45,7 +44,7 @@ pub async fn upload_file(
             async move {
                 // create a version for this file
                 let new_version = NewVersion {
-                    id: Some(Uuid::now_v7()),
+                    id: None,
                     account_id: account_id,
                     meta: None,
                 };
@@ -129,7 +128,7 @@ pub async fn upload_file(
 /// Get the content of the given file, optionally at the given version (default=latest).
 pub async fn get_file_data(
     State(state): State<AppState>,
-    Path((account_id, filepath)): Path<(Uuid, String)>,
+    Path((account_id, filepath)): Path<(i64, String)>,
     Query(file_query): Query<FileQuery>,
     _request: Request,
 ) -> Result<impl IntoResponse, (StatusCode, Json<ErrorResponse>)> {
@@ -182,7 +181,7 @@ pub async fn get_file_data(
 /// Get the history of the given file.
 pub async fn get_history(
     db::Connection(mut conn): db::Connection,
-    Path((account_id, filepath)): Path<(Uuid, String)>,
+    Path((account_id, filepath)): Path<(i64, String)>,
 ) -> Result<(StatusCode, Json<FileHistory>), (StatusCode, Json<ErrorResponse>)> {
     let versions: Vec<FileVersion> = file_version::table
         .filter(file_version::account_id.eq(account_id))
@@ -217,7 +216,7 @@ pub async fn get_history(
 /// Search for and list files with the given parameters.
 pub async fn search(
     db::Connection(mut conn): db::Connection,
-    Path(account_id): Path<Uuid>,
+    Path(account_id): Path<i64>,
 ) -> Result<Json<Vec<FileVersion>>, (StatusCode, Json<ErrorResponse>)> {
     let file_versions: Vec<FileVersion> = file_version::table
         .select(FileVersion::as_select())

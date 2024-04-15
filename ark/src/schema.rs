@@ -2,7 +2,7 @@
 
 diesel::table! {
     account (id) {
-        id -> Uuid,
+        id -> Int8,
         created -> Timestamptz,
         title -> Nullable<Text>,
         meta -> Nullable<Jsonb>,
@@ -18,9 +18,9 @@ diesel::table! {
 
 diesel::table! {
     file_version (account_id, filepath, version_id) {
-        account_id -> Uuid,
-        version_id -> Uuid,
+        account_id -> Int8,
         filepath -> Text,
+        version_id -> Int8,
         created -> Timestamptz,
         mimetype -> Text,
         filesize -> Int8,
@@ -36,8 +36,8 @@ diesel::table! {
 
 diesel::table! {
     version (id) {
-        id -> Uuid,
-        account_id -> Uuid,
+        id -> Int8,
+        account_id -> Int8,
         created -> Timestamptz,
         meta -> Nullable<Jsonb>,
     }

@@ -17,19 +17,17 @@ use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
-use uuid::Uuid;
 
 /// Create a new version without any files.
 pub async fn create_version(
     State(state): State<AppState>,
-    Json(mut new_version): Json<NewVersion>,
+    Json(new_version): Json<NewVersion>,
 ) -> Result<(StatusCode, Json<VersionData>), (StatusCode, Json<ErrorResponse>)> {
     let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
 
     let version = conn
         .transaction::<Version, ArkError, _>(|mut conn| {
             async move {
-                new_version.id = Some(Uuid::now_v7());
                 let version = diesel::insert_into(schema::version::table)
                     .values(new_version)
                     .returning(Version::as_returning())
@@ -59,7 +57,7 @@ pub async fn create_version(
 /// Get the metadata and files that were modified in the given version.
 pub async fn get_version(
     db::Connection(mut conn): db::Connection,
-    Path(version_id): Path<Uuid>,
+    Path(version_id): Path<i64>,
 ) -> Result<(StatusCode, Json<VersionData>), (StatusCode, Json<ErrorResponse>)> {
     let version = schema::version::table
         .filter(schema::version::id.eq(version_id))
