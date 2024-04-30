@@ -65,6 +65,7 @@ pub async fn get_version(
         .first(&mut conn)
         .await
         .map_err(db::diesel_result_error_response)?;
+
     let files: Vec<FileVersion> = schema::file_version::table
         .filter(schema::file_version::version_id.eq(version_id))
         .select(FileVersion::as_select())

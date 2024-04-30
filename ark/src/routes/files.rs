@@ -136,21 +136,21 @@ pub async fn get_file_data(
     let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
 
     // get the given or latest file_version
+    let query = file_version::table
+        .select(FileVersion::as_select())
+        .filter(file_version::account_id.eq(account_id))
+        .filter(file_version::filepath.eq(&filepath));
+
     let file_version = match file_query._version {
         Some(version_id) => {
-            file_version::table
-                .filter(file_version::account_id.eq(account_id))
-                .filter(file_version::filepath.eq(&filepath))
+            query
                 .filter(file_version::version_id.eq(&version_id))
-                .select(FileVersion::as_select())
                 .first(&mut conn)
                 .await
         }
         _ => {
-            file_version::table
-                .filter(file_version::account_id.eq(account_id))
+            query
                 .filter(file_version::filepath.eq(&filepath))
-                .select(FileVersion::as_select())
                 .order_by(file_version::version_id.desc())
                 .first(&mut conn)
                 .await
