@@ -91,13 +91,15 @@ async fn main() {
     let app: Router = Router::new()
         .route("/", get(home))
         .route("/accounts", post(accounts::upsert).get(accounts::search))
-        .route("/files/:account_id", get(files::search))
+        .route("/accounts/:account_id/files", get(files::search))
         .route(
-            "/files/:account_id/*filepath",
+            "/accounts/:account_id/files/*filepath",
             put(files::upload_file).get(files::get_file_data),
         )
-        .route("/history/:account_id/*filepath", get(files::get_history))
-        .route("/versions", post(versions::create_version))
+        .route(
+            "/accounts/:account_id/history/*filepath",
+            get(files::get_history),
+        )
         // .route("/versions", post(versions::create_version))
         .route("/versions/:version_id", get(versions::get_version))
         .layer(TraceLayer::new_for_http())
