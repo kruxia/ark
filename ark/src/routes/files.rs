@@ -91,7 +91,7 @@ pub async fn upload_file(
                     &state.s3,
                     &state.settings.s3_bucket_name,
                     body.into(),
-                    format!("{}/{}/{}", &account_id, &filepath, version.id).as_str(),
+                    format!("{}/{}/{}", &account_id, version.id, &filepath).as_str(),
                     Some(&mimetype),
                 )
                 .await
@@ -158,7 +158,7 @@ pub async fn get_file_data(
     }
     .map_err(db::diesel_result_error_response)?;
 
-    let file_key = format!("{}/{}/{}", &account_id, &filepath, &file_version.version_id);
+    let file_key = format!("{}/{}/{}", &account_id, &file_version.version_id, &filepath);
 
     let object_result =
         ark_s3::object::get_object(&state.s3, &state.settings.s3_bucket_name, &file_key)
