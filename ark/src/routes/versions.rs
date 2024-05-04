@@ -18,41 +18,41 @@ use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
 
-/// Create a new version without any files.
-pub async fn create_version(
-    State(state): State<AppState>,
-    Json(new_version): Json<NewVersion>,
-) -> Result<(StatusCode, Json<VersionData>), (StatusCode, Json<ErrorResponse>)> {
-    let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
+// /// Create a new version without any files.
+// pub async fn create_version(
+//     State(state): State<AppState>,
+//     Json(new_version): Json<NewVersion>,
+// ) -> Result<(StatusCode, Json<VersionData>), (StatusCode, Json<ErrorResponse>)> {
+//     let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
 
-    let version = conn
-        .transaction::<Version, ArkError, _>(|mut conn| {
-            async move {
-                let version = diesel::insert_into(schema::version::table)
-                    .values(new_version)
-                    .returning(Version::as_returning())
-                    .get_result(&mut conn)
-                    .await
-                    .map_err(db::diesel_result_error)?;
+//     let version = conn
+//         .transaction::<Version, ArkError, _>(|mut conn| {
+//             async move {
+//                 let version = diesel::insert_into(schema::version::table)
+//                     .values(new_version)
+//                     .returning(Version::as_returning())
+//                     .get_result(&mut conn)
+//                     .await
+//                     .map_err(db::diesel_result_error)?;
 
-                Ok(version)
-            }
-            .scope_boxed()
-        })
-        .await
-        .map_err(error_response)?;
+//                 Ok(version)
+//             }
+//             .scope_boxed()
+//         })
+//         .await
+//         .map_err(error_response)?;
 
-    Ok((
-        StatusCode::CREATED,
-        Json(VersionData {
-            id: version.id,
-            account_id: version.account_id,
-            created: version.created,
-            meta: version.meta,
-            files: Vec::new(),
-        }),
-    ))
-}
+//     Ok((
+//         StatusCode::CREATED,
+//         Json(VersionData {
+//             id: version.id,
+//             account_id: version.account_id,
+//             created: version.created,
+//             meta: version.meta,
+//             files: Vec::new(),
+//         }),
+//     ))
+// }
 
 /// Get the metadata and files that were modified in the given version.
 pub async fn get_version(

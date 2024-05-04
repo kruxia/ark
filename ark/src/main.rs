@@ -98,6 +98,7 @@ async fn main() {
         )
         .route("/history/:account_id/*filepath", get(files::get_history))
         .route("/versions", post(versions::create_version))
+        // .route("/versions", post(versions::create_version))
         .route("/versions/:version_id", get(versions::get_version))
         .layer(TraceLayer::new_for_http())
         .with_state(state);
