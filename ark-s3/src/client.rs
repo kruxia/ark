@@ -7,7 +7,7 @@ pub fn new_client() -> Client {
     let endpoint_url = std::env::var("S3_ENDPOINT_URL").unwrap();
     let access_key_id = std::env::var("AWS_ACCESS_KEY_ID").unwrap();
     let secret_access_key = std::env::var("AWS_SECRET_ACCESS_KEY").unwrap();
-    let region_name = std::env::var("AWS_REGION").unwrap();
+    let region_name = std::env::var("AWS_DEFAULT_REGION").unwrap();
 
     tracing::debug!("endpoint_url = {}", endpoint_url);
     tracing::debug!("access_key_id = {}", access_key_id);
