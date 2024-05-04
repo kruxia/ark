@@ -30,7 +30,7 @@ use diesel_async::RunQueryDsl;
 use regex::Regex;
 use schema::file_version;
 
-const MAX_FILE_SIZE: usize = 100_000_000;
+const MAX_FILE_SIZE: usize = 1_000_000_000; // 1 GB
 
 /// Upload a single file with a new version.
 pub async fn upload_file(
