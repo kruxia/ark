@@ -50,9 +50,14 @@ select create_big_id_exec(
     $create_function$
         create function big_id(varchar) returns bigint as $$
         select (
+            -- big_id is current timestamp minus the base timestamp for this function,
+            -- plus the next value for the given sequence. The base timestamp is 1 year
+            -- before when this function is defined. (Adding an additional year to the
+            -- difference helps the early numbers have the same size.) Including a
+            -- sequence ensures uniqueness.
             (extract(epoch from clock_timestamp())*1e6) 
             - $create_function$ ||
-                (extract(epoch from clock_timestamp())*1e6)::bigint::text
+                (extract(epoch from clock_timestamp()-make_interval(1))*1e6)::bigint::text
                 || $create_function$ 
             + nextval($1)
         );
