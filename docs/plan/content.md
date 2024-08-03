@@ -52,7 +52,7 @@ Files and Content Items are separate but related
 
 - Files can also be versioned. Like content, they don't necessarily have a linear version history -- checking out a particular version of the files means checking out the latest version of all files in that version's history. [reminds me a little of dealing with database migrations in sqly]
 
-- A Content Version has one base and one optional merge base. (If version 4 was based on version 2 and version 2 was based on version 1, and version 3 was based on version 1, and version 5 is based on version 4 and represents merging version 4 and version 3, we could say that version 5 has version 4 as base and version 3 as merge base).
+- A Content Version has one base and one optional merge base. (If version 4 was based on version 2 and version 2 was based on version 1, and version 3 was based on version 1, and version 5 merges version 4 and version 3, we could say that version 5 has version 4 as base and version 3 as merge base).
     ```
     1 <----- 3 <-----\
      \<-- 2 <-- 4 <-- 5

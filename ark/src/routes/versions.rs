@@ -1,5 +1,12 @@
-/*
-A version contains zero or more files.
+/**
+ * Manage versions: 
+ * A version belongs to an account, has a timestamp when it was created, and contains 
+ * zero or more files plus metadata about the version.
+ * 
+ * - [x] GET the Version with the given id and the data about it.
+ * - [] POST a new Version with Version metadata.
+ *      - The Version object can then be filled with file objects
+ * - [] Search for and list Versions with the given parameters.   
 */
 use crate::{
     db,

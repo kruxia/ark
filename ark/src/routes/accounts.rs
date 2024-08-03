@@ -1,3 +1,12 @@
+/**
+ * Manage Accounts
+ * 
+ * - [x] Create or update an Account: POST the information about the Account and either 
+ *   create or update it, then return the Account object.
+ * - [*] Search for Accounts: 
+ *      - [x] Return all Account objects
+ *      - [] Return the Account objects that match the given parameters
+ */
 use crate::{
     db, errors,
     models::account::{Account, NewAccount},
@@ -40,7 +49,7 @@ pub async fn upsert(
         .await
         .map_err(errors::error_response)?;
 
-    Ok((StatusCode::CREATED, Json(record)))
+    Ok((StatusCode::OK, Json(record)))
 }
 
 /// Search for accounts (**TODO**: with the given parameters).

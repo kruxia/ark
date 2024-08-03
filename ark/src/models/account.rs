@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-// the input to our `account` handler
+/// A single Account
 #[derive(Serialize, Selectable, Queryable, QueryableByName, Debug)]
 #[diesel(table_name = schema::account)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -14,6 +14,7 @@ pub struct Account {
     pub meta: Option<serde_json::Value>,
 }
 
+/// Input to create a new Account
 #[derive(Deserialize, Insertable, Debug, AsChangeset)]
 #[diesel(table_name = schema::account)]
 #[diesel(check_for_backend(diesel::pg::Pg))]

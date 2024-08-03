@@ -1,6 +1,6 @@
 # Ark Queue 
 
-As an Ark user, I want a queue that will run automations on my archives, so that things that don't need human intervention can be automated.
+As an archive user, I want a queue that will run automations on my archives, so that things that don't need human intervention can be automated.
 
 ## Requirements
 

@@ -1,12 +1,19 @@
-/*
-A version contains zero or more files.
-Each file is identified by its filepath and has one or more versions.
-
-1. PUT a single file to a particular account and filepath: creates a new version
-    containing that file.
-2. POST one or more files to a particular account and directory path: creates a new
-    version containing those files
-*/
+/**
+ * Manage Files: Each file is identified by its filepath and has one or more versions. 
+ * A version contains zero or more files.
+ * 
+ * - [*] PUT a single file + filepath to a particular account: creates a new version
+ *      containing that file.
+ *      - [x] Upload the file as a single block -- requires memory to hold the file.
+ *      - [] Stream the file upload to object storage -- requires memory per chunk.
+ * - [] PUT a single file + filepath to a particular account + version: [TODO]
+ *      - If the version already includes a file at that filepath, return 409 Conflict.
+ *      - Otherwise, add the file to that version.
+ * - [x] GET the file data for a given file path in an account (optionally: at a particular
+ *      version) [DONE]
+ * - [] POST one or more files + filepaths to a particular account: creates a new version 
+ *      containing those files. [TODO]
+ */
 use crate::{
     db,
     errors::{ark_error, ark_error_response, error_response, ArkError, ErrorResponse},
@@ -72,8 +79,9 @@ pub async fn upload_file(
                 };
 
                 // stream the request body to S3
-                // ## TODO: axum BodyDataStream into aws ByteStream.
+                // ## TODO: axum Body into aws ByteStream.
                 // See <https://imfeld.dev/writing/process_streaming_uploads_with_axum>
+                // or <https://docs.aws.amazon.com/sdk-for-rust/latest/dg/rust_s3_code_examples.html#scenarios>
                 // For now, just get the whole body up to MAX_FILE_SIZE as bytes.
 
                 let body = axum::body::to_bytes(request.into_body(), MAX_FILE_SIZE)
@@ -85,13 +93,15 @@ pub async fn upload_file(
                 // get the files attributes: filesize
                 let filesize = body.len() as i64;
 
+                // The file key in object storage is ACCOUNT_ID/VERSION_ID/FILEPATH
+                let file_key = format!("{}/{}/{}", &account_id, &version.id, &filepath);
+                
                 // TODO: What if this file content has been prevously uploaded?
-
                 ark_s3::upload::upload_object_stream(
                     &state.s3,
                     &state.settings.s3_bucket_name,
                     body.into(),
-                    format!("{}/{}/{}", &account_id, version.id, &filepath).as_str(),
+                    &file_key.as_str(),
                     Some(&mimetype),
                 )
                 .await
@@ -136,20 +146,22 @@ pub async fn get_file_data(
     let mut conn = state.pool.get().await.map_err(db::pool_error_response)?;
 
     // get the given or latest file_version
-    let query = file_version::table
+    // - construct the base db query
+    let db_query = file_version::table
         .select(FileVersion::as_select())
         .filter(file_version::account_id.eq(account_id))
         .filter(file_version::filepath.eq(&filepath));
 
+    // - if the FileQuery has _version, get that, else get the last-created version id.
     let file_version = match file_query._version {
         Some(version_id) => {
-            query
+            db_query
                 .filter(file_version::version_id.eq(&version_id))
                 .first(&mut conn)
                 .await
         }
         _ => {
-            query
+            db_query
                 .filter(file_version::filepath.eq(&filepath))
                 .order_by(file_version::version_id.desc())
                 .first(&mut conn)
@@ -158,6 +170,7 @@ pub async fn get_file_data(
     }
     .map_err(db::diesel_result_error_response)?;
 
+    // The file key in object storage is ACCOUNT_ID/VERSION_ID/FILEPATH
     let file_key = format!("{}/{}/{}", &account_id, &file_version.version_id, &filepath);
 
     let object_result =
@@ -180,7 +193,7 @@ pub async fn get_file_data(
 }
 
 /// Get the history of the given file.
-pub async fn get_history(
+pub async fn get_file_history(
     db::Connection(mut conn): db::Connection,
     Path((account_id, filepath)): Path<(i64, String)>,
 ) -> Result<(StatusCode, Json<FileHistory>), (StatusCode, Json<ErrorResponse>)> {

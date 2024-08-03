@@ -1,14 +1,14 @@
 /* 
 ## version
 
-A version is an identifiable set of changes at a particular point in time. Every
-version has zero or more objects; every object has one or more versions. Any
-set of changes is made as a new version.
+A version is an identifiable set of changes at a particular point in time. Every version
+has zero or more objects; every object has one or more versions. Any set of changes is
+made as a new version.
 
-(TODO: versions are currently linear: The latest version is implicitly the
-most recent one, and it is implicitly based on the previous one in time. Adding a
-"base_id" would enable a tree of versions; also adding a "merge_base_id" would
-enable 2-way merges and versions to be a DAG.)
+(TODO: versions are currently linear: The latest version is implicitly the most recent
+one, and it is implicitly based on the previous one in time. Adding a "base_id" would
+enable a tree of versions; also adding a "merge_id" would enable 2-way merges and
+versions to be a DAG.)
 */
 
 CREATE SEQUENCE version_id_seq AS bigint;
@@ -32,7 +32,8 @@ CREATE TABLE file_version (
     filepath    text        NOT NULL, -- relative path in the account
     version_id  bigint      NOT NULL REFERENCES version(id),
 
-    -- In a given account and version, a given filepath must be unique
+    -- In a given account and version, filepath must be unique (filepath second so that
+    -- the index can be used to look up all versions for a given account + filepath)
     PRIMARY KEY (account_id, filepath, version_id),
 
     created     timestamptz NOT NULL DEFAULT current_timestamp,
